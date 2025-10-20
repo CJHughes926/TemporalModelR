@@ -13,5 +13,9 @@ Description: More about what it does (maybe more than one line).
     Continuation lines should be indented.
 License: What license is it under?
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.3.2
+NeedsCompilation: no
+Packaged: 2025-10-20 18:51:48 UTC; mcguz
+Author: Jane Doe [aut, cre]
+Maintainer: Jane Doe <jane@example.com>
+Built: R 4.4.1; ; 2025-10-20 18:51:56 UTC; windows
