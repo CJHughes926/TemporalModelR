@@ -4,8 +4,10 @@
 ** byte-compile and prepare package for lazy loading
 ** help
 *** installing help indices
+*** copying figures
 ** building package indices
 ** testing if installed package can be loaded from temporary location
-** testing if installed package can be loaded from final location
-** testing if installed package keeps a record of temporary installation path
-* DONE (TemporalModelR)
+Warning in file.rename(instdir, final_instdir) :
+  cannot rename file 'C:/Users/mcguz/OneDrive/Desktop/TEMPOR~1/TEMPOR~1/TEMPOR~1.RCH/00LOCK-TEMPOR~1/00new/TemporalModelR' to 'C:/Users/mcguz/OneDrive/Desktop/TEMPOR~1/TEMPOR~1/TEMPOR~1.RCH/TemporalModelR', reason 'Access is denied'
+ERROR:    moving to final location failed
+* removing 'C:/Users/mcguz/OneDrive/Desktop/TEMPOR~1/TEMPOR~1/TEMPOR~1.RCH/TemporalModelR'

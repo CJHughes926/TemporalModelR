@@ -1,20 +1,21 @@
 Package: TemporalModelR
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Temporal Modleing in R
 Version: 0.1.0
 Authors@R: c(
     person(
-      "Jane", "Doe",
+      "Connor", "Hughes",
       email = "jane@example.com",
       role = c("aut", "cre")
     )
   )
 Description: More about what it does (maybe more than one line).
     Continuation lines should be indented.
-License: What license is it under?
+License: CCC
 Encoding: UTF-8
 RoxygenNote: 7.3.2
+Imports: raster
 NeedsCompilation: no
-Packaged: 2025-10-20 18:51:48 UTC; mcguz
-Author: Jane Doe [aut, cre]
-Maintainer: Jane Doe <jane@example.com>
+Packaged: 2025-10-20 19:05:34 UTC; mcguz
+Author: Connor Hughes [aut, cre]
+Maintainer: Connor Hughes <jane@example.com>
