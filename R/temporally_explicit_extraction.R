@@ -1,4 +1,8 @@
+#' Temporally explicit extraction
 #' @export
+#' @importFrom raster raster extract
+#' @importFrom dplyr select distinct all_of
+#' @importFrom utils write.csv
 temporally_explicit_extraction <- function(points_sp,
                                            raster_dir,
                                            variable_patterns, ### # Define variable patterns as follows in a c() list
