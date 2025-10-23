@@ -468,7 +468,7 @@ spatiotemporal_partition <- function(
   )
 
   results <- list(
-    folds = pts_sf %>% st_drop_geometry() %>% select(fold, spatial_block, temporal_block, block_type, all_of(time_col)),
+    folds = pts_sf %>% st_drop_geometry() %>% dplyr::select(fold, spatial_block, temporal_block, block_type, all_of(time_col)),
     points_sf = pts_sf,
     voronoi = voronoi_sf,
     summary = summary_stats,
