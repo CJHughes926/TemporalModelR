@@ -62,8 +62,8 @@ temporally_explicit_extraction <- function(points_sp,
 
   # Get unique time combinations
   time_combinations <- points_sp@data %>%
-    select(all_of(time_cols)) %>%
-    distinct()
+    dplyr::select(all_of(time_cols)) %>%
+    dplyr::distinct()
 
   print(paste("Extracting values for", nrow(time_combinations), "time periods..."))
 
