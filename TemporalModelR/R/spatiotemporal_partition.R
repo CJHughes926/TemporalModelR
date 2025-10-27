@@ -2,6 +2,8 @@ spatiotemporal_partition <- function(
     reference_shapefile_path,
     points_file_path,
     time_col = NULL,
+    xcol = NULL,
+    ycol = NULL,
     total_folds = 4,
     n_temporal = 2,
     n_spatial = 8,
@@ -74,7 +76,7 @@ spatiotemporal_partition <- function(
 
   reference_shapefile <- st_read(reference_shapefile_path, quiet = TRUE)
   pts <- read.csv(points_file_path)
-  pts_sf <- st_as_sf(pts, coords = c("LONGDD", "LATDD"), crs = 4326)
+  pts_sf <- st_as_sf(pts, coords = c(xcol, ycol), crs = 4326)
 
   if (!time_col %in% names(pts_sf)) {
     stop(paste("Time column", time_col, "not found in data!"))
