@@ -37,9 +37,36 @@ raster_align <- function(input_dir,
                          output_suffix = "_Masked_Updated",
                          pattern = ".*\\.tif$",
                          overwrite = FALSE) {
-
   # Load required library
   require(raster)
+
+  # Check for required inputs
+  if (missing(input_dir)) {
+    stop("ERROR: 'input_dir' is required but was not provided. ",
+         "Please specify the directory containing input raster files.")
+  }
+
+  if (missing(output_dir)) {
+    stop("ERROR: 'output_dir' is required but was not provided. ",
+         "Please specify the directory where processed rasters should be saved.")
+  }
+
+  if (missing(reference_raster)) {
+    stop("ERROR: 'reference_raster' is required but was not provided. ",
+         "Please specify the path to the reference raster file that will be used ",
+         "for alignment (projection, extent, and resolution).")
+  }
+
+  # Validate that paths exist and are accessible
+  if (!dir.exists(input_dir)) {
+    stop("ERROR: Input directory does not exist: '", input_dir, "'. ",
+         "Please check the path and try again.")
+  }
+
+  if (!file.exists(reference_raster)) {
+    stop("ERROR: Reference raster file does not exist: '", reference_raster, "'. ",
+         "Please check the file path and try again.")
+  }
 
   # Create output directory
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
@@ -50,6 +77,11 @@ raster_align <- function(input_dir,
   # List all raster files
   all_tif_files <- list.files(input_dir, pattern = pattern, full.names = TRUE)
   total_files <- length(all_tif_files)
+
+  if (total_files == 0) {
+    stop("ERROR: No raster files found in input directory matching pattern '", pattern, "'. ",
+         "Please check that the directory contains .tif files or adjust the pattern parameter.")
+  }
 
   print(paste("Found", total_files, "total raster files in directory"))
 
@@ -71,7 +103,6 @@ raster_align <- function(input_dir,
 
     already_processed <- sum(output_exists)
     percent_processed <- round((already_processed / total_files) * 100, 1)
-
     print(paste(already_processed, " files already exist in output directory (", percent_processed, "%)", sep = ""))
 
     # Filter to only files that need processing
@@ -95,15 +126,19 @@ raster_align <- function(input_dir,
     print(paste0("Processing raster ", i, " of ", files_to_process, ": ", original_file_name))
 
     r <- raster(tif_files[i])
+
     if (is.na(crs(r))) {
       stop(paste0("ERROR: Raster '", original_file_name, "' has no defined CRS. ",
                   "Please assign a coordinate reference system to this raster before processing. ",
                   "You can use raster::crs() to set the CRS if you know what it should be."))
     }
+
     r <- projectRaster(r, crs = crs(reference_raster))
     print("  - Reprojected")
+
     r <- resample(r, reference_raster, method = "bilinear")
     print("  - Resampled")
+
     r <- mask(r, reference_raster, maskvalue = 0)
     print("  - Masked")
 
