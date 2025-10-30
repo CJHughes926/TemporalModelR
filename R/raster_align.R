@@ -95,6 +95,11 @@ raster_align <- function(input_dir,
     print(paste0("Processing raster ", i, " of ", files_to_process, ": ", original_file_name))
 
     r <- raster(tif_files[i])
+    if (is.na(crs(r))) {
+      stop(paste0("ERROR: Raster '", original_file_name, "' has no defined CRS. ",
+                  "Please assign a coordinate reference system to this raster before processing. ",
+                  "You can use raster::crs() to set the CRS if you know what it should be."))
+    }
     r <- projectRaster(r, crs = crs(reference_raster))
     print("  - Reprojected")
     r <- resample(r, reference_raster, method = "bilinear")
