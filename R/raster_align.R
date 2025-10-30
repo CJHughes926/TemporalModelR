@@ -53,7 +53,7 @@ raster_align <- function(input_dir,
 
   if (missing(reference_raster)) {
     stop("ERROR: 'reference_raster' is required but was not provided. ",
-         "Please specify the path to the reference raster file that will be used ",
+         "Please specify the path to the reference raster file or a raster object that will be used ",
          "for alignment (projection, extent, and resolution).")
   }
 
@@ -63,16 +63,24 @@ raster_align <- function(input_dir,
          "Please check the path and try again.")
   }
 
-  if (!file.exists(reference_raster)) {
-    stop("ERROR: Reference raster file does not exist: '", reference_raster, "'. ",
-         "Please check the file path and try again.")
+  # Handle reference_raster as either file path or raster object
+  if (is.character(reference_raster)) {
+    # It's a file path
+    if (!file.exists(reference_raster)) {
+      stop("ERROR: Reference raster file does not exist: '", reference_raster, "'. ",
+           "Please check the file path and try again.")
+    }
+    reference_raster <- raster(reference_raster)
+  } else if (inherits(reference_raster, "RasterLayer")) {
+    # It's already a raster object, use as-is
+    reference_raster <- reference_raster
+  } else {
+    stop("ERROR: 'reference_raster' must be either a file path (character string) or a RasterLayer object. ",
+         "Provided object is of class: ", class(reference_raster)[1])
   }
 
   # Create output directory
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-
-  # Load reference raster
-  reference_raster <- raster(reference_raster)
 
   # List all raster files
   all_tif_files <- list.files(input_dir, pattern = pattern, full.names = TRUE)

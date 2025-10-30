@@ -22,9 +22,7 @@ spatiotemporal_partition <- function(
   require(gridExtra)
   require(deldir)
 
-  # ============================================================================
-  # INPUT VALIDATION
-  # ============================================================================
+  ### INPUT VALIDATION
 
   if (is.null(reference_shapefile_path)) {
     stop("ERROR: 'reference_shapefile_path' is required.")
@@ -32,18 +30,6 @@ spatiotemporal_partition <- function(
 
   if (is.null(points_file_path)) {
     stop("ERROR: 'points_file_path' is required.")
-  }
-
-  if (is.null(xcol)) {
-    stop("ERROR: 'xcol' is required.")
-  }
-
-  if (is.null(ycol)) {
-    stop("ERROR: 'ycol' is required.")
-  }
-
-  if (is.null(points_crs)) {
-    stop("ERROR: 'points_crs' is required.")
   }
 
   if (is.null(blocking_priority)) {
@@ -79,9 +65,7 @@ spatiotemporal_partition <- function(
   if (n_spatial <= 0) n_spatial <- 1
   if (n_temporal <= 0) n_temporal <- 1
 
-  # ============================================================================
-  # LOAD DATA
-  # ============================================================================
+  ### LOAD REFERENCE SHAPEFILE
 
   if (inherits(reference_shapefile_path, "sf")) {
     reference_shapefile <- reference_shapefile_path
@@ -92,14 +76,111 @@ spatiotemporal_partition <- function(
     reference_shapefile <- st_read(reference_shapefile_path, quiet = TRUE)
   }
 
-  if (is.data.frame(points_file_path)) {
-    pts <- points_file_path
-  } else {
+  ### LOAD AND CONVERT POINTS DATA
+
+  # Handle points_file_path input
+  if (is.character(points_file_path)) {
     if (!file.exists(points_file_path)) {
-      stop(paste0("ERROR: Points file not found at: ", points_file_path))
+      stop(paste("ERROR: File does not exist:", points_file_path))
     }
-    pts <- read.csv(points_file_path)
+
+    file_ext <- tolower(tools::file_ext(points_file_path))
+
+    if (file_ext == "csv") {
+
+      # Require xcol, ycol, and points_crs for CSV files
+      if (is.null(xcol)) {
+        stop("ERROR: 'xcol' is required when reading CSV files.")
+      }
+      if (is.null(ycol)) {
+        stop("ERROR: 'ycol' is required when reading CSV files.")
+      }
+      if (is.null(points_crs)) {
+        stop("ERROR: 'points_crs' is required when reading CSV files.")
+      }
+
+      print(paste("Reading CSV file:", basename(points_file_path)))
+      pts <- read.csv(points_file_path, stringsAsFactors = FALSE)
+
+      if (!xcol %in% names(pts)) {
+        stop(paste0("ERROR: Column '", xcol, "' not found in CSV. Available columns: ",
+                    paste(names(pts), collapse = ", ")))
+      }
+      if (!ycol %in% names(pts)) {
+        stop(paste0("ERROR: Column '", ycol, "' not found in CSV. Available columns: ",
+                    paste(names(pts), collapse = ", ")))
+      }
+
+    } else if (file_ext %in% c("shp", "geojson", "gpkg")) {
+      print(paste("Reading spatial file:", basename(points_file_path)))
+      pts_sf_raw <- st_read(points_file_path, quiet = TRUE)
+      pts <- st_drop_geometry(pts_sf_raw)
+
+      # Extract coordinates
+      coords <- st_coordinates(pts_sf_raw)
+      if (is.null(xcol)) xcol <- "X"
+      if (is.null(ycol)) ycol <- "Y"
+      pts[[xcol]] <- coords[, 1]
+      pts[[ycol]] <- coords[, 2]
+
+      # Get CRS if not provided
+      if (is.null(points_crs)) {
+        points_crs <- st_crs(pts_sf_raw)
+      }
+
+    } else {
+      stop(paste("ERROR: Unsupported file format:", file_ext,
+                 "\nSupported formats: .csv, .shp, .geojson, .gpkg"))
+    }
+
+  } else if (inherits(points_file_path, "sf")) {
+
+    # If it's already an sf object
+    print("Using provided sf object...")
+    pts <- st_drop_geometry(points_file_path)
+
+    # Extract coordinates
+    coords <- st_coordinates(points_file_path)
+    if (is.null(xcol)) xcol <- "X"
+    if (is.null(ycol)) ycol <- "Y"
+    pts[[xcol]] <- coords[, 1]
+    pts[[ycol]] <- coords[, 2]
+
+    # Get CRS if not provided
+    if (is.null(points_crs)) {
+      points_crs <- st_crs(points_file_path)
+    }
+
+  } else if (is.data.frame(points_file_path)) {
+
+    # Require xcol, ycol, and points_crs for data frames
+    if (is.null(xcol)) {
+      stop("ERROR: 'xcol' is required when providing a data frame.")
+    }
+    if (is.null(ycol)) {
+      stop("ERROR: 'ycol' is required when providing a data frame.")
+    }
+    if (is.null(points_crs)) {
+      stop("ERROR: 'points_crs' is required when providing a data frame.")
+    }
+
+    print("Using provided data frame...")
+    pts <- points_file_path
+
+    if (!xcol %in% names(pts)) {
+      stop(paste0("ERROR: Column '", xcol, "' not found in data frame. Available columns: ",
+                  paste(names(pts), collapse = ", ")))
+    }
+    if (!ycol %in% names(pts)) {
+      stop(paste0("ERROR: Column '", ycol, "' not found in data frame. Available columns: ",
+                  paste(names(pts), collapse = ", ")))
+    }
+
+  } else {
+    stop("ERROR: points_file_path must be an sf object, data frame with x/y columns, or file path")
   }
+
+  ### DATA CLEANING
 
   n_original <- nrow(pts)
   pts_complete <- pts[complete.cases(pts), ]
@@ -114,6 +195,8 @@ spatiotemporal_partition <- function(
     stop("ERROR: No complete rows remaining.")
   }
 
+  ### VALIDATE REQUIRED COLUMNS
+
   if (!xcol %in% names(pts_complete)) {
     stop(paste0("ERROR: Column '", xcol, "' not found. Available: ", paste(names(pts_complete), collapse = ", ")))
   }
@@ -124,6 +207,8 @@ spatiotemporal_partition <- function(
     stop(paste0("ERROR: Column '", time_col, "' not found. Available: ", paste(names(pts_complete), collapse = ", ")))
   }
 
+  ### CREATE SF OBJECT
+
   pts_sf <- st_as_sf(pts_complete, coords = c(xcol, ycol), crs = points_crs)
   pts_sf <- st_transform(pts_sf, crs = st_crs(reference_shapefile))
 
@@ -133,9 +218,7 @@ spatiotemporal_partition <- function(
     stop(paste0("ERROR: Not enough points (", total_points, ") for ", total_folds, " folds."))
   }
 
-  # ============================================================================
-  # RETRY LOOP
-  # ============================================================================
+  ### RETRY LOOP
 
   best_imbalance <- Inf
   best_results <- NULL
@@ -152,9 +235,7 @@ spatiotemporal_partition <- function(
     pts_sf_attempt$fold <- NULL
     pts_sf_attempt$block_type <- NULL
 
-    # ============================================================================
-    # FOLD STRUCTURE
-    # ============================================================================
+    ### FOLD STRUCTURE
 
     if (blocking_priority == "spatial") {
       n_spatially_exclusive_folds <- total_folds
@@ -197,9 +278,7 @@ spatiotemporal_partition <- function(
       }
     }
 
-    # ============================================================================
-    # SPATIAL PARTITIONING
-    # ============================================================================
+    ### SPATIAL PARTITIONING
 
     if (n_spatial == 1) {
       pts_sf_attempt$spatial_block <- 1
@@ -242,9 +321,7 @@ spatiotemporal_partition <- function(
       voronoi_sf <- suppressWarnings(st_intersection(voronoi_sf, st_union(reference_shapefile)))
     }
 
-    # ============================================================================
-    # TEMPORAL PARTITIONING
-    # ============================================================================
+    ### TEMPORAL PARTITIONING
 
     if (temporal_partitioning) {
       temporal_values <- pts_sf_attempt[[time_col]]
@@ -271,9 +348,7 @@ spatiotemporal_partition <- function(
       pts_sf_attempt$temporal_block <- 1
     }
 
-    # ============================================================================
-    # FOLD ASSIGNMENT
-    # ============================================================================
+    ### FOLD ASSIGNMENT
 
     pts_sf_attempt$fold <- NA
     pts_sf_attempt$block_type <- NA
@@ -410,9 +485,7 @@ spatiotemporal_partition <- function(
 
     final_fold_counts <- table(factor(pts_sf_attempt$fold, levels = 1:total_folds))
 
-    # ============================================================================
-    # BALANCE ASSESSMENT
-    # ============================================================================
+    ### BALANCE ASSESSMENT
 
     mean_per_fold <- mean(final_fold_counts)
     max_deviation <- max(abs(final_fold_counts - mean_per_fold))
@@ -456,9 +529,7 @@ spatiotemporal_partition <- function(
                    "% exceeds threshold ", round(max_imbalance * 100, 2), "%"))
   }
 
-  # ============================================================================
-  # REPORTING
-  # ============================================================================
+  ### REPORTING
 
   cat("\n=== FOLD STRUCTURE ===\n")
   cat(paste0(total_folds, " folds | ", n_spatial, " spatial blocks"))
