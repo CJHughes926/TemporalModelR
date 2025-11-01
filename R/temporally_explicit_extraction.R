@@ -18,7 +18,7 @@ temporally_explicit_extraction <- function(points_sp,
 
   ### Input validation and conversion
 
-  # Handle points_sp input
+  ### Handle points_sp input
   if (is.character(points_sp)) {
     if (!file.exists(points_sp)) {
       stop(paste("Error: File does not exist:", points_sp))
@@ -28,7 +28,7 @@ temporally_explicit_extraction <- function(points_sp,
 
     if (file_ext == "csv") {
 
-      # Require xcol, ycol, and points_crs for CSV files
+      ### Require xcol, ycol, and points_crs for CSV files
       if (is.null(xcol)) {
         stop("Error: 'xcol' is required when reading CSV files.")
       }
@@ -60,12 +60,12 @@ temporally_explicit_extraction <- function(points_sp,
       points_sp <- rgdal::readOGR(points_sp)
     } else {
       stop(paste("Error: Unsupported file format:", file_ext,
-                 "\nSupported formats: .csv, .shp, .geojson, .gpkg"))
+                 "Supported formats: .csv, .shp, .geojson, .gpkg"))
     }
 
   } else if (is.data.frame(points_sp)) {
 
-    # Require xcol, ycol, and points_crs for data frames
+    ### Require xcol, ycol, and points_crs for data frames
     if (is.null(xcol)) {
       stop("Error: 'xcol' is required when providing a data frame.")
     }
@@ -94,33 +94,33 @@ temporally_explicit_extraction <- function(points_sp,
     stop("Error: points_sp must be a SpatialPointsDataFrame, data frame with x/y columns, or file path")
   }
 
-  # Validate variable_patterns format
+  ### Validate variable_patterns format
   if (!is.vector(variable_patterns) || is.null(names(variable_patterns))) {
     stop(paste(
       "Error: variable_patterns must be a named vector.",
-      "\n",
-      "\n### Define variable patterns as follows in a named vector:",
-      "\n#",
-      "\n# my_variable_patterns <- c(",
-      "\n#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
-      "\n#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
-      "\n#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
-      "\n#   \"elevation\" = \"elevation\"",
-      "\n# )",
-      "\n#",
-      "\n# Where:",
-      "\n#   - The NAME (left side) is the variable name for the output column",
-      "\n#   - The VALUE (right side) is the pattern to match in raster filenames",
-      "\n#",
-      "\n# For time-varying variables:",
-      "\n#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
-      "\n#   - These correspond to column names in your time_cols parameter",
-      "\n#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
-      "\n#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
-      "\n#",
-      "\n# For static variables:",
-      "\n#   - Use a simple pattern with no time placeholders",
-      "\n#   - Example: \"elevation\" = \"elevation\"",
+      "",
+      "### Define variable patterns as follows in a named vector:",
+      "#",
+      "# my_variable_patterns <- c(",
+      "#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
+      "#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
+      "#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
+      "#   \"elevation\" = \"elevation\"",
+      "# )",
+      "#",
+      "# Where:",
+      "#   - The NAME (left side) is the variable name for the output column",
+      "#   - The VALUE (right side) is the pattern to match in raster filenames",
+      "#",
+      "# For time-varying variables:",
+      "#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
+      "#   - These correspond to column names in your time_cols parameter",
+      "#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
+      "#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
+      "#",
+      "# For static variables:",
+      "#   - Use a simple pattern with no time placeholders",
+      "#   - Example: \"elevation\" = \"elevation\"",
       sep = ""
     ))
   }
@@ -129,14 +129,118 @@ temporally_explicit_extraction <- function(points_sp,
     stop("Error: All elements in variable_patterns must be named")
   }
 
-  # Validate time_cols exist in data
+  ### Validate time_cols is provided
+  if (missing(time_cols)) {
+    stop(paste(
+      "Error: time_cols is required. Provide a character vector of time column names.",
+      "",
+      "### Examples:",
+      "#",
+      "# For single time dimension:",
+      "# time_cols = \"Year\"",
+      "#",
+      "# For multiple time dimensions:",
+      "# time_cols = c(\"Year\", \"Month\")",
+      "# time_cols = c(\"Year\", \"DOY\")",
+      "#",
+      "# The time_cols must:",
+      "#   1. Match column names in your points data",
+      "#   2. Match placeholders used in your variable_patterns",
+      sep = ""
+    ))
+  }
+
+  if (!is.character(time_cols) || length(time_cols) == 0) {
+    stop("time_cols must be a character vector with at least one time column name")
+  }
+
+  ### Validate time_cols exist in data
   missing_cols <- setdiff(time_cols, names(points_sp@data))
   if (length(missing_cols) > 0) {
     stop(paste("Error: The following time_cols are missing from the input data:",
-               paste(missing_cols, collapse = ", ")))
+               paste(missing_cols, collapse = ", "),
+               "Available columns:",
+               paste(names(points_sp@data), collapse = ", ")))
   }
 
-  # Check for missing values in time columns
+  ### Identify dynamic vs static variables early for validation
+  dynamic_vars_temp <- c()
+  static_vars_temp <- c()
+
+  for (var_name in names(variable_patterns)) {
+    pattern <- variable_patterns[var_name]
+    has_time_component <- any(sapply(time_cols, function(tc) {
+      grepl(tc, pattern, ignore.case = TRUE)
+    }))
+
+    if (has_time_component) {
+      dynamic_vars_temp <- c(dynamic_vars_temp, var_name)
+    } else {
+      static_vars_temp <- c(static_vars_temp, var_name)
+    }
+  }
+
+  ### Validate time_cols match variable_patterns
+
+  if (length(dynamic_vars_temp) > 0) {
+    ### Extract time placeholders from dynamic variable patterns only
+    pattern_time_placeholders <- c()
+    for (var_name in dynamic_vars_temp) {
+      pattern <- variable_patterns[var_name]
+      pattern_parts <- strsplit(pattern, "_")[[1]]
+
+      for (part in pattern_parts) {
+        if (toupper(part) %in% toupper(time_cols)) {
+          pattern_time_placeholders <- c(pattern_time_placeholders, toupper(part))
+        }
+      }
+    }
+
+    pattern_time_placeholders <- unique(pattern_time_placeholders)
+
+    time_cols_upper <- toupper(time_cols)
+    missing_in_patterns <- time_cols_upper[!time_cols_upper %in% pattern_time_placeholders]
+    extra_in_patterns <- pattern_time_placeholders[!pattern_time_placeholders %in% time_cols_upper]
+
+    if (length(missing_in_patterns) > 0 && length(pattern_time_placeholders) > 0) {
+      warning(paste(
+        "Warning: time_cols includes columns not found as placeholders in variable_patterns:",
+        paste(missing_in_patterns, collapse = ", "),
+        "This may indicate a mismatch between your time_cols and variable_patterns.",
+        "",
+        "Your time_cols:", paste(time_cols, collapse = ", "),
+        "Placeholders found in variable_patterns:", paste(pattern_time_placeholders, collapse = ", ")
+      ))
+    }
+
+    if (length(extra_in_patterns) > 0) {
+      stop(paste(
+        "Error: variable_patterns contain time placeholders not specified in time_cols:",
+        paste(extra_in_patterns, collapse = ", "),
+        "",
+        "Your time_cols:", paste(time_cols, collapse = ", "),
+        "Placeholders found in variable_patterns:", paste(pattern_time_placeholders, collapse = ", "),
+        "",
+        "### To fix this issue:",
+        "#",
+        "# Option 1: Add missing time columns to time_cols:",
+        "# time_cols = c(\"", paste(c(time_cols, tolower(extra_in_patterns)), collapse = "\", \""), "\")",
+        "#",
+        "# Option 2: Update your variable_patterns to match time_cols:",
+        "# Ensure all placeholders in patterns (YEAR, MONTH, etc.) are in time_cols",
+        "#",
+        "# Example of matching time_cols and patterns:",
+        "# time_cols = c(\"Year\", \"Month\")",
+        "# variable_patterns = c(",
+        "#   \"Temperature\" = \"Temperature_YEAR_MONTH\",",
+        "#   \"Precipitation\" = \"Precipitation_YEAR_MONTH\"",
+        "# )",
+        sep = ""
+      ))
+    }
+  }
+
+  ### Check for missing values in time columns
   n_original <- nrow(points_sp@data)
   for (tc in time_cols) {
     n_missing <- sum(is.na(points_sp@data[[tc]]))
@@ -147,12 +251,12 @@ temporally_explicit_extraction <- function(points_sp,
     }
   }
 
-  # Validate raster_dir
+  ### Validate raster_dir
   if (!dir.exists(raster_dir)) {
     stop(paste("Error: Raster directory does not exist:", raster_dir))
   }
 
-  # Create output directory
+  ### Create output directory
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
   print(paste("Processing", nrow(points_sp@data), "points"))
@@ -171,22 +275,9 @@ temporally_explicit_extraction <- function(points_sp,
     stop(paste("Error: No .tif files found in raster directory:", raster_dir))
   }
 
-  ### Determine which variables are static vs dynamic
-  static_vars <- c()
-  dynamic_vars <- c()
-
-  for (var_name in names(variable_patterns)) {
-    pattern <- variable_patterns[var_name]
-    has_time_component <- any(sapply(time_cols, function(tc) {
-      grepl(tc, pattern, ignore.case = TRUE)
-    }))
-
-    if (has_time_component) {
-      dynamic_vars <- c(dynamic_vars, var_name)
-    } else {
-      static_vars <- c(static_vars, var_name)
-    }
-  }
+  ### Use previously identified variable types
+  static_vars <- static_vars_temp
+  dynamic_vars <- dynamic_vars_temp
 
   print(paste("Dynamic variables:", ifelse(length(dynamic_vars) > 0,
                                            paste(dynamic_vars, collapse = ", "),
@@ -327,29 +418,29 @@ temporally_explicit_extraction <- function(points_sp,
   if (total_vars_extracted == 0) {
     stop(paste(
       "Error: No raster files could be matched for any of the specified variables.",
-      "\n",
-      "\n### Define variable patterns as follows in a named vector:",
-      "\n#",
-      "\n# my_variable_patterns <- c(",
-      "\n#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
-      "\n#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
-      "\n#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
-      "\n#   \"elevation\" = \"elevation\"",
-      "\n# )",
-      "\n#",
-      "\n# Where:",
-      "\n#   - The NAME (left side) is the variable name for the output column",
-      "\n#   - The VALUE (right side) is the pattern to match in raster filenames",
-      "\n#",
-      "\n# For time-varying variables:",
-      "\n#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
-      "\n#   - These correspond to column names in your time_cols parameter",
-      "\n#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
-      "\n#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
-      "\n#",
-      "\n# For static variables:",
-      "\n#   - Use a simple pattern with no time placeholders",
-      "\n#   - Example: \"elevation\" = \"elevation\"",
+      "",
+      "### Define variable patterns as follows in a named vector:",
+      "#",
+      "# my_variable_patterns <- c(",
+      "#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
+      "#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
+      "#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
+      "#   \"elevation\" = \"elevation\"",
+      "# )",
+      "#",
+      "# Where:",
+      "#   - The NAME (left side) is the variable name for the output column",
+      "#   - The VALUE (right side) is the pattern to match in raster filenames",
+      "#",
+      "# For time-varying variables:",
+      "#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
+      "#   - These correspond to column names in your time_cols parameter",
+      "#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
+      "#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
+      "#",
+      "# For static variables:",
+      "#   - Use a simple pattern with no time placeholders",
+      "#   - Example: \"elevation\" = \"elevation\"",
       sep = ""
     ))
   }
@@ -358,29 +449,29 @@ temporally_explicit_extraction <- function(points_sp,
   if (static_vars_extracted > 0 && dynamic_vars_extracted == 0 && length(dynamic_vars) > 0) {
     stop(paste(
       "Error: Only static variables could be matched. No raster files found for dynamic variables.",
-      "\n",
-      "\n### Define variable patterns as follows in a named vector:",
-      "\n#",
-      "\n# my_variable_patterns <- c(",
-      "\n#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
-      "\n#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
-      "\n#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
-      "\n#   \"elevation\" = \"elevation\"",
-      "\n# )",
-      "\n#",
-      "\n# Where:",
-      "\n#   - The NAME (left side) is the variable name for the output column",
-      "\n#   - The VALUE (right side) is the pattern to match in raster filenames",
-      "\n#",
-      "\n# For time-varying variables:",
-      "\n#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
-      "\n#   - These correspond to column names in your time_cols parameter",
-      "\n#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
-      "\n#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
-      "\n#",
-      "\n# For static variables:",
-      "\n#   - Use a simple pattern with no time placeholders",
-      "\n#   - Example: \"elevation\" = \"elevation\"",
+      "",
+      "### Define variable patterns as follows in a named vector:",
+      "#",
+      "# my_variable_patterns <- c(",
+      "#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
+      "#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
+      "#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
+      "#   \"elevation\" = \"elevation\"",
+      "# )",
+      "#",
+      "# Where:",
+      "#   - The NAME (left side) is the variable name for the output column",
+      "#   - The VALUE (right side) is the pattern to match in raster filenames",
+      "#",
+      "# For time-varying variables:",
+      "#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
+      "#   - These correspond to column names in your time_cols parameter",
+      "#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
+      "#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
+      "#",
+      "# For static variables:",
+      "#   - Use a simple pattern with no time placeholders",
+      "#   - Example: \"elevation\" = \"elevation\"",
       sep = ""
     ))
   }

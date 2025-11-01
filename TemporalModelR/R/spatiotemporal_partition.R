@@ -130,7 +130,7 @@ spatiotemporal_partition <- function(
 
     } else {
       stop(paste("ERROR: Unsupported file format:", file_ext,
-                 "\nSupported formats: .csv, .shp, .geojson, .gpkg"))
+                 "Supported formats: .csv, .shp, .geojson, .gpkg"))
     }
 
   } else if (inherits(points_file_path, "sf")) {
@@ -226,7 +226,7 @@ spatiotemporal_partition <- function(
   for (attempt in 1:max_retries) {
 
     if (attempt > 1) {
-      cat(paste0("\n--- Attempt ", attempt, "/", max_retries, " ---\n"))
+      cat(paste0("--- Attempt ", attempt, "/", max_retries, " ---"))
     }
 
     pts_sf_attempt <- pts_sf
@@ -244,12 +244,12 @@ spatiotemporal_partition <- function(
       n_shared_blocks <- n_spatial - min_exclusive_blocks
 
       if (attempt == 1) {
-        cat("BLOCKING PRIORITY: SPATIAL\n")
-        cat(paste0("  ", total_folds, " spatially exclusive folds\n"))
+        cat("BLOCKING PRIORITY: SPATIAL")
+        cat(paste0("  ", total_folds, " spatially exclusive folds"))
         if (temporal_partitioning) {
-          cat(paste0("  ", min_exclusive_blocks, " dedicated + ", n_shared_blocks, " shared blocks\n\n"))
+          cat(paste0("  ", min_exclusive_blocks, " dedicated + ", n_shared_blocks, " shared blocks"))
         } else {
-          cat(paste0("  ", n_spatial, " spatial blocks\n\n"))
+          cat(paste0("  ", n_spatial, " spatial blocks"))
         }
       }
 
@@ -260,9 +260,9 @@ spatiotemporal_partition <- function(
       n_shared_blocks <- n_spatial
 
       if (attempt == 1) {
-        cat("BLOCKING PRIORITY: TEMPORAL\n")
-        cat(paste0("  ", total_folds, " temporally exclusive folds\n"))
-        cat(paste0("  ", n_spatial, " shared spatial blocks\n\n"))
+        cat("BLOCKING PRIORITY: TEMPORAL")
+        cat(paste0("  ", total_folds, " temporally exclusive folds"))
+        cat(paste0("  ", n_spatial, " shared spatial blocks"))
       }
 
     } else {
@@ -272,9 +272,9 @@ spatiotemporal_partition <- function(
       n_shared_blocks <- n_spatial - min_exclusive_blocks
 
       if (attempt == 1) {
-        cat("BLOCKING PRIORITY: BALANCED\n")
-        cat(paste0("  ", n_spatially_exclusive_folds, " spatially exclusive folds\n"))
-        cat(paste0("  ", n_temporally_exclusive_folds, " temporally exclusive folds\n\n"))
+        cat("BLOCKING PRIORITY: BALANCED")
+        cat(paste0("  ", n_spatially_exclusive_folds, " spatially exclusive folds"))
+        cat(paste0("  ", n_temporally_exclusive_folds, " temporally exclusive folds"))
       }
     }
 
@@ -507,7 +507,7 @@ spatiotemporal_partition <- function(
       )
     }
 
-    cat(paste0("  Imbalance: ", round(imbalance * 100, 2), "%\n"))
+    cat(paste0("  Imbalance: ", round(imbalance * 100, 2), "%"))
   }
 
   pts_sf <- best_results$pts_sf
@@ -521,8 +521,8 @@ spatiotemporal_partition <- function(
   n_shared_blocks <- best_results$n_shared_blocks
   best_attempt <- best_results$best_attempt
 
-  cat(paste0("\n✓ Best balance: attempt ", best_attempt, "/", max_retries,
-             " (", round(imbalance * 100, 2), "%)\n"))
+  cat(paste0("✓ Best balance: attempt ", best_attempt, "/", max_retries,
+             " (", round(imbalance * 100, 2), "%)"))
 
   if (imbalance > max_imbalance) {
     warning(paste0("Imbalance ", round(imbalance * 100, 2),
@@ -531,22 +531,22 @@ spatiotemporal_partition <- function(
 
   ### REPORTING
 
-  cat("\n=== FOLD STRUCTURE ===\n")
+  cat("=== FOLD STRUCTURE ===")
   cat(paste0(total_folds, " folds | ", n_spatial, " spatial blocks"))
   if (temporal_partitioning) {
-    cat(paste0(" | ", n_temporal, " temporal blocks\n"))
+    cat(paste0(" | ", n_temporal, " temporal blocks"))
   } else {
-    cat(" | No temporal blocks\n")
+    cat(" | No temporal blocks")
   }
-  cat(paste0("Priority: ", toupper(blocking_priority), "\n\n"))
+  cat(paste0("Priority: ", toupper(blocking_priority), ""))
 
-  cat("=== FOLD SIZES ===\n")
+  cat("=== FOLD SIZES ===")
   for (f in 1:total_folds) {
     points <- as.numeric(final_fold_counts[f])
     percent <- round(points / total_points * 100, 2)
-    cat(paste0("Fold ", f, ": ", points, " (", percent, "%)\n"))
+    cat(paste0("Fold ", f, ": ", points, " (", percent, "%)"))
   }
-  cat("\n")
+  cat("")
 
   plot_list <- list()
 
@@ -601,7 +601,7 @@ spatiotemporal_partition <- function(
     if (temporal_partitioning && n_temporal > 1) {
       plot_list$temporal <- ggplot(pts_sf, aes(x = get(time_col), fill = factor(temporal_block))) +
         geom_histogram(bins = 30, color = "white", linewidth = 0.2) +
-        scale_fill_viridis_d(option = "mako", name = "Temporal\nBlock") +
+        scale_fill_viridis_d(option = "mako", name = "TemporalBlock") +
         theme_minimal(base_size = 10) +
         theme(plot.title = element_text(face = "bold"), legend.position = "right") +
         labs(title = "Temporal Distribution", x = time_col, y = "Count")
@@ -626,7 +626,7 @@ spatiotemporal_partition <- function(
         geom_sf(data = pts_sf, aes(color = factor(fold), shape = factor(temporal_block)),
                 size = 2, alpha = 0.8) +
         scale_shape_manual(values = c(16, 17, 15, 18)[1:n_temporal],
-                           name = "Temporal\nBlock") +
+                           name = "TemporalBlock") +
         coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]),
                  ylim = c(bbox["ymin"], bbox["ymax"])) +
         theme_minimal(base_size = 12) +
@@ -679,7 +679,7 @@ spatiotemporal_partition <- function(
     }
 
     saveRDS(results, output_file)
-    cat(paste0("Results saved to: ", output_file, "\n\n"))
+    cat(paste0("Results saved to: ", output_file, ""))
   }
 
   return(results)

@@ -28,7 +28,7 @@ spatiotemporal_rarefication <- function(points_sp,
 
     if (file_ext == "csv") {
 
-      # Require xcol, ycol, and points_crs for CSV files
+      ### Require xcol, ycol, and points_crs for CSV files
       if (is.null(xcol)) {
         stop("Error: 'xcol' is required when reading CSV files.")
       }
@@ -60,12 +60,12 @@ spatiotemporal_rarefication <- function(points_sp,
       points_sp <- rgdal::readOGR(points_sp, verbose = FALSE)
     } else {
       stop(paste("Error: Unsupported file format:", file_ext,
-                 "\nSupported formats: .csv, .shp, .geojson, .gpkg"))
+                 "Supported formats: .csv, .shp, .geojson, .gpkg"))
     }
 
   } else if (is.data.frame(points_sp)) {
 
-    # Require xcol, ycol, and points_crs for data frames
+    ### Require xcol, ycol, and points_crs for data frames
     if (is.null(xcol)) {
       stop("Error: 'xcol' is required when providing a data frame.")
     }
@@ -114,25 +114,56 @@ spatiotemporal_rarefication <- function(points_sp,
   ### VALIDATE TIME COLUMNS
 
   if (is.null(time_cols) || length(time_cols) == 0) {
-    warning("No time columns provided. Defaulting to spatial-only rarefaction.")
+    print("No time columns provided. Performing spatial-only rarefaction.")
     create_spatial_only <- TRUE
     perform_spatiotemporal <- FALSE
   } else {
-    missing_cols <- setdiff(time_cols, names(points_sp@data))
-    if (length(missing_cols) > 0) {
-      stop(paste("Error: The following time columns were not found in the data:",
-                 paste(missing_cols, collapse = ", ")))
+    ### Validate time_cols is character vector
+    if (!is.character(time_cols)) {
+      stop(paste(
+        "Error: time_cols must be a character vector.",
+        "",
+        "### Examples:",
+        "#",
+        "# For single time dimension:",
+        "# time_cols = \"Year\"",
+        "#",
+        "# For multiple time dimensions:",
+        "# time_cols = c(\"Year\", \"Month\")",
+        "# time_cols = c(\"Year\", \"DOY\")",
+        sep = ""
+      ))
     }
 
-    # Check for missing values in time columns
+    ### Check if time_cols exist in data
+    missing_cols <- setdiff(time_cols, names(points_sp@data))
+    if (length(missing_cols) > 0) {
+      stop(paste(
+        "Error: The following time_cols are missing from the input data:",
+        paste(missing_cols, collapse = ", "),
+        "Available columns:",
+        paste(names(points_sp@data), collapse = ", ")
+      ))
+    }
+
+    ### Check for missing values in time columns
     n_original <- nrow(points_sp@data)
+    has_missing <- FALSE
     for (tc in time_cols) {
       n_missing <- sum(is.na(points_sp@data[[tc]]))
       if (n_missing > 0) {
         pct_missing <- round(n_missing / n_original * 100, 2)
         warning(paste0("Warning: ", n_missing, " rows (", pct_missing,
                        "%) have missing values in time column '", tc, "'"))
+        has_missing <- TRUE
       }
+    }
+
+    ### Print confirmation of time columns
+    if (length(time_cols) == 1) {
+      print(paste("Using single time dimension:", time_cols))
+    } else {
+      print(paste("Using", length(time_cols), "time dimensions:", paste(time_cols, collapse = ", ")))
     }
 
     perform_spatiotemporal <- TRUE
@@ -165,6 +196,7 @@ spatiotemporal_rarefication <- function(points_sp,
   ### SPATIOTEMPORAL RAREFACTION
 
   if (perform_spatiotemporal) {
+    ### Group by pixel_id and all time columns
     points_subset <- points_sp@data %>%
       group_by(pixel_id, across(all_of(time_cols))) %>%
       slice(1) %>%
@@ -189,6 +221,14 @@ spatiotemporal_rarefication <- function(points_sp,
     )
 
     print(paste("Spatiotemporal file saved:", basename(spatiotemporal_file)))
+
+    ### Print summary of time combinations
+    time_combinations <- points_subset %>%
+      select(all_of(time_cols)) %>%
+      distinct() %>%
+      nrow()
+
+    print(paste("  Retained 1 point per pixel across", time_combinations, "unique time combinations"))
   }
 
   ### SPATIAL-ONLY RAREFACTION
@@ -232,6 +272,7 @@ spatiotemporal_rarefication <- function(points_sp,
     input_points = nrow(points_sp@data),
     spatial_points = if (create_spatial_only || !perform_spatiotemporal) n_spatial else NA,
     spatiotemporal_points = if (perform_spatiotemporal) n_spatiotemporal else NA,
+    time_cols_used = if (perform_spatiotemporal) time_cols else NULL,
     files_created = list()
   )
 
