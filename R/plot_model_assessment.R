@@ -1,0 +1,617 @@
+plot_model_assessment <- function(data_file_path,
+                                  time_column,
+                                  facet_column = NULL,
+                                  cbp_threshold = 0.001,
+                                  separate_cbp = TRUE) {
+
+  # Validate inputs
+  if (missing(data_file_path)) {
+    stop("data_file_path is required. Provide path to Model_Assessment_Metrics.csv file")
+  }
+
+  if (!file.exists(data_file_path)) {
+    stop(paste("File not found:", data_file_path,
+               "\nWorking directory:", getwd(),
+               "\nPlease check the file path and ensure the file exists"))
+  }
+
+  if (missing(time_column)) {
+    stop(paste("time_column is required. Specify which column to use for the x-axis.",
+               "\nExamples: time_column = 'Year', time_column = 'Month', time_column = 'Time_Step'",
+               "\nThis column must exist in your Model_Assessment_Metrics.csv file"))
+  }
+
+  if (!is.character(time_column) || length(time_column) != 1) {
+    stop("time_column must be a single character string (e.g., 'Year', 'Time_Step', 'Month')")
+  }
+
+  if (!is.null(facet_column) && (!is.character(facet_column) || length(facet_column) != 1)) {
+    stop("facet_column must be NULL or a single character string (e.g., 'Month', 'Season')")
+  }
+
+  if (!is.numeric(cbp_threshold) || cbp_threshold <= 0) {
+    stop("cbp_threshold must be a positive numeric value")
+  }
+
+  if (!is.logical(separate_cbp)) {
+    stop("separate_cbp must be TRUE or FALSE")
+  }
+
+  # Read the data
+  tryCatch({
+    all_model_data <- read_csv(data_file_path, show_col_types = FALSE)
+  }, error = function(e) {
+    stop(paste("Error reading CSV file:", e$message,
+               "\nEnsure the file is a valid CSV format"))
+  })
+
+  # Check for required columns
+  required_cols <- c(time_column, "Fold", "G_volume", "sensitivity_test_G",
+                     "sensitivity_test_E", "CBP_test_G", "CBP_test_E",
+                     "TP_test_G", "FN_test_G", "TP_test_E", "FN_test_E")
+
+  if (!is.null(facet_column)) {
+    required_cols <- c(required_cols, facet_column)
+  }
+
+  missing_cols <- setdiff(required_cols, names(all_model_data))
+  if (length(missing_cols) > 0) {
+    stop(paste("Missing required columns in data file:",
+               paste(missing_cols, collapse = ", "),
+               "\nAvailable columns:", paste(names(all_model_data), collapse = ", "),
+               "\nEnsure you're using the correct Model_Assessment_Metrics.csv file"))
+  }
+
+  # Check for empty data
+  if (nrow(all_model_data) == 0) {
+    stop("Data file is empty. No rows found in the CSV file")
+  }
+
+  # Check for all NA values in critical columns
+  if (all(is.na(all_model_data$G_volume))) {
+    warning("All G_volume values are NA. Check if model predictions completed successfully")
+  }
+
+  if (all(is.na(all_model_data$CBP_test_G))) {
+    warning("All CBP_test_G values are NA. Check if geographic space metrics were calculated")
+  }
+
+  if (all(is.na(all_model_data$CBP_test_E))) {
+    warning("All CBP_test_E values are NA. Check if environmental space metrics were calculated")
+  }
+
+  # Add a column to indicate if CBP is good (below threshold) or bad (above)
+  all_model_data <- all_model_data %>%
+    mutate(
+      CBP_G_Status = ifelse(CBP_test_G < cbp_threshold, "Good", "Bad"),
+      CBP_E_Status = ifelse(CBP_test_E < cbp_threshold, "Good", "Bad")
+    )
+
+  # Calculate summary statistics for variables that change over time
+  # Adjust grouping based on whether facet_column is provided
+  if (!is.null(facet_column)) {
+    summary_stats <- all_model_data %>%
+      group_by(!!sym(time_column), !!sym(facet_column)) %>%
+      summarise(
+        Mean_G_Volume = mean(G_volume, na.rm = TRUE),
+        Mean_Sensitivity_G = mean(sensitivity_test_G, na.rm = TRUE),
+        Mean_Sensitivity_E = mean(sensitivity_test_E, na.rm = TRUE),
+        Mean_CBP_G = mean(CBP_test_G, na.rm = TRUE),
+        Mean_CBP_E = mean(CBP_test_E, na.rm = TRUE),
+        Mean_TP_G = mean(TP_test_G, na.rm = TRUE),
+        Mean_FN_G = mean(FN_test_G, na.rm = TRUE),
+        Mean_TP_E = mean(TP_test_E, na.rm = TRUE),
+        Mean_FN_E = mean(FN_test_E, na.rm = TRUE),
+        SD_G_Volume = sd(G_volume, na.rm = TRUE),
+        SD_Sensitivity_G = sd(sensitivity_test_G, na.rm = TRUE),
+        SD_Sensitivity_E = sd(sensitivity_test_E, na.rm = TRUE),
+        SD_CBP_G = sd(CBP_test_G, na.rm = TRUE),
+        SD_CBP_E = sd(CBP_test_E, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      mutate(
+        CBP_G_Status = ifelse(Mean_CBP_G < cbp_threshold, "Good", "Bad"),
+        CBP_E_Status = ifelse(Mean_CBP_E < cbp_threshold, "Good", "Bad")
+      )
+  } else {
+    summary_stats <- all_model_data %>%
+      group_by(!!sym(time_column)) %>%
+      summarise(
+        Mean_G_Volume = mean(G_volume, na.rm = TRUE),
+        Mean_Sensitivity_G = mean(sensitivity_test_G, na.rm = TRUE),
+        Mean_Sensitivity_E = mean(sensitivity_test_E, na.rm = TRUE),
+        Mean_CBP_G = mean(CBP_test_G, na.rm = TRUE),
+        Mean_CBP_E = mean(CBP_test_E, na.rm = TRUE),
+        Mean_TP_G = mean(TP_test_G, na.rm = TRUE),
+        Mean_FN_G = mean(FN_test_G, na.rm = TRUE),
+        Mean_TP_E = mean(TP_test_E, na.rm = TRUE),
+        Mean_FN_E = mean(FN_test_E, na.rm = TRUE),
+        SD_G_Volume = sd(G_volume, na.rm = TRUE),
+        SD_Sensitivity_G = sd(sensitivity_test_G, na.rm = TRUE),
+        SD_Sensitivity_E = sd(sensitivity_test_E, na.rm = TRUE),
+        SD_CBP_G = sd(CBP_test_G, na.rm = TRUE),
+        SD_CBP_E = sd(CBP_test_E, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      mutate(
+        CBP_G_Status = ifelse(Mean_CBP_G < cbp_threshold, "Good", "Bad"),
+        CBP_E_Status = ifelse(Mean_CBP_E < cbp_threshold, "Good", "Bad")
+      )
+  }
+
+  # Calculate mean CBP_test_E and sensitivity_test_E across all folds and time
+  mean_cbp_e <- mean(all_model_data$CBP_test_E, na.rm = TRUE)
+  mean_sensitivity_e <- mean(all_model_data$sensitivity_test_E, na.rm = TRUE)
+
+  # Calculate scaling factor for dual y-axis (Volume and Sensitivity)
+  volume_range <- range(all_model_data$G_volume, na.rm = TRUE)
+  sensitivity_range <- range(c(all_model_data$sensitivity_test_G, all_model_data$sensitivity_test_E), na.rm = TRUE)
+  scale_factor <- diff(volume_range) / diff(sensitivity_range)
+  offset <- volume_range[1] - (sensitivity_range[1] * scale_factor)
+
+  # Custom labeling function for CBP values
+  cbp_label_function <- function(x) {
+    labels <- sapply(x, function(val) {
+      if (val >= 0.0001) {
+        format(val, scientific = FALSE, digits = 1, drop0trailing = TRUE)
+      } else {
+        scales::scientific(val, digits = 0)
+      }
+    })
+    return(labels)
+  }
+
+  # Plot 1: Combined G_volume and both sensitivities
+  plot1 <- ggplot() +
+    geom_line(data = all_model_data,
+              aes(x = !!sym(time_column), y = sensitivity_test_E * scale_factor + offset, group = Fold),
+              color = "#9467BD", alpha = 0.3, size = 0.5, linetype = "dotted") +
+    geom_line(data = summary_stats,
+              aes(x = !!sym(time_column), y = Mean_Sensitivity_E * scale_factor + offset),
+              color = "#9467BD", size = 1, linetype = "dotted") +
+    geom_line(data = all_model_data,
+              aes(x = !!sym(time_column), y = G_volume, group = Fold),
+              color = "#0072B2", alpha = 0.3, size = 0.5) +
+    geom_point(data = all_model_data,
+               aes(x = !!sym(time_column), y = G_volume),
+               color = "#0072B2", alpha = 0.3, size = 1) +
+    geom_line(data = summary_stats,
+              aes(x = !!sym(time_column), y = Mean_G_Volume),
+              color = "#0072B2", size = .75) +
+    geom_point(data = summary_stats,
+               aes(x = !!sym(time_column), y = Mean_G_Volume),
+               color = "#0072B2", size = 1) +
+    geom_line(data = all_model_data,
+              aes(x = !!sym(time_column), y = sensitivity_test_G * scale_factor + offset, group = Fold),
+              color = "#D55E00", alpha = 0.3, size = 0.5) +
+    geom_point(data = all_model_data,
+               aes(x = !!sym(time_column), y = sensitivity_test_G * scale_factor + offset),
+               color = "#D55E00", alpha = 0.3, size = 1) +
+    geom_line(data = summary_stats,
+              aes(x = !!sym(time_column), y = Mean_Sensitivity_G * scale_factor + offset),
+              color = "#D55E00", size = .75) +
+    geom_point(data = summary_stats,
+               aes(x = !!sym(time_column), y = Mean_Sensitivity_G * scale_factor + offset),
+               color = "#D55E00", size = 1) +
+    scale_y_continuous(
+      name = "G Volume (blue)",
+      sec.axis = sec_axis(
+        trans = ~ (. - offset) / scale_factor,
+        name = "Sensitivity\n(G-Space & E-Space)"
+      )
+    ) +
+    labs(
+      title = "G-Space Hypervolume Size and Test Sensitivity Over Time",
+      subtitle = "Blue = G Volume | Orange solid = G-Space Sensitivity | Purple dashed = E-Space Sensitivity",
+      x = time_column
+    ) +
+    theme_classic() +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 10),
+      axis.title.y.left = element_text(color = "#0072B2", size = 12, face = "bold"),
+      axis.title.y.right = element_text(size = 12, face = "bold"),
+      axis.text.y.left = element_text(color = "#0072B2", size = 11),
+      axis.text.y.right = element_text(size = 11),
+      axis.title.x = element_text(size = 12)
+    )
+
+  # Add faceting if specified
+  if (!is.null(facet_column)) {
+    plot1 <- plot1 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
+  }
+
+  # Create custom grob for two-colored y-axis title
+  library(grid)
+  library(gridExtra)
+
+  # Convert plot to grob
+  g <- ggplotGrob(plot1)
+
+  # Find the right y-axis title position
+  right_title_index <- which(g$layout$name == "axis-r")
+
+  # Create two text grobs with different colors
+  text_grob1 <- textGrob("G-Space",
+                         rot = 270,
+                         gp = gpar(col = "#D55E00", fontsize = 12, fontface = "bold"))
+  text_grob2 <- textGrob("E-Space",
+                         rot = 270,
+                         gp = gpar(col = "#9467BD", fontsize = 12, fontface = "bold"))
+
+  # Combine the text grobs vertically
+  combined_title <- arrangeGrob(text_grob1, text_grob2, ncol = 1)
+
+  # Replace the original right axis title
+  g$grobs[[right_title_index]] <- combined_title
+
+  # Store the modified plot
+  plot1_modified <- g
+
+  # NEW PLOT: TP/FN Bargraph (G-Space only)
+  # Prepare data for TP/FN plot - filter out years with no G-space measures
+  if (!is.null(facet_column)) {
+    tp_fn_data <- all_model_data %>%
+      select(!!sym(time_column), !!sym(facet_column), Fold, TP_test_G, FN_test_G) %>%
+      mutate(FN_test_G_neg = -FN_test_G) %>%
+      filter(!is.na(TP_test_G) & !is.na(FN_test_G) & (TP_test_G > 0 | FN_test_G > 0))
+
+    tp_fn_summary <- summary_stats %>%
+      select(!!sym(time_column), !!sym(facet_column), Mean_TP_G, Mean_FN_G) %>%
+      mutate(Mean_FN_G_neg = -Mean_FN_G) %>%
+      filter(!is.na(Mean_TP_G) & !is.na(Mean_FN_G) & (Mean_TP_G > 0 | Mean_FN_G > 0))
+  } else {
+    tp_fn_data <- all_model_data %>%
+      select(!!sym(time_column), Fold, TP_test_G, FN_test_G) %>%
+      mutate(FN_test_G_neg = -FN_test_G) %>%
+      filter(!is.na(TP_test_G) & !is.na(FN_test_G) & (TP_test_G > 0 | FN_test_G > 0))
+
+    tp_fn_summary <- summary_stats %>%
+      select(!!sym(time_column), Mean_TP_G, Mean_FN_G) %>%
+      mutate(Mean_FN_G_neg = -Mean_FN_G) %>%
+      filter(!is.na(Mean_TP_G) & !is.na(Mean_FN_G) & (Mean_TP_G > 0 | Mean_FN_G > 0))
+  }
+
+  # Create TP/FN plot
+  plot_tp_fn <- ggplot() +
+    geom_hline(yintercept = 0, color = "black", size = 0.5) +
+
+    # Individual folds - TP points
+    geom_point(data = tp_fn_data,
+               aes(x = !!sym(time_column), y = TP_test_G),
+               color = "#0072B2", alpha = 0.3, size = 2) +
+
+    # Individual folds - FN points (negative)
+    geom_point(data = tp_fn_data,
+               aes(x = !!sym(time_column), y = FN_test_G_neg),
+               color = "#D55E00", alpha = 0.3, size = 2) +
+
+    # Mean values - TP bars
+    geom_bar(data = tp_fn_summary,
+             aes(x = !!sym(time_column), y = Mean_TP_G),
+             stat = "identity",
+             fill = "#0072B2", alpha = 0.7, width = 0.8, color = "black", size = 0.3) +
+
+    # Mean values - FN bars (negative)
+    geom_bar(data = tp_fn_summary,
+             aes(x = !!sym(time_column), y = Mean_FN_G_neg),
+             stat = "identity",
+             fill = "#D55E00", alpha = 0.7, width = 0.8, color = "black", size = 0.3) +
+
+    labs(
+      title = "G-Space True Positives and False Negatives Over Time",
+      subtitle = "Bars = Mean across folds | Points = Individual folds | Blue = TP | Orange = FN",
+      x = time_column,
+      y = "True Positive and False Negative Counts"
+    ) +
+    theme_classic() +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 10),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 11)
+    )
+
+  # Add faceting if specified
+  if (!is.null(facet_column)) {
+    plot_tp_fn <- plot_tp_fn + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
+  }
+
+  if (separate_cbp) {
+    # SEPARATE CBP PLOTS
+
+    # Calculate min and max for y-axis limits for G CBP
+    cbp_g_min <- min(all_model_data$CBP_test_G, na.rm = TRUE)
+    cbp_g_max <- max(all_model_data$CBP_test_G, na.rm = TRUE)
+
+    # Get powers of 10 range
+    log_g_min <- floor(log10(cbp_g_min))
+    log_g_max <- ceiling(log10(cbp_g_max))
+    log_g_range <- log_g_max - log_g_min + 1
+
+    # Determine skip interval to get 6-12 labels
+    if (log_g_range <= 12) {
+      skip_g <- 1
+    } else if (log_g_range <= 24) {
+      skip_g <- 2
+    } else if (log_g_range <= 36) {
+      skip_g <- 3
+    } else if (log_g_range <= 48) {
+      skip_g <- 4
+    } else {
+      skip_g <- ceiling(log_g_range / 10)
+    }
+
+    # Create all possible powers of 10 in range
+    all_breaks_g <- 10^seq(log_g_min, log_g_max, by = 1)
+
+    # Filter to only those within plot limits
+    plot_limit_min_g <- cbp_g_min * 0.8
+    plot_limit_max_g <- cbp_g_max * 1.2
+    breaks_in_range_g <- all_breaks_g[all_breaks_g >= plot_limit_min_g & all_breaks_g <= plot_limit_max_g]
+
+    # Apply skipping
+    y_breaks_g <- breaks_in_range_g[seq(1, length(breaks_in_range_g), by = skip_g)]
+
+    # Plot 2: G-Space CBP only
+    plot2 <- ggplot() +
+      geom_hline(yintercept = cbp_threshold, color = "black", linetype = "dotted", size = 1, alpha = 0.3) +
+      geom_line(data = all_model_data,
+                aes(x = !!sym(time_column), y = CBP_test_G, group = Fold),
+                color = "gray60", alpha = 0.3, size = 0.5) +
+      geom_point(data = all_model_data,
+                 aes(x = !!sym(time_column), y = CBP_test_G, color = CBP_G_Status),
+                 alpha = 0.5, size = 1.5) +
+      geom_line(data = summary_stats,
+                aes(x = !!sym(time_column), y = Mean_CBP_G),
+                color = "black", size = 0.8) +
+      geom_point(data = summary_stats,
+                 aes(x = !!sym(time_column), y = Mean_CBP_G, color = CBP_G_Status),
+                 size = 2.5, stroke = 1, shape = 21, fill = "white") +
+      scale_color_manual(
+        values = c("Good" = "#0072B2", "Bad" = "#D55E00"),
+        labels = c(paste0("Good (< ", cbp_threshold, ")"), paste0("Bad (≥ ", cbp_threshold, ")"))
+      ) +
+      scale_y_log10(
+        limits = c(plot_limit_min_g, plot_limit_max_g),
+        breaks = y_breaks_g,
+        labels = cbp_label_function
+      ) +
+      labs(
+        title = "G-Space Cumulative Binomial Probability Over Time (Log Scale)",
+        subtitle = paste0("Black line = ", cbp_threshold, " threshold | Blue = Good | Orange = Bad"),
+        x = time_column,
+        y = "G-Space CBP Value",
+        color = "Performance"
+      ) +
+      theme_classic() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 9),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        legend.position = "bottom",
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10)
+      )
+
+    # Add faceting if specified
+    if (!is.null(facet_column)) {
+      plot2 <- plot2 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
+    }
+
+    # Calculate min and max for y-axis limits for E CBP
+    cbp_e_min <- min(all_model_data$CBP_test_E, na.rm = TRUE)
+    cbp_e_max <- max(all_model_data$CBP_test_E, na.rm = TRUE)
+
+    # Get powers of 10 range
+    log_e_min <- floor(log10(cbp_e_min))
+    log_e_max <- ceiling(log10(cbp_e_max))
+    log_e_range <- log_e_max - log_e_min + 1
+
+    # Determine skip interval to get 6-12 labels
+    if (log_e_range <= 12) {
+      skip_e <- 1
+    } else if (log_e_range <= 24) {
+      skip_e <- 2
+    } else if (log_e_range <= 36) {
+      skip_e <- 3
+    } else if (log_e_range <= 48) {
+      skip_e <- 4
+    } else {
+      skip_e <- ceiling(log_e_range / 10)
+    }
+
+    # Create all possible powers of 10 in range
+    all_breaks_e <- 10^seq(log_e_min, log_e_max, by = 1)
+
+    # Filter to only those within plot limits
+    plot_limit_min_e <- cbp_e_min * 0.8
+    plot_limit_max_e <- cbp_e_max * 1.2
+    breaks_in_range_e <- all_breaks_e[all_breaks_e >= plot_limit_min_e & all_breaks_e <= plot_limit_max_e]
+
+    # Apply skipping
+    y_breaks_e <- breaks_in_range_e[seq(1, length(breaks_in_range_e), by = skip_e)]
+
+    # Plot 3: E-Space CBP over time
+    plot3 <- ggplot() +
+      geom_hline(yintercept = cbp_threshold, color = "black", linetype = "dotted", size = 1, alpha = 0.3) +
+      geom_line(data = all_model_data,
+                aes(x = !!sym(time_column), y = CBP_test_E, group = Fold),
+                color = "gray60", alpha = 0.3, size = 0.5) +
+      geom_point(data = all_model_data,
+                 aes(x = !!sym(time_column), y = CBP_test_E, color = CBP_E_Status),
+                 alpha = 0.5, size = 1.5) +
+      geom_line(data = summary_stats,
+                aes(x = !!sym(time_column), y = Mean_CBP_E),
+                color = "black", size = 0.8) +
+      geom_point(data = summary_stats,
+                 aes(x = !!sym(time_column), y = Mean_CBP_E, color = CBP_E_Status),
+                 size = 2.5, stroke = 1, shape = 21, fill = "white") +
+      scale_color_manual(
+        values = c("Good" = "#0072B2", "Bad" = "#D55E00"),
+        labels = c(paste0("Good (< ", cbp_threshold, ")"), paste0("Bad (≥ ", cbp_threshold, ")"))
+      ) +
+      scale_y_log10(
+        limits = c(plot_limit_min_e, plot_limit_max_e),
+        breaks = y_breaks_e,
+        labels = cbp_label_function
+      ) +
+      labs(
+        title = "E-Space Cumulative Binomial Probability Over Time (Log Scale)",
+        subtitle = paste0("Black line = ", cbp_threshold, " threshold | Blue = Good | Orange = Bad"),
+        x = time_column,
+        y = "E-Space CBP Value",
+        color = "Performance"
+      ) +
+      theme_classic() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 9),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        legend.position = "bottom",
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10)
+      )
+
+    # Add faceting if specified
+    if (!is.null(facet_column)) {
+      plot3 <- plot3 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
+    }
+
+    grid.draw(plot1_modified)
+    print(plot_tp_fn)
+    print(plot2)
+    print(plot3)
+
+  } else {
+    # COMBINED CBP PLOT
+
+    # Calculate combined min and max
+    cbp_combined_min <- min(c(all_model_data$CBP_test_G, all_model_data$CBP_test_E), na.rm = TRUE)
+    cbp_combined_max <- max(c(all_model_data$CBP_test_G, all_model_data$CBP_test_E), na.rm = TRUE)
+
+    # Get powers of 10 range
+    log_combined_min <- floor(log10(cbp_combined_min))
+    log_combined_max <- ceiling(log10(cbp_combined_max))
+    log_combined_range <- log_combined_max - log_combined_min + 1
+
+    # Determine skip interval to get 6-12 labels
+    if (log_combined_range <= 12) {
+      skip_combined <- 1
+    } else if (log_combined_range <= 24) {
+      skip_combined <- 2
+    } else if (log_combined_range <= 36) {
+      skip_combined <- 3
+    } else if (log_combined_range <= 48) {
+      skip_combined <- 4
+    } else {
+      skip_combined <- ceiling(log_combined_range / 10)
+    }
+
+    # Create all possible powers of 10 in range
+    all_breaks_combined <- 10^seq(log_combined_min, log_combined_max, by = 1)
+
+    # Filter to only those within plot limits
+    plot_limit_min_combined <- cbp_combined_min * 0.8
+    plot_limit_max_combined <- cbp_combined_max * 1.2
+    breaks_in_range_combined <- all_breaks_combined[all_breaks_combined >= plot_limit_min_combined &
+                                                      all_breaks_combined <= plot_limit_max_combined]
+
+    # Apply skipping
+    y_breaks_combined <- breaks_in_range_combined[seq(1, length(breaks_in_range_combined), by = skip_combined)]
+
+    # Plot 2: Combined CBP
+    plot2 <- ggplot() +
+      geom_hline(yintercept = cbp_threshold, color = "black", linetype = "dotted", size = 1, alpha = 0.3) +
+      geom_line(data = all_model_data,
+                aes(x = !!sym(time_column), y = CBP_test_E, group = Fold),
+                color = "#9467BD", alpha = 0.2, size = 0.5, linetype = "dashed") +
+      geom_point(data = all_model_data,
+                 aes(x = !!sym(time_column), y = CBP_test_E),
+                 color = "#9467BD", alpha = 0.3, size = 1) +
+      geom_line(data = summary_stats,
+                aes(x = !!sym(time_column), y = Mean_CBP_E),
+                color = "#9467BD", size = 1, linetype = "dashed") +
+      geom_point(data = summary_stats,
+                 aes(x = !!sym(time_column), y = Mean_CBP_E),
+                 color = "#9467BD", size = 2.5) +
+      geom_line(data = all_model_data,
+                aes(x = !!sym(time_column), y = CBP_test_G, group = Fold),
+                color = "gray60", alpha = 0.3, size = 0.5) +
+      geom_point(data = all_model_data,
+                 aes(x = !!sym(time_column), y = CBP_test_G, color = CBP_G_Status),
+                 alpha = 0.5, size = 1.5) +
+      geom_line(data = summary_stats,
+                aes(x = !!sym(time_column), y = Mean_CBP_G),
+                color = "black", size = 0.8) +
+      geom_point(data = summary_stats,
+                 aes(x = !!sym(time_column), y = Mean_CBP_G, color = CBP_G_Status),
+                 size = 2.5, stroke = 1, shape = 21, fill = "white") +
+      scale_color_manual(
+        values = c("Good" = "#0072B2", "Bad" = "#D55E00"),
+        labels = c(paste0("Good (< ", cbp_threshold, ")"), paste0("Bad (≥ ", cbp_threshold, ")"))
+      ) +
+      scale_y_log10(
+        limits = c(plot_limit_min_combined, plot_limit_max_combined),
+        breaks = y_breaks_combined,
+        labels = cbp_label_function
+      ) +
+      labs(
+        title = "Cumulative Binomial Probability Over Time (Log Scale)",
+        subtitle = paste0("Solid = G-Space | Dashed purple = E-Space | Black line = ", cbp_threshold, " threshold"),
+        x = time_column,
+        y = "CBP Value",
+        color = "G Performance"
+      ) +
+      theme_classic() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 9),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        legend.position = "bottom",
+        legend.title = element_text(size = 11, face = "bold"),
+        legend.text = element_text(size = 10)
+      )
+
+    # Add faceting if specified
+    if (!is.null(facet_column)) {
+      plot2 <- plot2 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
+    }
+
+    grid.draw(plot1_modified)
+    print(plot_tp_fn)
+    print(plot2)
+  }
+
+  # Display summary table
+  print(knitr::kable(summary_stats, digits = 5,
+                     caption = "Model Performance Summary by Time Step (Means across all folds)"))
+
+  # Print CBP and Sensitivity values for reference
+  cat("\n\nMean CBP_test_E:", format(mean_cbp_e, scientific = TRUE, digits = 5), "\n")
+  cat("Mean Sensitivity_test_E:", format(mean_sensitivity_e, scientific = FALSE, digits = 5), "\n")
+
+  # Return plots invisibly
+  if (separate_cbp) {
+    invisible(list(
+      volume_sensitivity_plot = plot1_modified,
+      tp_fn_plot = plot_tp_fn,
+      cbp_g_plot = plot2,
+      cbp_e_plot = plot3,
+      summary_stats = summary_stats
+    ))
+  } else {
+    invisible(list(
+      volume_sensitivity_plot = plot1_modified,
+      tp_fn_plot = plot_tp_fn,
+      cbp_combined_plot = plot2,
+      summary_stats = summary_stats
+    ))
+  }
+}
