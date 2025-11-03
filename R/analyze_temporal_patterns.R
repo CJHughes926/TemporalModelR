@@ -146,8 +146,8 @@ analyze_temporal_patterns <- function(
           if (is.null(time_per_pixel) && n_complex > 0) {
             cat("\nTiming sample pixels...       \n")
 
-            middle_years <- subset(tile_binary, 2:(n_years - 1))
-            lag_stack <- subset(tile_binary, 1:(n_years - 2))
+            middle_years <- raster::subset(tile_binary, 2:(n_years - 1))
+            lag_stack <- raster::subset(tile_binary, 1:(n_years - 2))
 
             middle_neighbor <- stack(lapply(1:nlayers(middle_years), function(i) {
               focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
@@ -257,8 +257,8 @@ analyze_temporal_patterns <- function(
       n_years <- nlayers(tile_binary)
       n_middle <- n_years - 2
 
-      middle_years <- subset(tile_binary, 2:(n_years - 1))
-      lag_stack <- subset(tile_binary, 1:(n_years - 2))
+      middle_years <- raster::subset(tile_binary, 2:(n_years - 1))
+      lag_stack <- raster::subset(tile_binary, 1:(n_years - 2))
 
       middle_neighbor <- stack(lapply(1:nlayers(middle_years), function(i) {
         focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
@@ -304,9 +304,9 @@ analyze_temporal_patterns <- function(
         result_matrix <- calc(predictor_stack,
                               fun = function(x) classify_pixel_with_years(x, n_middle, time_steps, method, alpha))
 
-        tile_pattern <- subset(result_matrix, 1)
-        tile_decrease <- subset(result_matrix, 2)
-        tile_increase <- subset(result_matrix, 3)
+        tile_pattern <- raster::subset(result_matrix, 1)
+        tile_decrease <- raster::subset(result_matrix, 2)
+        tile_increase <- raster::subset(result_matrix, 3)
       }
 
       writeRaster(tile_pattern, tile_file_pattern, overwrite = TRUE,
