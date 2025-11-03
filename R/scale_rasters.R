@@ -1,3 +1,14 @@
+#' Scale rasters using precomputed mean/sd
+#' @export
+#' @param input_dir Input directory with .tif files.
+#' @param output_dir Output directory for scaled rasters.
+#' @param scaling_params_file CSV with columns `variable,mean,sd`.
+#' @param variable_patterns Named vector mapping variable -> filename pattern.
+#' @param time_cols Optional character vector of time placeholders.
+#' @param output_suffix Suffix for output files.
+#' @param overwrite Overwrite existing outputs.
+#' @importFrom raster raster writeRaster
+#' @importFrom readr read_csv
 scale_rasters <- function(input_dir,
                           output_dir,
                           scaling_params_file,

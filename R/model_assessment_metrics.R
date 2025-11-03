@@ -1,3 +1,11 @@
+#' Model assessment metrics (G- and E-space)
+#' @export
+#' @importFrom hypervolume hypervolume_inclusion_test get_volume
+#' @importFrom raster extract values crs
+#' @importFrom sp spTransform
+#' @importFrom sf st_drop_geometry
+#' @importFrom dplyr select all_of
+#' @importFrom stats dbinom
 model_assessment_metrics <- function(hypervolume_model,
                                      projected_raster,
                                      test_points_current_year,

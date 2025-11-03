@@ -1,3 +1,31 @@
+#' Analyze temporal patterns in binary raster time series
+#'
+#' Splits a binary raster stack into tiles, classifies per-pixel temporal patterns (e.g., increase/decrease) using a chosen method, and writes pattern and change-year rasters.
+#'
+#' @param binary_stack RasterStack/Brick of binary layers across time.
+#' @param summary_raster RasterLayer with per-pixel summary (e.g., mean/persistence).
+#' @param time_steps Integer vector of time labels (same length as layers).
+#' @param method Character; changepoint/selection criterion (e.g., "BIC", "MBIC", "MDL").
+#' @param output_dir Output directory.
+#' @param n_tiles_x,n_tiles_y Number of tiles in x/y.
+#' @param overlap Overlap (in cells) between tiles.
+#' @param alpha Significance level.
+#' @param show_progress Logical; show progress bar.
+#' @param estimate_time Logical; quick runtime estimate from sampled pixels.
+#' @param overwrite Logical; overwrite existing outputs.
+#'
+#' @return A list with rasters: \code{pattern}, \code{year_decrease}, \code{year_increase}.
+#'
+#' @details Requires an auxiliary \code{classify_pixel_with_years()} function available in scope.
+#'
+#' @seealso \code{classify_pixel_with_years}
+#'
+#' @export
+#' @importFrom raster raster extent res crop nlayers subset stack focal getValues values ncell mosaic writeRaster freq
+#' @importFrom utils txtProgressBar setTxtProgressBar write.csv
+#' @importFrom graphics par plot legend
+#' @importFrom grDevices heat.colors terrain.colors
+
 analyze_temporal_patterns <- function(
     binary_stack,
     summary_raster,

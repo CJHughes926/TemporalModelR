@@ -1,3 +1,39 @@
+#' Plot model assessment over time from metrics CSV
+#' @export
+#' @description Reads a \code{Model_Assessment_Metrics.csv} file and produces:
+#'   (1) a combined plot of G-space hypervolume size and sensitivities over time
+#'   with a dual y-axis, (2) a TP vs. FN plot in G-space, and (3) CBP plots
+#'   either separated for G and E or combined, on a log scale with a threshold line.
+#'
+#' @param data_file_path Path to \code{Model_Assessment_Metrics.csv}.
+#' @param time_column Single column name used on the x axis (for example, \code{"Year"}).
+#' @param facet_column Optional single column name for faceting (for example, \code{"Month"}).
+#' @param cbp_threshold Numeric threshold for CBP classification, defaults to \code{0.001}.
+#' @param separate_cbp Logical, if \code{TRUE} draws separate CBP plots for G and E, otherwise a combined plot.
+#'
+#' @returns Invisibly returns a list with the created plots and a summary table:
+#'   \code{volume_sensitivity_plot}, \code{tp_fn_plot}, and either
+#'   \code{cbp_g_plot} and \code{cbp_e_plot} or \code{cbp_combined_plot},
+#'   plus \code{summary_stats}. Plots are printed to the active device.
+#'
+#' @details
+#' The function expects the CSV to include at least:
+#' \code{Fold}, \code{G_volume}, \code{sensitivity_test_G}, \code{sensitivity_test_E},
+#' \code{CBP_test_G}, \code{CBP_test_E}, \code{TP_test_G}, \code{FN_test_G},
+#' \code{TP_test_E}, \code{FN_test_E}, and the chosen \code{time_column}.
+#' If \code{facet_column} is provided, summaries are computed within facets.
+#'
+#' @seealso \code{\link{generate_spatiotemporal_predictions}} for producing the metrics CSV.
+#'
+#' @importFrom readr read_csv
+#' @importFrom dplyr mutate group_by summarise select arrange across all_of %>% sym
+#' @importFrom ggplot2 ggplot geom_line geom_point geom_bar geom_hline facet_wrap
+#'   scale_y_log10 scale_color_manual scale_y_continuous sec_axis labs theme_classic
+#'   theme element_text aes
+#' @importFrom grid textGrob gpar
+#' @importFrom gridExtra arrangeGrob grid.draw
+#' @importFrom scales scientific
+#' @importFrom knitr kable
 plot_model_assessment <- function(data_file_path,
                                   time_column,
                                   facet_column = NULL,

@@ -1,3 +1,11 @@
+#' Summarize prediction rasters into a binary stack and mean
+#' @export
+#' @param predictions_dir Directory with prediction rasters.
+#' @param output_dir Optional output directory (defaults to \code{predictions_dir}).
+#' @param file_pattern Regex to match prediction files.
+#' @param overwrite Overwrite existing outputs.
+#' @return A list with \code{binary_stack} (RasterStack) and \code{summary_raster} (RasterLayer).
+#' @importFrom raster stack raster calc cellStats nlayers writeRaster
 summarize_raster_outputs <- function(predictions_dir,
                                         output_dir = NULL,
                                         file_pattern = "Prediction_.*\\.tif$",

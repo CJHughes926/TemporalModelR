@@ -1,3 +1,25 @@
+#' Build hypervolume models across folds
+#'
+#' Fits per-fold hypervolumes (Gaussian KDE or one-class SVM), saves/loads a combined RDS, plots (optional), and returns volumes and overlaps.
+#'
+#' @param partition_results List or .rds path from spatiotemporal_partition().
+#' @param model_vars Character vector of predictor column names.
+#' @param method "gaussian" or "svm".
+#' @param output_dir Output directory.
+#' @param hypervolume_params Named list of args passed to the selected hypervolume function.
+#' @param create_plot Logical.
+#' @param overwrite Logical.
+#'
+#' @return A list with elements: \code{hypervolumes}, \code{volumes}, \code{overlaps}, \code{method}, \code{model_vars}, \code{output_dir}, \code{combined_file}.
+#'
+#' @export
+#' @importFrom hypervolume hypervolume_gaussian hypervolume_svm hypervolume_join
+#' @importFrom hypervolume hypervolume_set hypervolume_overlap_statistics get_volume
+#' @importFrom sf st_drop_geometry
+#' @importFrom utils readRDS saveRDS combn
+#' @importFrom tools file_ext
+#' @importFrom grDevices rainbow
+#' @importFrom graphics plot
 build_hypervolume_models <- function(partition_results,
                                      model_vars,
                                      method,

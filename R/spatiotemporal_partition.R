@@ -1,3 +1,32 @@
+#' Spatiotemporal cross-validation partitioning
+#'
+#' Creates spatial and/or temporal folds with optional Voronoi visualization and balance checks.
+#'
+#' @param reference_shapefile_path Path to study-area polygon (or \code{sf} object).
+#' @param points_file_path Path to occurrences (\code{.csv/.shp/.geojson/.gpkg}) or data/\code{sf}.
+#' @param time_col Optional time column name for temporal blocks.
+#' @param xcol,ycol Coordinate column names when reading a CSV/data.frame.
+#' @param points_crs CRS (EPSG/proj4) for input points if not embedded.
+#' @param total_folds Total number of folds.
+#' @param n_temporal Number of temporal blocks.
+#' @param n_spatial Number of spatial blocks.
+#' @param blocking_priority One of \code{"balanced"}, \code{"spatial"}, \code{"temporal"}.
+#' @param max_imbalance Max allowed fold-size imbalance (proportion).
+#' @param max_retries Number of random attempts to improve balance.
+#' @param generate_plots Logical; draw summary plots.
+#' @param output_file Optional \code{.rds} path to save results.
+#'
+#' @return A list with: \code{folds} (data.frame), \code{points_sf} (sf), \code{voronoi} (sf),
+#'   \code{summary} (data.frame), \code{plots} (ggplot objects).
+#'
+#' @export
+#' @importFrom sf st_read st_as_sf st_transform st_coordinates st_crs st_bbox st_union st_intersection st_drop_geometry st_sfc
+#' @importFrom dplyr select all_of
+#' @importFrom ggplot2 ggplot geom_sf aes coord_sf theme_minimal theme element_text labs geom_histogram geom_col geom_hline
+#' @importFrom viridis scale_fill_viridis_d
+#' @importFrom deldir deldir tile.list
+#' @importFrom stats kmeans quantile
+#' @importFrom tools file_ext
 spatiotemporal_partition <- function(
     reference_shapefile_path,
     points_file_path,

@@ -8,7 +8,10 @@ spatiotemporal_rarefication(
   points_sp,
   output_dir,
   reference_raster,
-  time_cols,
+  time_cols = NULL,
+  xcol = NULL,
+  ycol = NULL,
+  points_crs = NULL,
   create_spatial_only = FALSE,
   output_prefix = "Pts_Database"
 )

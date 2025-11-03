@@ -1,3 +1,6 @@
+#' Likelihood-ratio changepoint test
+#' @keywords internal
+#' @importFrom stats glm binomial logLik pchisq coef
 test_cp_likelihood <- function(data, cp, alpha = 0.05) {
   n <- nrow(data)
   seg1_data <- data[1:cp, ]
@@ -25,6 +28,8 @@ test_cp_likelihood <- function(data, cp, alpha = 0.05) {
   })
 }
 
+#' Permutation changepoint test (difference in means)
+#' @keywords internal
 test_cp_permutation <- function(data, cp, n_perm = 1000, alpha = 0.05) {
   n <- nrow(data)
   seg1_mean <- mean(data$y[1:cp])
@@ -41,6 +46,9 @@ test_cp_permutation <- function(data, cp, n_perm = 1000, alpha = 0.05) {
        test_statistic = obs_stat, effect_size = obs_stat)
 }
 
+#' Two-proportion z test at a changepoint
+#' @keywords internal
+#' @importFrom stats pnorm
 test_cp_proportion <- function(data, cp, alpha = 0.05) {
   n <- nrow(data)
   seg1_y <- data$y[1:cp]
@@ -69,6 +77,10 @@ test_cp_proportion <- function(data, cp, alpha = 0.05) {
        test_statistic = z_stat, effect_size = abs(p1 - p2))
 }
 
+
+#' Chi-square test at a changepoint
+#' @keywords internal
+#' @importFrom stats chisq.test
 test_cp_chisquare <- function(data, cp, alpha = 0.05) {
   n <- nrow(data)
   seg1_y <- data$y[1:cp]
@@ -85,6 +97,8 @@ test_cp_chisquare <- function(data, cp, alpha = 0.05) {
        test_statistic = test_result$statistic, effect_size = abs(mean(seg1_y) - mean(seg2_y)))
 }
 
+#' Assess significance of candidate changepoints
+#' @keywords internal
 assess_changepoint_significance <- function(data, cp_set, alpha = 0.05, n_perm = 1000) {
   if (length(cp_set) == 0) return(data.frame())
 
@@ -172,6 +186,8 @@ assess_changepoint_significance <- function(data, cp_set, alpha = 0.05, n_perm =
   do.call(rbind, results_list)
 }
 
+#' Classify temporal pattern from significant changepoints
+#' @keywords internal
 # FIXED classify_pattern function with better logic
 classify_pattern <- function(sig_results) {
   # Filter to significant changepoints only
@@ -209,6 +225,9 @@ classify_pattern <- function(sig_results) {
 # ============================================================================
 # FIXED classify_pixel_cpd - USES MATRIX FORMAT WITH WARNINGS SUPPRESSED
 # ============================================================================
+#' Classify a pixel with changepoint detection
+#' @keywords internal
+#' @importFrom fastcpd fastcpd.binomial
 classify_pixel_cpd <- function(pixel_vals, n_middle, method = "MBIC", alpha = 0.05, n_perm = 1000) {
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
@@ -298,7 +317,9 @@ library(dplyr)
 # ============================================================================
 # ENHANCED PIXEL CLASSIFICATION WITH YEAR EXTRACTION
 # ============================================================================
-
+#' Classify a pixel and extract first increase/decrease years
+#' @keywords internal
+#' @importFrom fastcpd fastcpd.binomial
 classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
                                       method = method, alpha = 0.05, n_perm = 1000) {
   # Returns a vector of length 3: [classification, year_decrease, year_increase]
@@ -398,6 +419,17 @@ classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
   return(c(classification_code, year_decrease, year_increase))
 }
 
+
+#' Generate spatiotemporal predictions from hypervolumes
+#' @keywords internal
+#' @details Expects outputs from \code{build_hypervolume_models()} and a helper \code{model_assessment_metrics()} in scope.
+#' @importFrom hypervolume hypervolume_project
+#' @importFrom raster stack writeRaster nlayers
+#' @importFrom terra mask rast
+#' @importFrom sp SpatialPointsDataFrame CRS spTransform
+#' @importFrom sf st_coordinates st_drop_geometry
+#' @importFrom utils write.csv readRDS saveRDS
+#' @importFrom tools file_ext
 generate_spatiotemporal_predictions <- function(partition_results,
                                                 hypervolume_results,
                                                 model_vars,

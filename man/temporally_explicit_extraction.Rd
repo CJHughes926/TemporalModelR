@@ -2,13 +2,16 @@
 % Please edit documentation in R/temporally_explicit_extraction.R
 \name{temporally_explicit_extraction}
 \alias{temporally_explicit_extraction}
-\title{Temporally explicit extraction}
+\title{Extract time-aligned raster values at points and compute scaling}
 \usage{
 temporally_explicit_extraction(
   points_sp,
   raster_dir,
   variable_patterns,
   time_cols,
+  xcol = NULL,
+  ycol = NULL,
+  points_crs = NULL,
   output_dir,
   output_prefix = "temp_explicit_df",
   save_raw = TRUE,
@@ -16,6 +19,47 @@ temporally_explicit_extraction(
   save_scaling_params = TRUE
 )
 }
+\arguments{
+\item{points_sp}{A \code{SpatialPointsDataFrame}, a path to a CSV/SHP/GEOJSON/GPKG,
+or a data.frame with coordinate columns (see \code{xcol}, \code{ycol}, \code{points_crs}).}
+
+\item{raster_dir}{Directory containing source rasters (.tif).}
+
+\item{variable_patterns}{Named character vector mapping variable names to filename
+patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must match \code{time_cols}.
+Static variables have no placeholders (e.g., \code{"elevation" = "elevation"}).}
+
+\item{time_cols}{Character vector of time column names present in \code{points_sp} data.}
+
+\item{xcol, ycol}{Optional. Names of longitude/latitude columns when \code{points_sp} is a CSV or data.frame.}
+
+\item{points_crs}{Optional. CRS string (e.g., \code{"+proj=longlat +datum=WGS84"}) when
+\code{points_sp} is a CSV or data.frame.}
+
+\item{output_dir}{Directory to write outputs.}
+
+\item{output_prefix}{Prefix for output filenames.}
+
+\item{save_raw}{Logical; write raw extracted values CSV.}
+
+\item{save_scaled}{Logical; write z-scaled values CSV.}
+
+\item{save_scaling_params}{Logical; write per-variable means/SDs CSV.}
+}
+\value{
+Invisibly returns \code{NULL}. Side effects: writes
+  \code{*_Raw_Values.csv}, \code{*_Scaling_Parameters.csv}, and optionally \code{*_Scaled_Values.csv}.
+}
 \description{
-Temporally explicit extraction
+For each unique combination in \code{time_cols}, matches rasters by
+  \code{variable_patterns}, extracts values at \code{points_sp}, writes raw values,
+  per-variable scaling parameters (mean, sd), and optionally a z-scaled table.
+}
+\details{
+Dynamic variables are detected when their pattern contains any of \code{time_cols}
+placeholders; static variables are extracted once. Filenames are matched by
+variable prefix and placeholder substitution (bounded by underscores or extension).
+}
+\seealso{
+\code{\link{scale_rasters}} for applying saved scaling to rasters.
 }
