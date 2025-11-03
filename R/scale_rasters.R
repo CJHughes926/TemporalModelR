@@ -312,7 +312,7 @@ scale_rasters <- function(input_dir,
       time_file_pairs <- list()
 
       for (file in candidate_files) {
-        filename <- basename(f = file)
+        filename <- basename(file)
 
         ### Try to extract time values for each time column
         time_vals <- list()
