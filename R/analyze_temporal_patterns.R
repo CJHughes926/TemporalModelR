@@ -10,6 +10,7 @@
 #' @param n_tiles_x,n_tiles_y Number of tiles in x/y.
 #' @param overlap Overlap (in cells) between tiles.
 #' @param alpha Significance level.
+#' @param spatial_autocorrelation Logical; if TRUE (default), includes neighbor variable in analysis. If FALSE, spatial autocorrelation is not considered.
 #' @param show_progress Logical; show progress bar.
 #' @param estimate_time Logical; quick runtime estimate from sampled pixels.
 #' @param overwrite Logical; overwrite existing outputs.
@@ -36,6 +37,7 @@ analyze_temporal_patterns <- function(
     n_tiles_y = 1,
     overlap = 10,
     alpha = 0.05,
+    spatial_autocorrelation = TRUE,
     show_progress = TRUE,
     estimate_time = TRUE,
     overwrite = FALSE) {
@@ -64,6 +66,13 @@ analyze_temporal_patterns <- function(
       year_decrease = raster(decrease_file),
       year_increase = raster(increase_file)
     ))
+  }
+
+  ### Display spatial autocorrelation setting
+  if (spatial_autocorrelation) {
+    cat("\nSpatial autocorrelation: ENABLED (neighbor variable included)\n")
+  } else {
+    cat("\nSpatial autocorrelation: DISABLED (neighbor variable excluded)\n")
   }
 
   ### Calculate tile extents
@@ -149,15 +158,24 @@ analyze_temporal_patterns <- function(
             middle_years <- raster::subset(tile_binary, 2:(n_years - 1))
             lag_stack <- raster::subset(tile_binary, 1:(n_years - 2))
 
-            middle_neighbor <- stack(lapply(1:nlayers(middle_years), function(i) {
-              focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
-            }))
-
-            predictor_stack <- stack(middle_years, lag_stack, middle_neighbor, tile_summary)
+            if (spatial_autocorrelation) {
+              middle_neighbor <- stack(lapply(1:nlayers(middle_years), function(i) {
+                focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+              }))
+              predictor_stack <- stack(middle_years, lag_stack, middle_neighbor, tile_summary)
+            } else {
+              predictor_stack <- stack(middle_years, lag_stack, tile_summary)
+            }
 
             pred_vals_all <- getValues(predictor_stack)
             valid_pred <- which(!is.na(pred_vals_all[, 1]))
-            mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
+
+            if (spatial_autocorrelation) {
+              mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
+            } else {
+              mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
+            }
+
             complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
 
             sample_size <- min(100, length(complex_indices))
@@ -167,14 +185,15 @@ analyze_temporal_patterns <- function(
             start_time <- Sys.time()
             for (i in 1:sample_size) {
               classify_pixel_with_years(pred_vals_sample[i, ], n_middle,
-                                        time_steps, method, alpha)
+                                        time_steps, method, alpha, use_neighbor = spatial_autocorrelation)
             }
             end_time <- Sys.time()
 
             time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
 
-            rm(middle_years, lag_stack, middle_neighbor, predictor_stack,
+            rm(middle_years, lag_stack, predictor_stack,
                pred_vals_all, valid_pred, mean_pred, complex_indices, pred_vals_sample)
+            if (spatial_autocorrelation) rm(middle_neighbor)
             gc(verbose = FALSE)
           }
         }
@@ -260,11 +279,14 @@ analyze_temporal_patterns <- function(
       middle_years <- raster::subset(tile_binary, 2:(n_years - 1))
       lag_stack <- raster::subset(tile_binary, 1:(n_years - 2))
 
-      middle_neighbor <- stack(lapply(1:nlayers(middle_years), function(i) {
-        focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
-      }))
-
-      predictor_stack <- stack(middle_years, lag_stack, middle_neighbor, tile_summary)
+      if (spatial_autocorrelation) {
+        middle_neighbor <- stack(lapply(1:nlayers(middle_years), function(i) {
+          focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+        }))
+        predictor_stack <- stack(middle_years, lag_stack, middle_neighbor, tile_summary)
+      } else {
+        predictor_stack <- stack(middle_years, lag_stack, tile_summary)
+      }
 
       if (show_progress) {
         n_cells <- ncell(predictor_stack)
@@ -278,7 +300,7 @@ analyze_temporal_patterns <- function(
         for (cell_i in 1:n_cells) {
           if (!any(is.na(pred_vals[cell_i, ]))) {
             result <- classify_pixel_with_years(pred_vals[cell_i, ], n_middle,
-                                                time_steps, method, alpha)
+                                                time_steps, method, alpha, use_neighbor = spatial_autocorrelation)
             pattern_vals[cell_i] <- result[1]
             decrease_vals[cell_i] <- result[2]
             increase_vals[cell_i] <- result[3]
@@ -302,7 +324,8 @@ analyze_temporal_patterns <- function(
 
       } else {
         result_matrix <- calc(predictor_stack,
-                              fun = function(x) classify_pixel_with_years(x, n_middle, time_steps, method, alpha))
+                              fun = function(x) classify_pixel_with_years(x, n_middle, time_steps,
+                                                                          method, alpha, use_neighbor = spatial_autocorrelation))
 
         tile_pattern <- raster::subset(result_matrix, 1)
         tile_decrease <- raster::subset(result_matrix, 2)
@@ -316,8 +339,9 @@ analyze_temporal_patterns <- function(
       writeRaster(tile_increase, tile_file_increase, overwrite = TRUE,
                   datatype = "INT2S", options = c("COMPRESS=LZW"))
 
-      rm(tile_binary, tile_summary, middle_years, lag_stack, middle_neighbor,
+      rm(tile_binary, tile_summary, middle_years, lag_stack,
          predictor_stack, tile_pattern, tile_decrease, tile_increase)
+      if (spatial_autocorrelation) rm(middle_neighbor)
       if (exists("pred_vals")) rm(pred_vals, pattern_vals, decrease_vals, increase_vals)
       gc(verbose = FALSE)
 
@@ -394,7 +418,8 @@ analyze_temporal_patterns <- function(
   cat("ANALYSIS COMPLETE\n")
   cat("========================================\n")
   cat(paste("Period:", min(time_steps), "-", max(time_steps), "\n"))
-  cat(paste("Tiles:", n_tiles, "\n\n"))
+  cat(paste("Tiles:", n_tiles, "\n"))
+  cat(paste("Spatial autocorrelation:", ifelse(spatial_autocorrelation, "ENABLED", "DISABLED"), "\n\n"))
 
   pattern_freq <- freq(pattern_raster)
   if (!is.null(pattern_freq) && nrow(pattern_freq) > 0) {

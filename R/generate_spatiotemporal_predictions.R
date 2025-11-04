@@ -1,7 +1,7 @@
 #' Likelihood-ratio changepoint test
 #' @keywords internal
 #' @importFrom stats glm binomial logLik pchisq coef
-test_cp_likelihood <- function(data, cp, alpha = 0.05) {
+test_cp_likelihood <- function(data, cp, alpha = 0.05, use_neighbor = TRUE) {
   n <- nrow(data)
   seg1_data <- data[1:cp, ]
   seg2_data <- data[(cp + 1):n, ]
@@ -11,11 +11,17 @@ test_cp_likelihood <- function(data, cp, alpha = 0.05) {
   }
 
   tryCatch({
-    model_full <- glm(y ~ lag1 + neighbor, data = data, family = binomial())
-    loglik_full <- logLik(model_full)[1]
+    if (use_neighbor) {
+      model_full <- glm(y ~ lag1 + neighbor, data = data, family = binomial())
+      model_seg1 <- glm(y ~ lag1 + neighbor, data = seg1_data, family = binomial())
+      model_seg2 <- glm(y ~ lag1 + neighbor, data = seg2_data, family = binomial())
+    } else {
+      model_full <- glm(y ~ lag1, data = data, family = binomial())
+      model_seg1 <- glm(y ~ lag1, data = seg1_data, family = binomial())
+      model_seg2 <- glm(y ~ lag1, data = seg2_data, family = binomial())
+    }
 
-    model_seg1 <- glm(y ~ lag1 + neighbor, data = seg1_data, family = binomial())
-    model_seg2 <- glm(y ~ lag1 + neighbor, data = seg2_data, family = binomial())
+    loglik_full <- logLik(model_full)[1]
     loglik_seg <- logLik(model_seg1)[1] + logLik(model_seg2)[1]
 
     lr_stat <- 2 * (loglik_seg - loglik_full)
@@ -99,7 +105,7 @@ test_cp_chisquare <- function(data, cp, alpha = 0.05) {
 
 #' Assess significance of candidate changepoints
 #' @keywords internal
-assess_changepoint_significance <- function(data, cp_set, alpha = 0.05, n_perm = 1000) {
+assess_changepoint_significance <- function(data, cp_set, alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
   if (length(cp_set) == 0) return(data.frame())
 
   cp_set <- sort(cp_set)
@@ -143,7 +149,7 @@ assess_changepoint_significance <- function(data, cp_set, alpha = 0.05, n_perm =
     temp_combined <- data[c(baseline_segment, current_segment), ]
     cp_temp <- length(baseline_segment)
 
-    lr_test <- suppressWarnings(test_cp_likelihood(temp_combined, cp_temp, alpha))
+    lr_test <- suppressWarnings(test_cp_likelihood(temp_combined, cp_temp, alpha, use_neighbor))
     lr_p_value <- ifelse(is.null(lr_test$p.value), lr_test$p_value, lr_test$p.value)
     lr_significant <- ifelse(is.na(lr_p_value), FALSE, lr_p_value < alpha)
 
@@ -188,27 +194,20 @@ assess_changepoint_significance <- function(data, cp_set, alpha = 0.05, n_perm =
 
 #' Classify temporal pattern from significant changepoints
 #' @keywords internal
-# FIXED classify_pattern function with better logic
 classify_pattern <- function(sig_results) {
-  # Filter to significant changepoints only
   sig <- sig_results[sig_results$Overall_Significant == TRUE, ]
 
-  # If no significant changepoints, it's truly "No Pattern"
   if (nrow(sig) == 0) {
     return("No Pattern")
   }
 
-  # Use a small tolerance for floating point comparisons
   tolerance <- 1e-10
 
-  # Calculate differences with tolerance
   prop_diffs <- sig$Seg2_Proportion - sig$Seg1_Proportion
 
-  # Check for increases and decreases
   has_inc <- any(prop_diffs > tolerance)
   has_dec <- any(prop_diffs < -tolerance)
 
-  # Classify based on patterns
   if (has_inc & has_dec) {
     return("Fluctuating/Intermittent")
   } else if (has_inc) {
@@ -216,34 +215,36 @@ classify_pattern <- function(sig_results) {
   } else if (has_dec) {
     return("Decreasing")
   } else {
-    # This catches the edge case where proportions are essentially equal
-    # Could indicate data issues or very subtle changes
     return("Failed Classification")
   }
 }
 
-# ============================================================================
-# FIXED classify_pixel_cpd - USES MATRIX FORMAT WITH WARNINGS SUPPRESSED
-# ============================================================================
 #' Classify a pixel with changepoint detection
 #' @keywords internal
 #' @importFrom fastcpd fastcpd.binomial
-classify_pixel_cpd <- function(pixel_vals, n_middle, method = "MBIC", alpha = 0.05, n_perm = 1000) {
+classify_pixel_cpd <- function(pixel_vals, n_middle, method = "MBIC", alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
-  neighbor <- pixel_vals[(2 * n_middle + 1):(3 * n_middle)]
-  mean_val <- pixel_vals[3 * n_middle + 1]
 
-  # Handle always absent/present cases
-  if (mean_val < 0.01) return(1)  # Always Absent
-  if (mean_val > 0.99) return(2)  # Always Present
-  if (any(is.na(c(y, lag, neighbor)))) return(NA)  # Missing data
+  if (use_neighbor) {
+    neighbor <- pixel_vals[(2 * n_middle + 1):(3 * n_middle)]
+    mean_val <- pixel_vals[3 * n_middle + 1]
+  } else {
+    neighbor <- NULL
+    mean_val <- pixel_vals[2 * n_middle + 1]
+  }
 
-  # FIXED: fastcpd.binomial expects cbind(y, x1, x2, ...) format
-  # Create matrix with y in first column, predictors in remaining columns
-  data_matrix <- cbind(y, lag, neighbor)
+  if (mean_val < 0.01) return(1)
+  if (mean_val > 0.99) return(2)
+  if (any(is.na(c(y, lag)))) return(NA)
+  if (use_neighbor && any(is.na(neighbor))) return(NA)
 
-  # Try to run changepoint detection (suppress GLM warnings)
+  if (use_neighbor) {
+    data_matrix <- cbind(y, lag, neighbor)
+  } else {
+    data_matrix <- cbind(y, lag)
+  }
+
   cp_result <- tryCatch({
     suppressWarnings({
       fastcpd.binomial(
@@ -255,34 +256,30 @@ classify_pixel_cpd <- function(pixel_vals, n_middle, method = "MBIC", alpha = 0.
     return(NULL)
   })
 
-  # If changepoint detection failed, mark as "Failed to Classify"
-  if (is.null(cp_result)) return(7)  # Failed - CPD error
+  if (is.null(cp_result)) return(7)
 
-  # Extract changepoints
   cp_set <- cp_result@cp_set
 
-  # If no changepoints detected, classify as "No Pattern"
-  if (length(cp_set) == 0) return(3)  # No Pattern
+  if (length(cp_set) == 0) return(3)
 
-  # Create data frame for significance testing
-  data_df <- data.frame(y = y, lag1 = lag, neighbor = neighbor)
+  if (use_neighbor) {
+    data_df <- data.frame(y = y, lag1 = lag, neighbor = neighbor)
+  } else {
+    data_df <- data.frame(y = y, lag1 = lag)
+  }
 
-  # Assess significance of detected changepoints (suppress warnings)
   sig_results <- tryCatch({
     suppressWarnings({
-      assess_changepoint_significance(data_df, cp_set, alpha, n_perm)
+      assess_changepoint_significance(data_df, cp_set, alpha, n_perm, use_neighbor)
     })
   }, error = function(e) {
     return(NULL)
   })
 
-  # If significance testing failed
-  if (is.null(sig_results) || nrow(sig_results) == 0) return(7)  # Failed - sig test error
+  if (is.null(sig_results) || nrow(sig_results) == 0) return(7)
 
-  # Classify the pattern based on significance results
   pattern <- classify_pattern(sig_results)
 
-  # Return numeric code
   pattern_codes <- c(
     "Always Absent" = 1,
     "Always Present" = 2,
@@ -300,44 +297,34 @@ library(raster)
 library(fastcpd)
 library(dplyr)
 
-# ============================================================================
-# INTEGRATED TILED ANALYSIS WITH YEAR-OF-CHANGE RASTERS
-# ============================================================================
-# This script includes all the functions from FIXED_classification_code.R
-# but with an enhanced analyze_temporal_patterns_tiles_raster() that creates
-# THREE rasters at once:
-# 1. Pattern classification raster
-# 2. Year of first decrease raster
-# 3. Year of first increase raster
-# ============================================================================
-
-# Source the complete FIXED_classification_code.R first to get all the helper functions
-# Then use the new function below
-
-# ============================================================================
-# ENHANCED PIXEL CLASSIFICATION WITH YEAR EXTRACTION
-# ============================================================================
 #' Classify a pixel and extract first increase/decrease years
 #' @keywords internal
 #' @importFrom fastcpd fastcpd.binomial
 classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
-                                      method = method, alpha = 0.05, n_perm = 1000) {
-  # Returns a vector of length 3: [classification, year_decrease, year_increase]
+                                      method = method, alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
 
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
-  neighbor <- pixel_vals[(2 * n_middle + 1):(3 * n_middle)]
-  mean_val <- pixel_vals[3 * n_middle + 1]
 
-  # Handle always absent/present cases
-  if (mean_val < 0.01) return(c(1, NA, NA))  # Always Absent
-  if (mean_val > 0.99) return(c(2, NA, NA))  # Always Present
-  if (any(is.na(c(y, lag, neighbor)))) return(c(NA, NA, NA))  # Missing data
+  if (use_neighbor) {
+    neighbor <- pixel_vals[(2 * n_middle + 1):(3 * n_middle)]
+    mean_val <- pixel_vals[3 * n_middle + 1]
+  } else {
+    neighbor <- NULL
+    mean_val <- pixel_vals[2 * n_middle + 1]
+  }
 
-  # Create matrix for changepoint detection
-  data_matrix <- cbind(y, lag, neighbor)
+  if (mean_val < 0.01) return(c(1, NA, NA))
+  if (mean_val > 0.99) return(c(2, NA, NA))
+  if (any(is.na(c(y, lag)))) return(c(NA, NA, NA))
+  if (use_neighbor && any(is.na(neighbor))) return(c(NA, NA, NA))
 
-  # Run changepoint detection (suppress warnings)
+  if (use_neighbor) {
+    data_matrix <- cbind(y, lag, neighbor)
+  } else {
+    data_matrix <- cbind(y, lag)
+  }
+
   cp_result <- tryCatch({
     suppressWarnings({
       fastcpd.binomial(
@@ -349,31 +336,28 @@ classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
     return(NULL)
   })
 
-  # If changepoint detection failed
-  if (is.null(cp_result)) return(c(7, NA, NA))  # Failed - CPD error
+  if (is.null(cp_result)) return(c(7, NA, NA))
 
-  # Extract changepoints
   cp_set <- cp_result@cp_set
 
-  # If no changepoints detected
-  if (length(cp_set) == 0) return(c(3, NA, NA))  # No Pattern
+  if (length(cp_set) == 0) return(c(3, NA, NA))
 
-  # Create data frame for significance testing
-  data_df <- data.frame(y = y, lag1 = lag, neighbor = neighbor)
+  if (use_neighbor) {
+    data_df <- data.frame(y = y, lag1 = lag, neighbor = neighbor)
+  } else {
+    data_df <- data.frame(y = y, lag1 = lag)
+  }
 
-  # Assess significance (suppress warnings)
   sig_results <- tryCatch({
     suppressWarnings({
-      assess_changepoint_significance(data_df, cp_set, alpha, n_perm)
+      assess_changepoint_significance(data_df, cp_set, alpha, n_perm, use_neighbor)
     })
   }, error = function(e) {
     return(NULL)
   })
 
-  # If significance testing failed
   if (is.null(sig_results) || nrow(sig_results) == 0) return(c(7, NA, NA))
 
-  # Classify the pattern
   pattern <- classify_pattern(sig_results)
 
   pattern_codes <- c(
@@ -388,16 +372,12 @@ classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
 
   classification_code <- pattern_codes[pattern]
 
-  # IMPORTANT: Only extract years for SIGNIFICANT changepoints
-  # And only for pixels classified as "Increasing" or "Decreasing"
   year_decrease <- NA
   year_increase <- NA
 
-  # Filter to ONLY significant changepoints
   sig_cps <- sig_results[sig_results$Overall_Significant == TRUE, ]
 
   if (nrow(sig_cps) > 0) {
-    # Only extract year of decrease if classified as "Decreasing"
     if (pattern == "Decreasing") {
       decreasing_cps <- sig_cps[sig_cps$Seg2_Proportion < sig_cps$Seg1_Proportion, ]
       if (nrow(decreasing_cps) > 0 && length(decreasing_cps$ChangePoint) > 0) {
@@ -406,7 +386,6 @@ classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
       }
     }
 
-    # Only extract year of increase if classified as "Increasing"
     if (pattern == "Increasing") {
       increasing_cps <- sig_cps[sig_cps$Seg2_Proportion > sig_cps$Seg1_Proportion, ]
       if (nrow(increasing_cps) > 0 && length(increasing_cps$ChangePoint) > 0) {
@@ -863,7 +842,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
 
     time_values <- time_steps_df[i, , drop = FALSE]
 
-    ### Create time label for output filename
     time_label <- paste(sapply(time_cols, function(tc) {
       as.character(time_values[[tc]])
     }), collapse = "_")
@@ -886,7 +864,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
     for (var in dynamic_vars) {
       pattern <- variable_patterns[var]
 
-      ### Replace each time column placeholder with its value
       file_name <- pattern
       for (tc in time_cols) {
         file_name <- gsub(tc, as.character(time_values[[tc]]),
@@ -952,7 +929,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
 
       test_points_all <- subset(points_sp, points_sp$fold == current_fold)
 
-      ### Filter test points for current time values
       time_filter <- rep(TRUE, nrow(points_sp@data))
       for (tc in time_cols) {
         time_filter <- time_filter & (points_sp@data[[tc]] == time_values[[tc]])
@@ -989,11 +965,9 @@ generate_spatiotemporal_predictions <- function(partition_results,
           model_vars = model_vars
         )
 
-        ### Build time columns as a named list
         time_data <- lapply(time_cols, function(tc) time_values[[tc]])
         names(time_data) <- time_cols
 
-        ### Build model data with time columns first, then metrics
         model_data <- data.frame(
           time_data,
           Fold = current_fold,
