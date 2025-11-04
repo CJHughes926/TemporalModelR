@@ -34,11 +34,13 @@
 #' @importFrom gridExtra arrangeGrob grid.draw
 #' @importFrom scales scientific
 #' @importFrom knitr kable
-plot_model_assessment <- function(data_file_path,
-                                  time_column,
-                                  facet_column = NULL,
-                                  cbp_threshold = 0.001,
-                                  separate_cbp = TRUE) {
+#' @importFrom ggtext element_markdown
+
+function(data_file_path,
+         time_column,
+         facet_column = NULL,
+         cbp_threshold = 0.001,
+         separate_cbp = TRUE) {
 
   # Validate inputs
   if (missing(data_file_path)) {
@@ -197,45 +199,55 @@ plot_model_assessment <- function(data_file_path,
     return(labels)
   }
 
-  # Plot 1: Combined G_volume and both sensitivities
   plot1 <- ggplot() +
     geom_line(data = all_model_data,
               aes(x = !!sym(time_column), y = sensitivity_test_E * scale_factor + offset, group = Fold),
               color = "#9467BD", alpha = 0.3, size = 0.5, linetype = "dotted") +
+    geom_point(data = all_model_data,
+               aes(x = !!sym(time_column), y = sensitivity_test_E * scale_factor + offset),
+               color = "#9467BD", alpha = 0.1, size = 1) +
     geom_line(data = summary_stats,
               aes(x = !!sym(time_column), y = Mean_Sensitivity_E * scale_factor + offset),
               color = "#9467BD", size = 1, linetype = "dotted") +
+
+    # G-volume lines and points
     geom_line(data = all_model_data,
               aes(x = !!sym(time_column), y = G_volume, group = Fold),
               color = "#0072B2", alpha = 0.3, size = 0.5) +
     geom_point(data = all_model_data,
                aes(x = !!sym(time_column), y = G_volume),
-               color = "#0072B2", alpha = 0.3, size = 1) +
+               color = "#0072B2", alpha = 0.1, size = 1) +
     geom_line(data = summary_stats,
               aes(x = !!sym(time_column), y = Mean_G_Volume),
-              color = "#0072B2", size = .75) +
+              color = "#0072B2", size = 0.75) +
     geom_point(data = summary_stats,
                aes(x = !!sym(time_column), y = Mean_G_Volume),
                color = "#0072B2", size = 1) +
+
+    # G-space sensitivity lines and fold points
     geom_line(data = all_model_data,
               aes(x = !!sym(time_column), y = sensitivity_test_G * scale_factor + offset, group = Fold),
               color = "#D55E00", alpha = 0.3, size = 0.5) +
     geom_point(data = all_model_data,
                aes(x = !!sym(time_column), y = sensitivity_test_G * scale_factor + offset),
-               color = "#D55E00", alpha = 0.3, size = 1) +
+               color = "#D55E00", alpha = 0.1, size = 1) +
     geom_line(data = summary_stats,
               aes(x = !!sym(time_column), y = Mean_Sensitivity_G * scale_factor + offset),
-              color = "#D55E00", size = .75) +
+              color = "#D55E00", size = 0.75) +
     geom_point(data = summary_stats,
                aes(x = !!sym(time_column), y = Mean_Sensitivity_G * scale_factor + offset),
                color = "#D55E00", size = 1) +
+
+    # Dual y-axis
     scale_y_continuous(
       name = "G Volume (blue)",
       sec.axis = sec_axis(
         trans = ~ (. - offset) / scale_factor,
-        name = "Sensitivity\n(G-Space & E-Space)"
+        name = "Sensitivity <span style='color:#D55E00;'>G-Space (Orange)</span> & <span style='color:#9467BD;'>E-Space (Pruple)</span>"
       )
     ) +
+
+    # Labels and theme
     labs(
       title = "G-Space Hypervolume Size and Test Sensitivity Over Time",
       subtitle = "Blue = G Volume | Orange solid = G-Space Sensitivity | Purple dashed = E-Space Sensitivity",
@@ -246,45 +258,16 @@ plot_model_assessment <- function(data_file_path,
       plot.title = element_text(size = 14, face = "bold"),
       plot.subtitle = element_text(size = 10),
       axis.title.y.left = element_text(color = "#0072B2", size = 12, face = "bold"),
-      axis.title.y.right = element_text(size = 12, face = "bold"),
+      axis.title.y.right = element_markdown(size = 12, face = "bold"),
       axis.text.y.left = element_text(color = "#0072B2", size = 11),
       axis.text.y.right = element_text(size = 11),
       axis.title.x = element_text(size = 12)
     )
 
-  # Add faceting if specified
   if (!is.null(facet_column)) {
     plot1 <- plot1 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
   }
 
-  # Create custom grob for two-colored y-axis title
-  library(grid)
-  library(gridExtra)
-
-  # Convert plot to grob
-  g <- ggplotGrob(plot1)
-
-  # Find the right y-axis title position
-  right_title_index <- which(g$layout$name == "axis-r")
-
-  # Create two text grobs with different colors
-  text_grob1 <- textGrob("G-Space",
-                         rot = 270,
-                         gp = gpar(col = "#D55E00", fontsize = 12, fontface = "bold"))
-  text_grob2 <- textGrob("E-Space",
-                         rot = 270,
-                         gp = gpar(col = "#9467BD", fontsize = 12, fontface = "bold"))
-
-  # Combine the text grobs vertically
-  combined_title <- arrangeGrob(text_grob1, text_grob2, ncol = 1)
-
-  # Replace the original right axis title
-  g$grobs[[right_title_index]] <- combined_title
-
-  # Store the modified plot
-  plot1_modified <- g
-
-  # NEW PLOT: TP/FN Bargraph (G-Space only)
   # Prepare data for TP/FN plot - filter out years with no G-space measures
   if (!is.null(facet_column)) {
     tp_fn_data <- all_model_data %>%
@@ -311,29 +294,20 @@ plot_model_assessment <- function(data_file_path,
   # Create TP/FN plot
   plot_tp_fn <- ggplot() +
     geom_hline(yintercept = 0, color = "black", size = 0.5) +
-
-    # Individual folds - TP points
-    geom_point(data = tp_fn_data,
-               aes(x = !!sym(time_column), y = TP_test_G),
-               color = "#0072B2", alpha = 0.3, size = 2) +
-
-    # Individual folds - FN points (negative)
-    geom_point(data = tp_fn_data,
-               aes(x = !!sym(time_column), y = FN_test_G_neg),
-               color = "#D55E00", alpha = 0.3, size = 2) +
-
-    # Mean values - TP bars
     geom_bar(data = tp_fn_summary,
              aes(x = !!sym(time_column), y = Mean_TP_G),
              stat = "identity",
              fill = "#0072B2", alpha = 0.7, width = 0.8, color = "black", size = 0.3) +
-
-    # Mean values - FN bars (negative)
     geom_bar(data = tp_fn_summary,
              aes(x = !!sym(time_column), y = Mean_FN_G_neg),
              stat = "identity",
              fill = "#D55E00", alpha = 0.7, width = 0.8, color = "black", size = 0.3) +
-
+    geom_point(data = tp_fn_data,
+               aes(x = !!sym(time_column), y = TP_test_G),
+               fill = "#0072B2", size = 2, shape = 21) +
+    geom_point(data = tp_fn_data,
+               aes(x = !!sym(time_column), y = FN_test_G_neg),
+               fill = "#D55E00", size = 2, shape = 21) +
     labs(
       title = "G-Space True Positives and False Negatives Over Time",
       subtitle = "Bars = Mean across folds | Points = Individual folds | Blue = TP | Orange = FN",
@@ -518,7 +492,7 @@ plot_model_assessment <- function(data_file_path,
       plot3 <- plot3 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
     }
 
-    grid.draw(plot1_modified)
+    grid.draw(plot1)
     print(plot_tp_fn)
     print(plot2)
     print(plot3)
@@ -620,7 +594,7 @@ plot_model_assessment <- function(data_file_path,
       plot2 <- plot2 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
     }
 
-    grid.draw(plot1_modified)
+    grid.draw(plot1)
     print(plot_tp_fn)
     print(plot2)
   }
@@ -636,7 +610,7 @@ plot_model_assessment <- function(data_file_path,
   # Return plots invisibly
   if (separate_cbp) {
     invisible(list(
-      volume_sensitivity_plot = plot1_modified,
+      volume_sensitivity_plot = plot1,
       tp_fn_plot = plot_tp_fn,
       cbp_g_plot = plot2,
       cbp_e_plot = plot3,
@@ -644,7 +618,7 @@ plot_model_assessment <- function(data_file_path,
     ))
   } else {
     invisible(list(
-      volume_sensitivity_plot = plot1_modified,
+      volume_sensitivity_plot = plot1,
       tp_fn_plot = plot_tp_fn,
       cbp_combined_plot = plot2,
       summary_stats = summary_stats
