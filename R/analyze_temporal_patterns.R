@@ -42,19 +42,35 @@ analyze_temporal_patterns <- function(
     estimate_time = TRUE,
     overwrite = FALSE) {
 
-  ### Check required parameters
+  require(raster)
+
+  ### --- Input validation ---
   if (missing(binary_stack)) stop("binary_stack is required", call. = FALSE)
   if (missing(summary_raster)) stop("summary_raster is required", call. = FALSE)
   if (missing(time_steps)) stop("time_steps is required", call. = FALSE)
   if (missing(method)) stop("method is required (e.g., 'BIC', 'MBIC', 'MDL')", call. = FALSE)
 
-  ### Setup directories
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  ### --- Handle binary_stack as either directory or RasterStack ---
+  if (is.character(binary_stack) && dir.exists(binary_stack)) {
+    cat(paste0("\nLoading binary rasters from directory: ", binary_stack, "\n"))
+    binary_files <- list.files(binary_stack, pattern = "\\.tif$", full.names = TRUE)
+    if (length(binary_files) == 0) {
+      stop("No .tif files found in provided binary_stack directory: ", binary_stack)
+    }
+    binary_stack <- stack(binary_files)
+    cat(paste("Loaded", nlayers(binary_stack), "binary raster layers\n"))
+  } else if (inherits(binary_stack, c("RasterStack", "RasterBrick"))) {
+    cat("\nUsing provided raster stack object\n")
+  } else {
+    stop("binary_stack must be either a directory path containing binary rasters or a RasterStack/RasterBrick object.")
+  }
 
+  ### --- Setup output directories ---
+  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
   tiles_dir <- file.path(output_dir, "tiles")
   if (!dir.exists(tiles_dir)) dir.create(tiles_dir, recursive = TRUE)
 
-  ### Define output files
+  ### --- Define output files ---
   pattern_file <- file.path(output_dir, paste0("pattern_raster_", min(time_steps), "_", max(time_steps), ".tif"))
   decrease_file <- file.path(output_dir, paste0("year_first_decrease_", min(time_steps), "_", max(time_steps), ".tif"))
   increase_file <- file.path(output_dir, paste0("year_first_increase_", min(time_steps), "_", max(time_steps), ".tif"))
@@ -68,14 +84,14 @@ analyze_temporal_patterns <- function(
     ))
   }
 
-  ### Display spatial autocorrelation setting
+  ### --- Spatial autocorrelation message ---
   if (spatial_autocorrelation) {
     cat("\nSpatial autocorrelation: ENABLED (neighbor variable included)\n")
   } else {
     cat("\nSpatial autocorrelation: DISABLED (neighbor variable excluded)\n")
   }
 
-  ### Calculate tile extents
+  ### --- Calculate tile extents ---
   cat("\nCalculating tile extents...\n")
 
   full_ext <- extent(binary_stack)
@@ -119,7 +135,6 @@ analyze_temporal_patterns <- function(
   n_tiles <- length(tile_extents)
   cat(paste("Created", n_tiles, "tiles\n"))
 
-  ### Estimate processing time
   if (estimate_time) {
     cat("\nEstimating processing time...\n")
 
@@ -393,14 +408,14 @@ analyze_temporal_patterns <- function(
   par(mfrow = c(2, 2))
 
   plot(pattern_raster,
-       col = c("darkgray", "lightgray", "gray", "green4", "red3", "purple", "orange"),
+       col = c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202"),
        main = paste("Pattern Classification\n", min(time_steps), "-", max(time_steps)),
        breaks = c(0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5),
        legend = FALSE)
   legend("topright",
          legend = c("Always Absent", "Always Present", "No Pattern",
                     "Increasing", "Decreasing", "Fluctuating", "Failed"),
-         fill = c("darkgray", "lightgray", "gray", "green4", "red3", "purple", "orange"),
+         fill = c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202"),
          cex = 0.6)
 
   plot(decrease_raster,
