@@ -79,6 +79,8 @@ raster_align <- function(input_dir,
          "Provided object is of class: ", class(reference_raster)[1])
   }
 
+  reference_raster[is.na(reference_raster)] <- 0
+
   # Create output directory
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
