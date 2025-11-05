@@ -7,9 +7,9 @@
 #' @return A list with \code{binary_stack} (RasterStack) and \code{summary_raster} (RasterLayer).
 #' @importFrom raster stack raster calc cellStats nlayers writeRaster
 summarize_raster_outputs <- function(predictions_dir,
-                                        output_dir = NULL,
-                                        file_pattern = "Prediction_.*\\.tif$",
-                                        overwrite = TRUE) {
+                                     output_dir = NULL,
+                                     file_pattern = "Prediction_.*\\.tif$",
+                                     overwrite = TRUE) {
 
   require(raster)
 
@@ -30,7 +30,7 @@ summarize_raster_outputs <- function(predictions_dir,
          "Please check the path and try again.")
   }
 
-  ### Check if directory contains any raster files at all
+  ### Check for raster files
   all_raster_files <- list.files(
     path = predictions_dir,
     pattern = "\\.(tif|tiff|grd|img|asc)$",
@@ -40,40 +40,29 @@ summarize_raster_outputs <- function(predictions_dir,
 
   if (length(all_raster_files) == 0) {
     stop("Error: No raster files found in the predictions_dir:\n  ",
-         predictions_dir, "\n",
-         "  The directory exists but contains no raster files (.tif, .tiff, .grd, .img, .asc)\n",
-         "  Please verify you're pointing to the correct directory.")
+         predictions_dir)
   }
 
   print("Creating binary stack and mean summary raster...")
 
-  ### Set output directory (default to predictions_dir)
-  if (is.null(output_dir)) {
-    output_dir <- predictions_dir
-  }
+  ### Set output directory
+  if (is.null(output_dir)) output_dir <- predictions_dir
+  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 
-  ### Create output directory if needed
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-  }
-
-  ### Define output file paths
-  stack_file <- file.path(output_dir, "Binary_Stack.RData")
+  ### Define output paths
+  binary_dir <- file.path(output_dir, "Binary_Rasters")
   summary_file <- file.path(output_dir, "Summary_Binary_Mean.tif")
 
-  ### Check if outputs already exist
-  if (file.exists(stack_file) && file.exists(summary_file) && !overwrite) {
-    print("Binary stack and summary already exist. Loading from files...")
-    load(stack_file)
+  ### Skip existing outputs
+  if (dir.exists(binary_dir) && file.exists(summary_file) && !overwrite) {
+    print("Binary rasters and summary already exist. Reloading from disk...")
+    binary_files <- list.files(binary_dir, pattern = "\\.tif$", full.names = TRUE)
+    binary_stack <- stack(binary_files)
     summary_raster <- raster(summary_file)
-
-    return(list(
-      binary_stack = binary_stack,
-      summary_raster = summary_raster
-    ))
+    return(list(binary_stack = binary_stack, summary_raster = summary_raster))
   }
 
-  ### Find prediction files
+  ### Find prediction rasters
   prediction_files <- list.files(
     path = predictions_dir,
     pattern = file_pattern,
@@ -86,18 +75,12 @@ summarize_raster_outputs <- function(predictions_dir,
     full.names = FALSE
   )
 
-  print(paste("Found", length(prediction_files), "prediction rasters"))
-
   if (length(prediction_files) == 0) {
     stop("Error: No prediction files found matching pattern '", file_pattern, "'\n",
-         "  Directory searched: ", predictions_dir, "\n",
-         "  Raster files found in directory: ", length(all_raster_files), "\n",
-         "  Please verify:\n",
-         "    1. The file_pattern is correct: ", file_pattern, "\n",
-         "    2. Files match the expected naming convention\n",
-         "  Available raster files:\n    ",
-         paste(head(all_raster_files, 10), collapse = "\n    "))
+         "Directory searched: ", predictions_dir)
   }
+
+  print(paste("Found", length(prediction_files), "prediction rasters"))
 
   ### Stack rasters
   print("Stacking rasters...")
@@ -105,43 +88,48 @@ summarize_raster_outputs <- function(predictions_dir,
     stack(prediction_files),
     error = function(e) {
       stop("Error: Failed to stack rasters.\n",
-           "  Original error: ", e$message, "\n",
-           "  This may indicate corrupted or incompatible raster files.")
+           "Original error: ", e$message)
     }
   )
 
   clean_names <- gsub("\\.tif$", "", prediction_names)
   names(prediction_stack) <- clean_names
 
-  ### Binary reclassification (max value -> 1, else -> 0)
+  ### Create binary raster directory
+  if (!dir.exists(binary_dir)) dir.create(binary_dir, recursive = TRUE)
+
+  ### Binary reclassification and save
   print("Performing binary reclassification (max value = 1, else = 0)...")
-  binary_layers <- list()
+  binary_files <- c()
 
   for (i in 1:nlayers(prediction_stack)) {
     layer <- prediction_stack[[i]]
     max_val <- cellStats(layer, max, na.rm = TRUE)
-    binary_layers[[i]] <- calc(layer, function(x) ifelse(x == max_val, 1, 0))
+    binary_raster <- calc(layer, function(x) ifelse(x == max_val, 1, 0))
+
+    binary_file <- file.path(binary_dir, paste0(clean_names[i], "_binary.tif"))
+    writeRaster(binary_raster, binary_file, format = "GTiff", overwrite = TRUE)
+    binary_files <- c(binary_files, binary_file)
   }
 
-  binary_stack <- stack(binary_layers)
+  ### Build stack from saved binary rasters
+  binary_stack <- stack(binary_files)
   names(binary_stack) <- clean_names
 
-  ### Calculate mean across all time steps
+  ### Calculate mean summary
   print("Calculating mean across all time steps...")
   summary_raster <- calc(binary_stack, mean, na.rm = TRUE)
 
-  ### Save binary stack as RData file
-  print(paste("Saving binary stack to:", stack_file))
-  save(binary_stack, file = stack_file)
-
-  ### Save mean summary raster as GeoTIFF
+  ### Save mean summary raster
   print(paste("Saving mean summary raster to:", summary_file))
   writeRaster(summary_raster, summary_file, format = "GTiff", overwrite = TRUE)
 
-  print(paste("Complete! Created", nlayers(binary_stack), "layer binary stack"))
+  print(paste("Complete! Created", nlayers(binary_stack), "layer binary stack in:"))
+  print(binary_dir)
 
   return(list(
     binary_stack = binary_stack,
     summary_raster = summary_raster
   ))
 }
+
