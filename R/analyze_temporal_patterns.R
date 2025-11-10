@@ -8,7 +8,6 @@
 #' @param method Character; changepoint/selection criterion (e.g., "BIC", "MBIC", "MDL").
 #' @param output_dir Output directory.
 #' @param n_tiles_x,n_tiles_y Number of tiles in x/y.
-#' @param overlap Overlap (in cells) between tiles.
 #' @param alpha Significance level.
 #' @param spatial_autocorrelation Logical; if TRUE (default), includes neighbor variable in analysis. If FALSE, spatial autocorrelation is not considered.
 #' @param show_progress Logical; show progress bar.
@@ -26,57 +25,84 @@
 #' @importFrom utils txtProgressBar setTxtProgressBar write.csv
 #' @importFrom graphics par plot legend
 #' @importFrom grDevices heat.colors terrain.colors
-
-analyze_temporal_patterns <- function(
-    binary_stack,
-    summary_raster,
-    time_steps,
-    method,
-    output_dir = "output",
-    n_tiles_x = 1,
-    n_tiles_y = 1,
-    overlap = 10,
-    alpha = 0.05,
-    spatial_autocorrelation = TRUE,
-    show_progress = TRUE,
-    estimate_time = TRUE,
-    overwrite = FALSE) {
+analyze_temporal_patterns <- function(binary_stack,
+                                       summary_raster,
+                                       time_steps,
+                                       fastcpd_params = list(),
+                                       output_dir = "output",
+                                       n_tiles_x = 1,
+                                       n_tiles_y = 1,
+                                       overlap = 10,
+                                       alpha = 0.05,
+                                       spatial_autocorrelation = TRUE,
+                                       show_progress = TRUE,
+                                       estimate_time = TRUE,
+                                       overwrite = FALSE) {
 
   require(raster)
 
-  ### --- Input validation ---
-  if (missing(binary_stack)) stop("binary_stack is required", call. = FALSE)
-  if (missing(summary_raster)) stop("summary_raster is required", call. = FALSE)
-  if (missing(time_steps)) stop("time_steps is required", call. = FALSE)
-  if (missing(method)) stop("method is required (e.g., 'BIC', 'MBIC', 'MDL')", call. = FALSE)
+  ### Input validation
 
-  ### --- Handle binary_stack as either directory or RasterStack ---
-  if (is.character(binary_stack) && dir.exists(binary_stack)) {
-    cat(paste0("\nLoading binary rasters from directory: ", binary_stack, "\n"))
-    binary_files <- list.files(binary_stack, pattern = "\\.tif$", full.names = TRUE)
-    if (length(binary_files) == 0) {
-      stop("No .tif files found in provided binary_stack directory: ", binary_stack)
-    }
-    binary_stack <- stack(binary_files)
-    cat(paste("Loaded", nlayers(binary_stack), "binary raster layers\n"))
-  } else if (inherits(binary_stack, c("RasterStack", "RasterBrick"))) {
-    cat("\nUsing provided raster stack object\n")
-  } else {
-    stop("binary_stack must be either a directory path containing binary rasters or a RasterStack/RasterBrick object.")
+  if (missing(binary_stack)) {
+    stop("ERROR: binary_stack is required")
+  }
+  if (missing(summary_raster)) {
+    stop("ERROR: summary_raster is required")
+  }
+  if (missing(time_steps)) {
+    stop("ERROR: time_steps is required")
   }
 
-  ### --- Setup output directories ---
+  ### Handle binary_stack as directory or RasterStack
+
+  if (is.character(binary_stack) && dir.exists(binary_stack)) {
+    print(paste0("Loading binary rasters from directory: ", binary_stack))
+    binary_files <- list.files(binary_stack, pattern = "\\.tif$", full.names = TRUE)
+    if (length(binary_files) == 0) {
+      stop(paste0("ERROR: No .tif files found in provided binary_stack directory: ", binary_stack))
+    }
+    binary_stack <- stack(binary_files)
+    print(paste("Loaded", nlayers(binary_stack), "binary raster layers"))
+  } else if (is.character(binary_stack) && file.exists(binary_stack)) {
+    print(paste0("Loading binary raster from file: ", binary_stack))
+    binary_stack <- raster(binary_stack)
+  } else if (inherits(binary_stack, c("RasterStack", "RasterBrick", "RasterLayer"))) {
+    print("Using provided raster object")
+  } else {
+    stop("ERROR: binary_stack must be a directory path, file path, or RasterStack/RasterBrick object.")
+  }
+
+  ### Handle summary_raster as file or RasterLayer
+
+  if (is.character(summary_raster)) {
+    if (!file.exists(summary_raster)) {
+      stop(paste0("ERROR: summary_raster file does not exist: ", summary_raster))
+    }
+    summary_raster <- raster(summary_raster)
+  } else if (!inherits(summary_raster, "RasterLayer")) {
+    stop("ERROR: summary_raster must be a file path or RasterLayer object")
+  }
+
+  ### Validate fastcpd_params
+
+  if (!is.list(fastcpd_params)) {
+    stop("ERROR: fastcpd_params must be a named list")
+  }
+
+  ### Setup output directories
+
   if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
   tiles_dir <- file.path(output_dir, "tiles")
   if (!dir.exists(tiles_dir)) dir.create(tiles_dir, recursive = TRUE)
 
-  ### --- Define output files ---
+  ### Define output files
+
   pattern_file <- file.path(output_dir, paste0("pattern_raster_", min(time_steps), "_", max(time_steps), ".tif"))
   decrease_file <- file.path(output_dir, paste0("year_first_decrease_", min(time_steps), "_", max(time_steps), ".tif"))
   increase_file <- file.path(output_dir, paste0("year_first_increase_", min(time_steps), "_", max(time_steps), ".tif"))
 
   if (file.exists(pattern_file) && file.exists(decrease_file) && file.exists(increase_file) && !overwrite) {
-    cat("Output rasters exist. Set overwrite = TRUE to rerun.\n")
+    print("Output rasters exist. Set overwrite = TRUE to rerun.")
     return(list(
       pattern = raster(pattern_file),
       year_decrease = raster(decrease_file),
@@ -84,15 +110,17 @@ analyze_temporal_patterns <- function(
     ))
   }
 
-  ### --- Spatial autocorrelation message ---
+  ### Spatial autocorrelation message
+
   if (spatial_autocorrelation) {
-    cat("\nSpatial autocorrelation: ENABLED (neighbor variable included)\n")
+    print("Spatial autocorrelation: ENABLED (neighbor variable included)")
   } else {
-    cat("\nSpatial autocorrelation: DISABLED (neighbor variable excluded)\n")
+    print("Spatial autocorrelation: DISABLED (neighbor variable excluded)")
   }
 
-  ### --- Calculate tile extents ---
-  cat("\nCalculating tile extents...\n")
+  ### Calculate tile extents
+
+  print("Calculating tile extents...")
 
   full_ext <- extent(binary_stack)
   x_min <- full_ext@xmin
@@ -133,10 +161,12 @@ analyze_temporal_patterns <- function(
   }
 
   n_tiles <- length(tile_extents)
-  cat(paste("Created", n_tiles, "tiles\n"))
+  print(paste("Created", n_tiles, "tiles"))
+
+  ### Time estimation
 
   if (estimate_time) {
-    cat("\nEstimating processing time...\n")
+    print("Estimating processing time...")
 
     n_years <- nlayers(binary_stack)
     n_middle <- n_years - 2
@@ -168,7 +198,7 @@ analyze_temporal_patterns <- function(
           total_complex <- total_complex + n_complex
 
           if (is.null(time_per_pixel) && n_complex > 0) {
-            cat("\nTiming sample pixels...       \n")
+            print("\nTiming sample pixels...")
 
             middle_years <- raster::subset(tile_binary, 2:(n_years - 1))
             lag_stack <- raster::subset(tile_binary, 1:(n_years - 2))
@@ -195,39 +225,29 @@ analyze_temporal_patterns <- function(
 
             sample_size <- min(100, length(complex_indices))
             sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
-            pred_vals_sample <- pred_vals_all[sample_indices, ]
 
             start_time <- Sys.time()
-            for (i in 1:sample_size) {
-              classify_pixel_with_years(pred_vals_sample[i, ], n_middle,
-                                        time_steps, method, alpha, use_neighbor = spatial_autocorrelation)
+            for (idx in sample_indices) {
+              result <- classify_pixel_with_years(pred_vals_all[idx, ], n_middle,
+                                                  time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
             }
             end_time <- Sys.time()
 
             time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
-
-            rm(middle_years, lag_stack, predictor_stack,
-               pred_vals_all, valid_pred, mean_pred, complex_indices, pred_vals_sample)
-            if (spatial_autocorrelation) rm(middle_neighbor)
-            gc(verbose = FALSE)
+            print(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
           }
         }
-
-        rm(tile_binary, tile_summary, summary_vals, valid_indices)
-        gc(verbose = FALSE)
-
       }, error = function(e) {
         if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-          stop("Memory error. Increase n_tiles_x and n_tiles_y to use smaller tiles.", call. = FALSE)
+          stop("ERROR: Memory error. Increase n_tiles_x and n_tiles_y to use smaller tiles.")
         } else {
           stop(e)
         }
       })
     }
 
-    cat("\n")
-    cat(paste0("Quick pixels (always absent/present): ", format(total_quick, big.mark = ","), "\n"))
-    cat(paste0("Complex pixels (changepoint analysis): ", format(total_complex, big.mark = ","), "\n"))
+    print(paste0("Quick pixels (always absent/present): ", format(total_quick, big.mark = ",")))
+    print(paste0("Complex pixels (changepoint analysis): ", format(total_complex, big.mark = ",")))
 
     if (!is.null(time_per_pixel) && total_complex > 0) {
       base_seconds <- time_per_pixel * total_complex
@@ -249,38 +269,30 @@ analyze_temporal_patterns <- function(
         }
       }
 
-      cat(paste0("\nEstimated time: ", format_time(lower_seconds), " - ", format_time(upper_seconds), "\n"))
-      cat(paste0("(", round(time_per_pixel, 3), " sec/pixel + overhead)\n"))
+      print(paste("Estimated processing time:", format_time(lower_seconds), "to", format_time(upper_seconds)))
     }
-  } else {
-    cat("\nSkipping time estimation. This may take a long time.\n")
-    cat("Set estimate_time = TRUE to get time estimate.\n")
   }
 
   ### Process tiles
-  cat("\nProcessing tiles...\n")
+
+  print("Processing tiles...")
 
   tile_files_pattern <- character(n_tiles)
   tile_files_decrease <- character(n_tiles)
   tile_files_increase <- character(n_tiles)
 
   for (tile_i in 1:n_tiles) {
-    cat(sprintf("\nTile %d/%d\n", tile_i, n_tiles))
+    print(paste("Processing tile", tile_i, "of", n_tiles))
 
-    tile_ext <- tile_extents[[tile_i]]
-    tile_file_pattern <- file.path(tiles_dir, paste0("tile_pattern_", tile_i, ".tif"))
-    tile_file_decrease <- file.path(tiles_dir, paste0("tile_decrease_", tile_i, ".tif"))
-    tile_file_increase <- file.path(tiles_dir, paste0("tile_increase_", tile_i, ".tif"))
+    tile_file_pattern <- file.path(tiles_dir, paste0("pattern_tile_", tile_i, ".tif"))
+    tile_file_decrease <- file.path(tiles_dir, paste0("decrease_tile_", tile_i, ".tif"))
+    tile_file_increase <- file.path(tiles_dir, paste0("increase_tile_", tile_i, ".tif"))
 
     tile_files_pattern[tile_i] <- tile_file_pattern
     tile_files_decrease[tile_i] <- tile_file_decrease
     tile_files_increase[tile_i] <- tile_file_increase
 
-    if (file.exists(tile_file_pattern) && file.exists(tile_file_decrease) &&
-        file.exists(tile_file_increase) && !overwrite) {
-      cat("Already processed, skipping\n")
-      next
-    }
+    tile_ext <- tile_extents[[tile_i]]
 
     tryCatch({
       suppressWarnings({
@@ -315,7 +327,7 @@ analyze_temporal_patterns <- function(
         for (cell_i in 1:n_cells) {
           if (!any(is.na(pred_vals[cell_i, ]))) {
             result <- classify_pixel_with_years(pred_vals[cell_i, ], n_middle,
-                                                time_steps, method, alpha, use_neighbor = spatial_autocorrelation)
+                                                time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
             pattern_vals[cell_i] <- result[1]
             decrease_vals[cell_i] <- result[2]
             increase_vals[cell_i] <- result[3]
@@ -327,7 +339,7 @@ analyze_temporal_patterns <- function(
           if (cell_i %% 10 == 0) setTxtProgressBar(pb, cell_i)
         }
         close(pb)
-        cat("\n")
+        print("")
 
         tile_pattern <- raster(predictor_stack, layer = 1)
         tile_decrease <- raster(predictor_stack, layer = 1)
@@ -340,7 +352,7 @@ analyze_temporal_patterns <- function(
       } else {
         result_matrix <- calc(predictor_stack,
                               fun = function(x) classify_pixel_with_years(x, n_middle, time_steps,
-                                                                          method, alpha, use_neighbor = spatial_autocorrelation))
+                                                                          fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
 
         tile_pattern <- raster::subset(result_matrix, 1)
         tile_decrease <- raster::subset(result_matrix, 2)
@@ -362,7 +374,7 @@ analyze_temporal_patterns <- function(
 
     }, error = function(e) {
       if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-        stop("Memory error on tile ", tile_i, ". Increase n_tiles_x and n_tiles_y.", call. = FALSE)
+        stop(paste0("ERROR: Memory error on tile ", tile_i, ". Increase n_tiles_x and n_tiles_y."))
       } else {
         stop(e)
       }
@@ -370,7 +382,8 @@ analyze_temporal_patterns <- function(
   }
 
   ### Merge tiles
-  cat("\nMerging tiles...\n")
+
+  print("Merging tiles...")
 
   tryCatch({
     tile_rasters_pattern <- lapply(tile_files_pattern, raster)
@@ -387,14 +400,15 @@ analyze_temporal_patterns <- function(
 
   }, error = function(e) {
     if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-      stop("Memory error merging tiles. Increase n_tiles_x and n_tiles_y.", call. = FALSE)
+      stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
     } else {
       stop(e)
     }
   })
 
   ### Save results
-  cat("\nSaving results...\n")
+
+  print("Saving results...")
   writeRaster(pattern_raster, pattern_file, overwrite = TRUE,
               datatype = "INT1U", options = c("COMPRESS=LZW"))
   writeRaster(decrease_raster, decrease_file, overwrite = TRUE,
@@ -403,7 +417,8 @@ analyze_temporal_patterns <- function(
               datatype = "INT2S", options = c("COMPRESS=LZW"))
 
   ### Visualize
-  cat("\nGenerating plots...\n")
+
+  print("Generating plots...")
 
   par(mfrow = c(2, 2))
 
@@ -429,12 +444,13 @@ analyze_temporal_patterns <- function(
   par(mfrow = c(1, 1))
 
   ### Summary
-  cat("\n========================================\n")
-  cat("ANALYSIS COMPLETE\n")
-  cat("========================================\n")
-  cat(paste("Period:", min(time_steps), "-", max(time_steps), "\n"))
-  cat(paste("Tiles:", n_tiles, "\n"))
-  cat(paste("Spatial autocorrelation:", ifelse(spatial_autocorrelation, "ENABLED", "DISABLED"), "\n\n"))
+
+  print("========================================")
+  print("ANALYSIS COMPLETE")
+  print("========================================")
+  print(paste("Period:", min(time_steps), "-", max(time_steps)))
+  print(paste("Tiles:", n_tiles))
+  print(paste("Spatial autocorrelation:", ifelse(spatial_autocorrelation, "ENABLED", "DISABLED")))
 
   pattern_freq <- freq(pattern_raster)
   if (!is.null(pattern_freq) && nrow(pattern_freq) > 0) {
@@ -444,41 +460,35 @@ analyze_temporal_patterns <- function(
                        "Increasing", "Decreasing", "Fluctuating", "Failed")
     pattern_freq$pattern <- pattern_names[pattern_freq$value]
 
-    cat("Pattern Classifications:\n")
+    print("Pattern Classifications:")
     print(pattern_freq[, c("value", "pattern", "count", "proportion")])
   }
 
-  cat("\n")
   dec_freq <- freq(decrease_raster, useNA = "no")
   if (!is.null(dec_freq) && nrow(dec_freq) > 0) {
     dec_freq <- as.data.frame(dec_freq)
     n_decreasing <- sum(dec_freq$count)
-    cat(paste("Decreasing pixels:", format(n_decreasing, big.mark = ","), "\n"))
-    cat(paste("Year range:", min(dec_freq$value), "-", max(dec_freq$value), "\n"))
-    cat(paste("Most common:", dec_freq$value[which.max(dec_freq$count)],
-              "(", format(max(dec_freq$count), big.mark = ","), "pixels)\n"))
+    print(paste("Decreasing pixels:", format(n_decreasing, big.mark = ",")))
+    print(paste("Year range:", min(dec_freq$value), "-", max(dec_freq$value)))
+    print(paste("Most common:", dec_freq$value[which.max(dec_freq$count)],
+                "(", format(max(dec_freq$count), big.mark = ","), "pixels)"))
   }
 
-  cat("\n")
   inc_freq <- freq(increase_raster, useNA = "no")
   if (!is.null(inc_freq) && nrow(inc_freq) > 0) {
     inc_freq <- as.data.frame(inc_freq)
     n_increasing <- sum(inc_freq$count)
-    cat(paste("Increasing pixels:", format(n_increasing, big.mark = ","), "\n"))
-    cat(paste("Year range:", min(inc_freq$value), "-", max(inc_freq$value), "\n"))
-    cat(paste("Most common:", inc_freq$value[which.max(inc_freq$count)],
-              "(", format(max(inc_freq$count), big.mark = ","), "pixels)\n"))
+    print(paste("Increasing pixels:", format(n_increasing, big.mark = ",")))
+    print(paste("Year range:", min(inc_freq$value), "-", max(inc_freq$value)))
+    print(paste("Most common:", inc_freq$value[which.max(inc_freq$count)],
+                "(", format(max(inc_freq$count), big.mark = ","), "pixels)"))
   }
 
-  ### Cleanup option
-  cat("\nDelete tile files? (y/n): ")
-  response <- readLines(con = "stdin", n = 1)
-  if (tolower(response) == "y") {
-    unlink(tiles_dir, recursive = TRUE)
-    cat("Tiles removed\n")
-  } else {
-    cat(paste("Tiles kept:", tiles_dir, "\n"))
-  }
+  ### Auto-cleanup tiles
+
+  print("Cleaning up tile files...")
+  unlink(tiles_dir, recursive = TRUE)
+  print("Tiles removed")
 
   return(list(
     pattern = pattern_raster,

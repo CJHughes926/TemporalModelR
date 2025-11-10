@@ -17,35 +17,35 @@ model_assessment_metrics <- function(hypervolume_model,
   require(sp)
   require(dplyr)
 
-  ### VALIDATE INPUTS
+  ### Validate inputs
 
   if (missing(hypervolume_model) || !inherits(hypervolume_model, "Hypervolume")) {
-    stop("hypervolume_model must be a Hypervolume object")
+    stop("ERROR: hypervolume_model must be a Hypervolume object")
   }
 
   if (missing(projected_raster) || !inherits(projected_raster, "RasterLayer")) {
-    stop("projected_raster must be a RasterLayer object")
+    stop("ERROR: projected_raster must be a RasterLayer object")
   }
 
   if (missing(test_points_current_year)) {
-    stop("test_points_current_year is required")
+    stop("ERROR: test_points_current_year is required")
   }
 
   if (missing(test_points_all_years)) {
-    stop("test_points_all_years is required")
+    stop("ERROR: test_points_all_years is required")
   }
 
   if (missing(model_vars)) {
-    stop("model_vars is required. Provide character vector of model variable names ")
+    stop("ERROR: model_vars is required. Provide character vector of model variable names")
   }
 
   if (!is.character(model_vars) || length(model_vars) == 0) {
-    stop("model_vars must be a character vector with at least one variable ")
+    stop("ERROR: model_vars must be a character vector with at least one variable")
   }
 
   clean_model_vars <- gsub("^X", "", model_vars)
 
-  ### GET HYPERVOLUME NAME FOR ERROR MESSAGES
+  ### Get hypervolume name for error messages
 
   hv_name <- if (!is.null(hypervolume_model@Name) && hypervolume_model@Name != "untitled") {
     hypervolume_model@Name
@@ -53,12 +53,12 @@ model_assessment_metrics <- function(hypervolume_model,
     "Unknown"
   }
 
-  ### GEOGRAPHIC SPACE METRICS (G)
+  ### Geographic space metrics (G)
 
   n_test_points_G <- nrow(test_points_current_year)
 
   if (n_test_points_G == 0) {
-    warning(paste(hv_name, "has 0 year-specific test points - G-space metrics will not be calculated "))
+    warning(paste0("WARNING: ", hv_name, " has 0 year-specific test points - G-space metrics will not be calculated"))
 
     TP_test_G <- 0
     FN_test_G <- 0
@@ -69,22 +69,22 @@ model_assessment_metrics <- function(hypervolume_model,
   } else {
 
     if (n_test_points_G < 10) {
-      warning(paste(hv_name, "has only", n_test_points_G,
-                    "year-specific test points in geographic space - results may be unreliable "))
+      warning(paste0("WARNING: ", hv_name, " has only ", n_test_points_G,
+                     " year-specific test points in geographic space - results may be unreliable"))
     } else {
-      print(paste("  ", hv_name, "using", n_test_points_G, "year-specific test points in geographic space "))
+      print(paste("  ", hv_name, "using", n_test_points_G, "year-specific test points in geographic space"))
     }
 
     tryCatch({
       test_points_proj <- spTransform(test_points_current_year, crs(projected_raster))
     }, error = function(e) {
-      stop(paste("Error transforming test points to raster CRS:", e$message))
+      stop(paste0("ERROR: Error transforming test points to raster CRS: ", e$message))
     })
 
     tryCatch({
       hv_projected_values <- raster::extract(projected_raster, test_points_proj)
     }, error = function(e) {
-      stop(paste("Error extracting raster values at test point locations:", e$message))
+      stop(paste0("ERROR: Error extracting raster values at test point locations: ", e$message))
     })
 
     hv_projected_values[is.na(hv_projected_values)] <- 0
@@ -93,7 +93,7 @@ model_assessment_metrics <- function(hypervolume_model,
     FN_test_G <- sum(hv_projected_values == 0, na.rm = TRUE)
 
     if ((TP_test_G + FN_test_G) == 0) {
-      warning(paste("No valid test point extractions for", hv_name, "in geographic space "))
+      warning(paste0("WARNING: No valid test point extractions for ", hv_name, " in geographic space"))
       sensitivity_test_G <- NA
       omission_test_G <- NA
       CBP_test_G <- NA
@@ -109,13 +109,13 @@ model_assessment_metrics <- function(hypervolume_model,
         CBP_test_G <- dbinom(TP_test_G, size = TP_test_G + FN_test_G,
                              prob = hypervolume_prob)
       } else {
-        warning(paste("No valid raster cells for CBP calculation in", hv_name))
+        warning(paste0("WARNING: No valid raster cells for CBP calculation in ", hv_name))
         CBP_test_G <- NA
       }
     }
   }
 
-  ### ENVIRONMENTAL SPACE METRICS (E)
+  ### Environmental space metrics (E)
 
   if (inherits(test_points_all_years, "SpatialPointsDataFrame")) {
     test_data <- test_points_all_years@data
@@ -124,21 +124,21 @@ model_assessment_metrics <- function(hypervolume_model,
   } else if (is.data.frame(test_points_all_years)) {
     test_data <- test_points_all_years
   } else {
-    stop(paste("test_points_all_years must be SpatialPointsDataFrame, sf, or data.frame, got:",
-               class(test_points_all_years)[1]))
+    stop(paste0("ERROR: test_points_all_years must be SpatialPointsDataFrame, sf, or data.frame, got: ",
+                class(test_points_all_years)[1]))
   }
 
   missing_vars <- clean_model_vars[!clean_model_vars %in% names(test_data)]
   if (length(missing_vars) > 0) {
-    stop(paste("Missing variables in test_points_all_years:",
-               paste(missing_vars, collapse = ", "),
-               "Available:", paste(names(test_data), collapse = ", ")))
+    stop(paste0("ERROR: Missing variables in test_points_all_years: ",
+                paste(missing_vars, collapse = ", "),
+                " Available: ", paste(names(test_data), collapse = ", ")))
   }
 
   tryCatch({
     test_env <- dplyr::select(test_data, all_of(clean_model_vars))
   }, error = function(e) {
-    stop(paste("Error selecting model variables from test points:", e$message))
+    stop(paste0("ERROR: Error selecting model variables from test points: ", e$message))
   })
 
   n_before <- nrow(test_env)
@@ -146,11 +146,11 @@ model_assessment_metrics <- function(hypervolume_model,
   n_after <- nrow(test_env)
 
   if (n_before > n_after) {
-    warning(paste("Removed", n_before - n_after, "test points with missing environmental data for", hv_name))
+    warning(paste0("WARNING: Removed ", n_before - n_after, " test points with missing environmental data for ", hv_name))
   }
 
   if (nrow(test_env) == 0) {
-    warning(paste("No complete test points for", hv_name, "in environmental space"))
+    warning(paste0("WARNING: No complete test points for ", hv_name, " in environmental space"))
 
     TP_test_E <- 0
     FN_test_E <- 0
@@ -163,21 +163,21 @@ model_assessment_metrics <- function(hypervolume_model,
 
     n_test_points_E <- nrow(test_env)
     if (n_test_points_E < 10) {
-      warning(paste(hv_name, "has only", n_test_points_E,
-                    "test points in environmental space - results may be unreliable"))
+      warning(paste0("WARNING: ", hv_name, " has only ", n_test_points_E,
+                     " test points in environmental space - results may be unreliable"))
     }
 
     tryCatch({
       hv_inclusion <- hypervolume_inclusion_test(hypervolume_model, test_env)
     }, error = function(e) {
-      stop(paste("Error testing hypervolume inclusion for", hv_name, ":", e$message))
+      stop(paste0("ERROR: Error testing hypervolume inclusion for ", hv_name, ": ", e$message))
     })
 
     TP_test_E <- sum(hv_inclusion == TRUE)
     FN_test_E <- sum(hv_inclusion == FALSE)
 
     if ((TP_test_E + FN_test_E) == 0) {
-      warning(paste("No valid inclusion tests for", hv_name, "in environmental space"))
+      warning(paste0("WARNING: No valid inclusion tests for ", hv_name, " in environmental space"))
       sensitivity_test_E <- NA
       omission_test_E <- NA
       CBP_test_E <- NA
@@ -193,7 +193,7 @@ model_assessment_metrics <- function(hypervolume_model,
         CBP_test_E <- dbinom(TP_test_E, size = TP_test_E + FN_test_E,
                              prob = hypervolume_prob)
       } else {
-        warning(paste("No valid raster cells for CBP calculation in", hv_name))
+        warning(paste0("WARNING: No valid raster cells for CBP calculation in ", hv_name))
         CBP_test_E <- NA
       }
     }
@@ -201,12 +201,12 @@ model_assessment_metrics <- function(hypervolume_model,
     tryCatch({
       volume_env <- get_volume(hypervolume_model)
     }, error = function(e) {
-      warning(paste("Error calculating environmental volume for", hv_name, ":", e$message))
+      warning(paste0("WARNING: Error calculating environmental volume for ", hv_name, ": ", e$message))
       volume_env <- NA
     })
   }
 
-  ### VOLUME METRICS
+  ### Volume metrics
 
   tryCatch({
     total_cells <- sum(!is.na(values(projected_raster)))
@@ -215,15 +215,15 @@ model_assessment_metrics <- function(hypervolume_model,
     if (total_cells > 0) {
       volume_geo <- suitable_cells / total_cells
     } else {
-      warning(paste("No valid raster cells for geographic volume calculation in", hv_name))
+      warning(paste0("WARNING: No valid raster cells for geographic volume calculation in ", hv_name))
       volume_geo <- NA
     }
   }, error = function(e) {
-    warning(paste("Error calculating geographic volume for", hv_name, ":", e$message))
+    warning(paste0("WARNING: Error calculating geographic volume for ", hv_name, ": ", e$message))
     volume_geo <- NA
   })
 
-  ### RETURN METRICS
+  ### Return metrics
 
   return(list(
     G_volume = volume_geo,

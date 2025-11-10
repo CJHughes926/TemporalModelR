@@ -5,161 +5,154 @@
 #' @importFrom dplyr group_by across all_of slice ungroup
 #' @importFrom utils write.csv
 spatiotemporal_rarefication <- function(points_sp,
-                                        output_dir,
-                                        reference_raster,
-                                        time_cols = NULL,
-                                        xcol = NULL,
-                                        ycol = NULL,
-                                        points_crs = NULL,
-                                        create_spatial_only = FALSE,
-                                        output_prefix = "Pts_Database") {
+                                         output_dir,
+                                         reference_raster,
+                                         time_cols = NULL,
+                                         xcol = NULL,
+                                         ycol = NULL,
+                                         points_crs = NULL,
+                                         output_prefix = "Pts_Database") {
+
   require(raster)
   require(sp)
   require(dplyr)
 
-  ### INPUT VALIDATION AND CONVERSION - POINTS
+  ### Input validation and conversion - points
 
   if (is.character(points_sp)) {
     if (!file.exists(points_sp)) {
-      stop(paste("Error: File does not exist:", points_sp))
+      stop(paste0("ERROR: File does not exist: ", points_sp))
     }
 
     file_ext <- tolower(tools::file_ext(points_sp))
 
     if (file_ext == "csv") {
-
-      ### Require xcol, ycol, and points_crs for CSV files
       if (is.null(xcol)) {
-        stop("Error: 'xcol' is required when reading CSV files.")
+        stop("ERROR: 'xcol' is required when reading CSV files.")
       }
       if (is.null(ycol)) {
-        stop("Error: 'ycol' is required when reading CSV files.")
+        stop("ERROR: 'ycol' is required when reading CSV files.")
       }
       if (is.null(points_crs)) {
-        stop("Error: 'points_crs' is required when reading CSV files.")
+        stop("ERROR: 'points_crs' is required when reading CSV files.")
       }
 
       print(paste("Reading CSV file:", basename(points_sp)))
       points_data <- read.csv(points_sp, stringsAsFactors = FALSE)
 
       if (!xcol %in% names(points_data)) {
-        stop(paste0("Error: Column '", xcol, "' not found in CSV. Available columns: ",
-                    paste(names(points_data), collapse = ", ")))
+        stop(paste0("ERROR: Column '", xcol, "' not found in CSV. Available columns: ", paste(names(points_data), collapse = ", ")))
       }
       if (!ycol %in% names(points_data)) {
-        stop(paste0("Error: Column '", ycol, "' not found in CSV. Available columns: ",
-                    paste(names(points_data), collapse = ", ")))
+        stop(paste0("ERROR: Column '", ycol, "' not found in CSV. Available columns: ", paste(names(points_data), collapse = ", ")))
       }
 
       coordinates(points_data) <- c(xcol, ycol)
-      proj4string(points_data) <- CRS(points_crs)
+
+      if (is.numeric(points_crs)) {
+        proj4string(points_data) <- CRS(paste0("+init=epsg:", points_crs))
+      } else if (inherits(points_crs, "CRS")) {
+        proj4string(points_data) <- points_crs
+      } else if (is.character(points_crs)) {
+        proj4string(points_data) <- CRS(points_crs)
+      } else {
+        stop("ERROR: points_crs must be a character string (proj4 or WKT), CRS object, or numeric EPSG code")
+      }
+
       points_sp <- points_data
 
     } else if (file_ext %in% c("shp", "geojson", "gpkg")) {
       print(paste("Reading spatial file:", basename(points_sp)))
       points_sp <- rgdal::readOGR(points_sp, verbose = FALSE)
     } else {
-      stop(paste("Error: Unsupported file format:", file_ext,
-                 "Supported formats: .csv, .shp, .geojson, .gpkg"))
+      stop(paste0("ERROR: Unsupported file format: ", file_ext, " Supported formats: .csv, .shp, .geojson, .gpkg"))
     }
 
   } else if (is.data.frame(points_sp)) {
-
-    ### Require xcol, ycol, and points_crs for data frames
     if (is.null(xcol)) {
-      stop("Error: 'xcol' is required when providing a data frame.")
+      stop("ERROR: 'xcol' is required when providing a data frame.")
     }
     if (is.null(ycol)) {
-      stop("Error: 'ycol' is required when providing a data frame.")
+      stop("ERROR: 'ycol' is required when providing a data frame.")
     }
     if (is.null(points_crs)) {
-      stop("Error: 'points_crs' is required when providing a data frame.")
+      stop("ERROR: 'points_crs' is required when providing a data frame.")
     }
 
     print("Converting data frame to SpatialPointsDataFrame...")
 
     if (!xcol %in% names(points_sp)) {
-      stop(paste0("Error: Column '", xcol, "' not found in data frame. Available columns: ",
-                  paste(names(points_sp), collapse = ", ")))
+      stop(paste0("ERROR: Column '", xcol, "' not found in data frame. Available columns: ", paste(names(points_sp), collapse = ", ")))
     }
     if (!ycol %in% names(points_sp)) {
-      stop(paste0("Error: Column '", ycol, "' not found in data frame. Available columns: ",
-                  paste(names(points_sp), collapse = ", ")))
+      stop(paste0("ERROR: Column '", ycol, "' not found in data frame. Available columns: ", paste(names(points_sp), collapse = ", ")))
     }
 
     coordinates(points_sp) <- c(xcol, ycol)
-    proj4string(points_sp) <- CRS(points_crs)
+
+    if (is.numeric(points_crs)) {
+      proj4string(points_sp) <- CRS(paste0("+init=epsg:", points_crs))
+    } else if (inherits(points_crs, "CRS")) {
+      proj4string(points_sp) <- points_crs
+    } else if (is.character(points_crs)) {
+      proj4string(points_sp) <- CRS(points_crs)
+    } else {
+      stop("ERROR: points_crs must be a character string (proj4 or WKT), CRS object, or numeric EPSG code")
+    }
 
   } else if (!inherits(points_sp, "SpatialPointsDataFrame")) {
-    stop("Error: points_sp must be a SpatialPointsDataFrame, data frame with x/y columns, or file path")
+    stop("ERROR: points_sp must be a SpatialPointsDataFrame, data frame with x/y columns, or file path")
   }
 
-  ### INPUT VALIDATION AND CONVERSION - RASTER
+  ### Input validation and conversion - raster
 
-  if (inherits(reference_raster, "RasterLayer")) {
-    binary_mask <- reference_raster
-  } else {
+  if (is.character(reference_raster)) {
     if (!file.exists(reference_raster)) {
-      stop(paste("Error: Reference raster file not found at path:", reference_raster))
+      stop(paste0("ERROR: Reference raster file not found at path: ", reference_raster))
     }
     binary_mask <- raster(reference_raster)
+  } else if (inherits(reference_raster, "RasterLayer")) {
+    binary_mask <- reference_raster
+  } else {
+    stop("ERROR: reference_raster must be a file path or RasterLayer object")
   }
 
-  ### VALIDATE OUTPUT DIRECTORY
+  ### Validate output directory
 
   if (is.null(output_dir) || output_dir == "") {
-    stop("Error: output_dir must be provided and cannot be empty")
+    stop("ERROR: output_dir must be provided and cannot be empty")
   }
 
-  ### VALIDATE TIME COLUMNS
+  ### Validate time columns
 
   if (is.null(time_cols) || length(time_cols) == 0) {
     print("No time columns provided. Performing spatial-only rarefaction.")
-    create_spatial_only <- TRUE
     perform_spatiotemporal <- FALSE
   } else {
-    ### Validate time_cols is character vector
     if (!is.character(time_cols)) {
-      stop(paste(
-        "Error: time_cols must be a character vector.",
-        "",
-        "### Examples:",
-        "#",
-        "# For single time dimension:",
-        "# time_cols = \"Year\"",
-        "#",
-        "# For multiple time dimensions:",
-        "# time_cols = c(\"Year\", \"Month\")",
-        "# time_cols = c(\"Year\", \"DOY\")",
-        sep = ""
-      ))
+      stop("ERROR: time_cols must be a character vector.")
     }
 
-    ### Check if time_cols exist in data
     missing_cols <- setdiff(time_cols, names(points_sp@data))
     if (length(missing_cols) > 0) {
-      stop(paste(
-        "Error: The following time_cols are missing from the input data:",
-        paste(missing_cols, collapse = ", "),
-        "Available columns:",
-        paste(names(points_sp@data), collapse = ", ")
-      ))
+      stop(paste0("ERROR: The following time_cols are missing from the input data: ",
+                  paste(missing_cols, collapse = ", "),
+                  " Available columns: ",
+                  paste(names(points_sp@data), collapse = ", ")))
     }
 
-    ### Check for missing values in time columns
     n_original <- nrow(points_sp@data)
     has_missing <- FALSE
     for (tc in time_cols) {
       n_missing <- sum(is.na(points_sp@data[[tc]]))
       if (n_missing > 0) {
         pct_missing <- round(n_missing / n_original * 100, 2)
-        warning(paste0("Warning: ", n_missing, " rows (", pct_missing,
+        warning(paste0("WARNING: ", n_missing, " rows (", pct_missing,
                        "%) have missing values in time column '", tc, "'"))
         has_missing <- TRUE
       }
     }
 
-    ### Print confirmation of time columns
     if (length(time_cols) == 1) {
       print(paste("Using single time dimension:", time_cols))
     } else {
@@ -171,7 +164,7 @@ spatiotemporal_rarefication <- function(points_sp,
 
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
-  ### PROCESS COORDINATES AND PIXEL IDs
+  ### Process coordinates and pixel IDs
 
   coords <- coordinates(points_sp)
   coord_names <- colnames(coords)
@@ -193,10 +186,9 @@ spatiotemporal_rarefication <- function(points_sp,
   Freq_Table <- as.data.frame(table(points_sp$pixel_id))
   colnames(Freq_Table) <- c("pixel_id", "Freq")
 
-  ### SPATIOTEMPORAL RAREFACTION
+  ### Spatiotemporal rarefaction
 
   if (perform_spatiotemporal) {
-    ### Group by pixel_id and all time columns
     points_subset <- points_sp@data %>%
       group_by(pixel_id, across(all_of(time_cols))) %>%
       slice(1) %>%
@@ -222,7 +214,6 @@ spatiotemporal_rarefication <- function(points_sp,
 
     print(paste("Spatiotemporal file saved:", basename(spatiotemporal_file)))
 
-    ### Print summary of time combinations
     time_combinations <- points_subset %>%
       select(all_of(time_cols)) %>%
       distinct() %>%
@@ -231,46 +222,43 @@ spatiotemporal_rarefication <- function(points_sp,
     print(paste("  Retained 1 point per pixel across", time_combinations, "unique time combinations"))
   }
 
-  ### SPATIAL-ONLY RAREFACTION
+  ### Spatial-only rarefaction
 
-  if (create_spatial_only || !perform_spatiotemporal) {
-    points_subset_perpixel <- points_sp@data %>%
-      group_by(pixel_id) %>%
-      slice(1) %>%
-      ungroup() %>%
-      merge(Freq_Table, by = "pixel_id")
+  points_subset_perpixel <- points_sp@data %>%
+    group_by(pixel_id) %>%
+    slice(1) %>%
+    ungroup() %>%
+    merge(Freq_Table, by = "pixel_id")
 
-    n_spatial <- nrow(points_subset_perpixel)
+  n_spatial <- nrow(points_subset_perpixel)
 
-    if (perform_spatiotemporal) {
-      cols_to_save <- c(time_cols, "pixel_id", coord_x, coord_y)
-    } else {
-      cols_to_save <- c("pixel_id", coord_x, coord_y)
-    }
-
-    spatial_file <- paste0(output_dir, "/", output_prefix, "_OnePerPix.csv")
-    write.csv(
-      points_subset_perpixel[, cols_to_save],
-      spatial_file,
-      row.names = FALSE
-    )
-
-    print(paste("Spatial file saved:", basename(spatial_file)))
-
-    if (perform_spatiotemporal) {
-      additional_points <- n_spatiotemporal - n_spatial
-      pct_additional <- round((additional_points / n_spatial) * 100, 2)
-      print(paste0("Spatial: ", n_spatial, " points | Spatiotemporal: ", n_spatiotemporal,
-                   " points | Additional retained: ", additional_points,
-                   " (", pct_additional, "% increase)"))
-    }
+  if (perform_spatiotemporal) {
+    cols_to_save <- c(time_cols, "pixel_id", coord_x, coord_y)
+  } else {
+    cols_to_save <- c("pixel_id", coord_x, coord_y)
   }
 
-  ### SUMMARY
+  spatial_file <- paste0(output_dir, "/", output_prefix, "_OnePerPix.csv")
+  write.csv(
+    points_subset_perpixel[, cols_to_save],
+    spatial_file,
+    row.names = FALSE
+  )
+
+  print(paste("Spatial file saved:", basename(spatial_file)))
+
+  if (perform_spatiotemporal) {
+    additional_points <- n_spatiotemporal - n_spatial
+    pct_additional <- round((additional_points / n_spatial) * 100, 2)
+    print(paste0("Spatial: ", n_spatial, " points | Spatiotemporal: ", n_spatiotemporal,
+                 " points | Additional retained: ", additional_points,
+                 " (", pct_additional, "% increase)"))
+  }
+
+  ### Summary
 
   summary_info <- list(
     input_points = nrow(points_sp@data),
-    spatial_points = if (create_spatial_only || !perform_spatiotemporal) n_spatial else NA,
     spatiotemporal_points = if (perform_spatiotemporal) n_spatiotemporal else NA,
     time_cols_used = if (perform_spatiotemporal) time_cols else NULL,
     files_created = list()
@@ -279,9 +267,9 @@ spatiotemporal_rarefication <- function(points_sp,
   if (perform_spatiotemporal) {
     summary_info$files_created$spatiotemporal <- spatiotemporal_file
   }
-  if (create_spatial_only || !perform_spatiotemporal) {
-    summary_info$files_created$spatial <- spatial_file
-  }
+
+  summary_info$files_created$spatial <- spatial_file
+
 
   print("Processing complete!")
 

@@ -37,65 +37,61 @@ raster_align <- function(input_dir,
                          output_suffix = "_Masked_Updated",
                          pattern = ".*\\.tif$",
                          overwrite = FALSE) {
-  # Load required library
+
   require(raster)
 
-  # Check for required inputs
+  ### Validate required inputs
+
   if (missing(input_dir)) {
-    stop("ERROR: 'input_dir' is required but was not provided. ",
-         "Please specify the directory containing input raster files.")
+    stop("ERROR: 'input_dir' is required but was not provided. Please specify the directory containing input raster files.")
   }
 
   if (missing(output_dir)) {
-    stop("ERROR: 'output_dir' is required but was not provided. ",
-         "Please specify the directory where processed rasters should be saved.")
+    stop("ERROR: 'output_dir' is required but was not provided. Please specify the directory where processed rasters should be saved.")
   }
 
   if (missing(reference_raster)) {
-    stop("ERROR: 'reference_raster' is required but was not provided. ",
-         "Please specify the path to the reference raster file or a raster object that will be used ",
-         "for alignment (projection, extent, and resolution).")
+    stop("ERROR: 'reference_raster' is required but was not provided. Please specify the path to the reference raster file or a raster object that will be used for alignment (projection, extent, and resolution).")
   }
 
-  # Validate that paths exist and are accessible
+  ### Validate that paths exist and are accessible
+
   if (!dir.exists(input_dir)) {
-    stop("ERROR: Input directory does not exist: '", input_dir, "'. ",
-         "Please check the path and try again.")
+    stop(paste0("ERROR: Input directory does not exist: '", input_dir, "'. Please check the path and try again."))
   }
 
-  # Handle reference_raster as either file path or raster object
+  ### Handle reference_raster as either file path or raster object
+
   if (is.character(reference_raster)) {
-    # It's a file path
     if (!file.exists(reference_raster)) {
-      stop("ERROR: Reference raster file does not exist: '", reference_raster, "'. ",
-           "Please check the file path and try again.")
+      stop(paste0("ERROR: Reference raster file does not exist: '", reference_raster, "'. Please check the file path and try again."))
     }
     reference_raster <- raster(reference_raster)
   } else if (inherits(reference_raster, "RasterLayer")) {
-    # It's already a raster object, use as-is
     reference_raster <- reference_raster
   } else {
-    stop("ERROR: 'reference_raster' must be either a file path (character string) or a RasterLayer object. ",
-         "Provided object is of class: ", class(reference_raster)[1])
+    stop(paste0("ERROR: 'reference_raster' must be either a file path (character string) or a RasterLayer object. Provided object is of class: ", class(reference_raster)[1]))
   }
 
   reference_raster[is.na(reference_raster)] <- 0
 
-  # Create output directory
+  ### Create output directory
+
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
-  # List all raster files
+  ### List all raster files
+
   all_tif_files <- list.files(input_dir, pattern = pattern, full.names = TRUE)
   total_files <- length(all_tif_files)
 
   if (total_files == 0) {
-    stop("ERROR: No raster files found in input directory matching pattern '", pattern, "'. ",
-         "Please check that the directory contains .tif files or adjust the pattern parameter.")
+    stop(paste0("ERROR: No raster files found in input directory matching pattern '", pattern, "'. Please check that the directory contains .tif files or adjust the pattern parameter."))
   }
 
   print(paste("Found", total_files, "total raster files in directory"))
 
-  # Determine which files to process based on overwrite setting
+  ### Determine which files to process based on overwrite setting
+
   if (overwrite) {
     print("Overwrite mode: ON - Will process and overwrite all files")
     tif_files <- all_tif_files
@@ -103,7 +99,6 @@ raster_align <- function(input_dir,
   } else {
     print("Overwrite mode: OFF - Will skip files that already exist")
 
-    # Check which files already have outputs
     output_exists <- sapply(all_tif_files, function(f) {
       original_file_name <- basename(f)
       updated_file_name <- sub("\\.tif$", paste0(output_suffix, ".tif"), original_file_name)
@@ -113,9 +108,8 @@ raster_align <- function(input_dir,
 
     already_processed <- sum(output_exists)
     percent_processed <- round((already_processed / total_files) * 100, 1)
-    print(paste(already_processed, " files already exist in output directory (", percent_processed, "%)", sep = ""))
+    print(paste0(already_processed, " files already exist in output directory (", percent_processed, "%)"))
 
-    # Filter to only files that need processing
     tif_files <- all_tif_files[!output_exists]
     files_to_process <- length(tif_files)
 
@@ -127,7 +121,8 @@ raster_align <- function(input_dir,
 
   print(paste("Processing", files_to_process, "files"))
 
-  # Process each raster
+  ### Process each raster
+
   for (i in 1:length(tif_files)) {
     original_file_name <- basename(tif_files[i])
     updated_file_name <- sub("\\.tif$", paste0(output_suffix, ".tif"), original_file_name)
@@ -138,9 +133,7 @@ raster_align <- function(input_dir,
     r <- raster(tif_files[i])
 
     if (is.na(crs(r))) {
-      stop(paste0("ERROR: Raster '", original_file_name, "' has no defined CRS. ",
-                  "Please assign a coordinate reference system to this raster before processing. ",
-                  "You can use raster::crs() to set the CRS if you know what it should be."))
+      stop(paste0("ERROR: Raster '", original_file_name, "' has no defined CRS. Please assign a coordinate reference system to this raster before processing. You can use raster::crs() to set the CRS if you know what it should be."))
     }
 
     r <- projectRaster(r, crs = crs(reference_raster))

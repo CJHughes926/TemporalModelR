@@ -35,12 +35,14 @@
 #' @importFrom scales scientific
 #' @importFrom knitr kable
 #' @importFrom ggtext element_markdown
+plot_model_assessment <- function(data_file_path,
+                                   time_column,
+                                   facet_column = NULL,
+                                   cbp_threshold = 0.05,
+                                   separate_cbp = TRUE) {
 
-function(data_file_path,
-         time_column,
-         facet_column = NULL,
-         cbp_threshold = 0.001,
-         separate_cbp = TRUE) {
+  require(ggtext)
+  require(grid)
 
   # Validate inputs
   if (missing(data_file_path)) {

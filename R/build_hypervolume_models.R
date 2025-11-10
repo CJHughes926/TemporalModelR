@@ -20,76 +20,76 @@
 #' @importFrom tools file_ext
 #' @importFrom grDevices rainbow
 #' @importFrom graphics plot
-build_hypervolume_models <- function(partition_results,
-                                     model_vars,
-                                     method,
-                                     output_dir = "./Hypervolume_Models",
-                                     hypervolume_params = list(),
-                                     create_plot = TRUE,
-                                     overwrite = FALSE) {
+build_hypervolume_models1 <- function(partition_results,
+                                      model_vars,
+                                      method,
+                                      output_dir = "./Hypervolume_Models",
+                                      hypervolume_params = list(),
+                                      create_plot = TRUE,
+                                      overwrite = FALSE) {
 
   require(hypervolume)
   require(dplyr)
   require(sf)
 
-  ### VALIDATE method INPUT
+  ### Validate method input
 
   if (missing(method)) {
-    stop("method is required. Expecting 'svm' or 'gaussian'")
+    stop("ERROR: method is required. Expecting 'svm' or 'gaussian'")
   }
 
   if (!method %in% c("gaussian", "svm")) {
-    stop(paste("method must be 'gaussian' or 'svm', got:", method))
+    stop(paste0("ERROR: method must be 'gaussian' or 'svm', got: ", method))
   }
 
   print(paste("Building hypervolume models using method:", method))
 
-  ### VALIDATE partition_results INPUT
+  ### Validate partition_results input
 
   if (missing(partition_results)) {
-    stop("partition_results is required. Provide output from spatiotemporal_partition() as list or .rds file path")
+    stop("ERROR: partition_results is required. Provide output from spatiotemporal_partition() as list or .rds file path")
   }
 
   if (is.character(partition_results)) {
     if (!file.exists(partition_results)) {
-      stop(paste("File not found:", partition_results, "Working directory:", getwd()))
+      stop(paste0("ERROR: File not found: ", partition_results, " Working directory: ", getwd()))
     }
 
     file_ext <- tolower(tools::file_ext(partition_results))
     if (file_ext != "rds") {
-      stop(paste("partition_results must be .rds format, got:", file_ext))
+      stop(paste0("ERROR: partition_results must be .rds format, got: ", file_ext))
     }
 
     print(paste("Reading partition results from:", basename(partition_results)))
     tryCatch({
       partition_data <- readRDS(partition_results)
     }, error = function(e) {
-      stop(paste("Error reading .rds file:", e$message))
+      stop(paste0("ERROR: Error reading .rds file: ", e$message))
     })
 
   } else if (is.list(partition_results)) {
     print("Using provided partition results list...")
     partition_data <- partition_results
   } else {
-    stop(paste("partition_results must be file path or list, got:", class(partition_results)[1]))
+    stop(paste0("ERROR: partition_results must be file path or list, got: ", class(partition_results)[1]))
   }
 
-  ### VALIDATE partition_data STRUCTURE
+  ### Validate partition_data structure
 
   if (!"points_sf" %in% names(partition_data)) {
-    stop(paste("partition_results missing 'points_sf' element. Available:",
-               paste(names(partition_data), collapse = ", ")))
+    stop(paste0("ERROR: partition_results missing 'points_sf' element. Available: ",
+                paste(names(partition_data), collapse = ", ")))
   }
 
   occurrence_points <- partition_data$points_sf
 
   if (is.null(occurrence_points) || nrow(occurrence_points) == 0) {
-    stop("partition_results$points_sf is empty")
+    stop("ERROR: partition_results$points_sf is empty")
   }
 
   if (!"fold" %in% names(occurrence_points)) {
-    stop(paste("Missing 'fold' column. Available columns:",
-               paste(names(occurrence_points)[names(occurrence_points) != "geometry"], collapse = ", ")))
+    stop(paste0("ERROR: Missing 'fold' column. Available columns: ",
+                paste(names(occurrence_points)[names(occurrence_points) != "geometry"], collapse = ", ")))
   }
 
   if (inherits(occurrence_points, "sf")) {
@@ -99,40 +99,40 @@ build_hypervolume_models <- function(partition_results,
   }
 
   if (all(is.na(folds))) {
-    stop("All fold values are NA. Re-run spatiotemporal_partition()")
+    stop("ERROR: All fold values are NA. Re-run spatiotemporal_partition()")
   }
 
   if (length(unique(folds[!is.na(folds)])) < 2) {
-    warning(paste("Only", length(unique(folds[!is.na(folds)])), "unique fold detected"))
+    warning(paste0("WARNING: Only ", length(unique(folds[!is.na(folds)])), " unique fold detected"))
   }
 
   print(paste("Loaded", nrow(occurrence_points), "points from partition results"))
 
-  ### VALIDATE model_vars INPUT
+  ### Validate model_vars input
 
   if (missing(model_vars)) {
     available_vars <- colnames(occurrence_points)
     available_vars <- available_vars[available_vars != "geometry"]
-    stop(paste("model_vars required. Available:", paste(available_vars, collapse = ", ")))
+    stop(paste0("ERROR: model_vars required. Available: ", paste(available_vars, collapse = ", ")))
   }
 
   if (!is.character(model_vars) || length(model_vars) == 0) {
-    stop("model_vars must be character vector with at least one variable")
+    stop("ERROR: model_vars must be character vector with at least one variable")
   }
 
   if (!all(model_vars %in% colnames(occurrence_points))) {
     missing_vars <- model_vars[!model_vars %in% colnames(occurrence_points)]
     available_vars <- colnames(occurrence_points)
     available_vars <- available_vars[available_vars != "geometry"]
-    stop(paste("Missing variables:", paste(missing_vars, collapse = ", "),
-               "Available:", paste(available_vars, collapse = ", ")))
+    stop(paste0("ERROR: Missing variables: ", paste(missing_vars, collapse = ", "),
+                " Available: ", paste(available_vars, collapse = ", ")))
   }
 
   if (length(folds) != nrow(occurrence_points)) {
-    stop(paste("Fold length mismatch:", length(folds), "vs", nrow(occurrence_points)))
+    stop(paste0("ERROR: Fold length mismatch: ", length(folds), " vs ", nrow(occurrence_points)))
   }
 
-  ### VALIDATE hypervolume_params
+  ### Validate hypervolume_params
 
   if (length(hypervolume_params) > 0) {
     if (method == "gaussian") {
@@ -140,21 +140,21 @@ build_hypervolume_models <- function(partition_results,
                         "chunk.size", "verbose", "samples.per.point")
       invalid_params <- setdiff(names(hypervolume_params), valid_params)
       if (length(invalid_params) > 0) {
-        warning(paste("Invalid parameters for gaussian method:", paste(invalid_params, collapse = ", "),
-                      "Valid parameters:", paste(valid_params, collapse = ", ")))
+        warning(paste0("WARNING: Invalid parameters for gaussian method: ", paste(invalid_params, collapse = ", "),
+                       " Valid parameters: ", paste(valid_params, collapse = ", ")))
       }
 
       if ("quantile.requested" %in% names(hypervolume_params)) {
         qr <- hypervolume_params$quantile.requested
         if (!is.numeric(qr) || qr <= 0 || qr > 1) {
-          warning(paste("quantile.requested should be between 0 and 1, got:", qr))
+          warning(paste0("WARNING: quantile.requested should be between 0 and 1, got: ", qr))
         }
       }
 
       if ("quantile.requested.type" %in% names(hypervolume_params)) {
         qrt <- hypervolume_params$quantile.requested.type
         if (!qrt %in% c("probability", "volume")) {
-          warning(paste("quantile.requested.type should be 'probability' or 'volume', got:", qrt))
+          warning(paste0("WARNING: quantile.requested.type should be 'probability' or 'volume', got: ", qrt))
         }
       }
 
@@ -162,21 +162,21 @@ build_hypervolume_models <- function(partition_results,
       valid_params <- c("svm.nu", "svm.gamma", "chunk.size", "verbose", "samples.per.point")
       invalid_params <- setdiff(names(hypervolume_params), valid_params)
       if (length(invalid_params) > 0) {
-        warning(paste("Invalid parameters for svm method:", paste(invalid_params, collapse = ", "),
-                      "Valid parameters:", paste(valid_params, collapse = ", ")))
+        warning(paste0("WARNING: Invalid parameters for svm method: ", paste(invalid_params, collapse = ", "),
+                       " Valid parameters: ", paste(valid_params, collapse = ", ")))
       }
 
       if ("svm.nu" %in% names(hypervolume_params)) {
         nu <- hypervolume_params$svm.nu
         if (!is.numeric(nu) || nu <= 0 || nu > 1) {
-          warning(paste("svm.nu should be between 0 and 1, got:", nu))
+          warning(paste0("WARNING: svm.nu should be between 0 and 1, got: ", nu))
         }
       }
 
       if ("svm.gamma" %in% names(hypervolume_params)) {
         gamma <- hypervolume_params$svm.gamma
         if (!is.numeric(gamma) || gamma <= 0) {
-          warning(paste("svm.gamma should be positive, got:", gamma))
+          warning(paste0("WARNING: svm.gamma should be positive, got: ", gamma))
         }
       }
     }
@@ -184,12 +184,12 @@ build_hypervolume_models <- function(partition_results,
     if ("samples.per.point" %in% names(hypervolume_params)) {
       spp <- hypervolume_params$samples.per.point
       if (!is.numeric(spp) || spp < 1) {
-        warning(paste("samples.per.point should be positive integer, got:", spp))
+        warning(paste0("WARNING: samples.per.point should be positive integer, got: ", spp))
       }
     }
   }
 
-  ### CREATE OUTPUT DIRECTORY
+  ### Create output directory
 
   tryCatch({
     if (!dir.exists(output_dir)) {
@@ -197,10 +197,10 @@ build_hypervolume_models <- function(partition_results,
       print(paste("Created output directory:", output_dir))
     }
   }, error = function(e) {
-    stop(paste("Could not create output directory:", output_dir, "-", e$message))
+    stop(paste0("ERROR: Could not create output directory: ", output_dir, " - ", e$message))
   })
 
-  ### PREPARE DATA
+  ### Prepare data
 
   occ_df <- st_drop_geometry(occurrence_points)
   occ_df$fold <- folds
@@ -210,7 +210,7 @@ build_hypervolume_models <- function(partition_results,
 
   if (any(na_summary > 0)) {
     na_vars <- names(na_summary[na_summary > 0])
-    warning(paste("NAs in:", paste(paste(na_vars, na_summary[na_summary > 0], sep = "="), collapse = ", ")))
+    warning(paste0("WARNING: NAs in: ", paste(paste(na_vars, na_summary[na_summary > 0], sep = "="), collapse = ", ")))
   }
 
   occ_df <- occ_df[complete.cases(occ_df[, model_vars]), ]
@@ -218,17 +218,17 @@ build_hypervolume_models <- function(partition_results,
 
   if (n_removed > 0) {
     pct_removed <- round(n_removed / n_original * 100, 2)
-    warning(paste0("Removed ", n_removed, " rows (", pct_removed, "%) with NAs. Remaining: ", nrow(occ_df)))
+    warning(paste0("WARNING: Removed ", n_removed, " rows (", pct_removed, "%) with NAs. Remaining: ", nrow(occ_df)))
   }
 
   if (nrow(occ_df) == 0) {
-    stop("No complete cases after removing NAs. Check environmental data extraction")
+    stop("ERROR: No complete cases after removing NAs. Check environmental data extraction")
   }
 
   fold_ids <- sort(unique(occ_df$fold))
   print(paste("Detected", length(fold_ids), "folds:", paste(fold_ids, collapse = ", ")))
 
-  ### DEFAULT HYPERVOLUME PARAMETERS
+  ### Default hypervolume parameters
 
   default_params_gaussian <- list(
     quantile.requested = 0.95,
@@ -243,7 +243,7 @@ build_hypervolume_models <- function(partition_results,
     verbose = TRUE
   )
 
-  ### CHECK FOR EXISTING COMBINED FILE
+  ### Check for existing combined file
 
   combined_file <- file.path(output_dir, paste0("all_hypervolumes_", method, ".rds"))
 
@@ -262,12 +262,12 @@ build_hypervolume_models <- function(partition_results,
       }
 
     }, error = function(e) {
-      stop(paste("Error loading combined hypervolume file. Try overwrite = TRUE:", e$message))
+      stop(paste0("ERROR: Error loading combined hypervolume file. Try overwrite = TRUE: ", e$message))
     })
 
   } else {
 
-    ### BUILD HYPERVOLUMES FOR EACH FOLD
+    ### Build hypervolumes for each fold
 
     hv_list <- list()
     for (fold in fold_ids) {
@@ -278,17 +278,17 @@ build_hypervolume_models <- function(partition_results,
       print(paste("Training with", nrow(train_data), "points"))
 
       if (nrow(train_data) < 5) {
-        stop(paste("Fold", fold, "has only", nrow(train_data), "training points. Minimum 5 required"))
+        stop(paste0("ERROR: Fold ", fold, " has only ", nrow(train_data), " training points. Minimum 5 required"))
       }
 
       if (nrow(train_data) < 10) {
-        warning(paste("Fold", fold, "has only", nrow(train_data), "training points. Results may be unreliable"))
+        warning(paste0("WARNING: Fold ", fold, " has only ", nrow(train_data), " training points. Results may be unreliable"))
       }
 
       var_check <- sapply(train_data, var)
       if (any(var_check == 0)) {
         zero_var <- names(var_check[var_check == 0])
-        stop(paste("Zero variance in Fold", fold, "for:", paste(zero_var, collapse = ", ")))
+        stop(paste0("ERROR: Zero variance in Fold ", fold, " for: ", paste(zero_var, collapse = ", ")))
       }
 
       hv_params <- modifyList(
@@ -302,7 +302,7 @@ build_hypervolume_models <- function(partition_results,
         hv <- suppressMessages(do.call(fn, c(list(data = train_data), hv_params)))
         hv@Name <- paste("Fold", fold)
       }, error = function(e) {
-        stop(paste("Hypervolume construction failed for Fold", fold, ":", e$message))
+        stop(paste0("ERROR: Hypervolume construction failed for Fold ", fold, ": ", e$message))
       })
 
       hv_list[[paste0("fold", fold)]] <- hv
@@ -311,64 +311,82 @@ build_hypervolume_models <- function(partition_results,
         vol <- get_volume(hv)
         print(paste("Fold", fold, "volume:", round(vol, 4)))
       }, error = function(e) {
-        warning(paste("Could not calculate volume for Fold", fold))
+        warning(paste0("WARNING: Could not calculate volume for Fold ", fold))
       })
     }
 
-    ### SAVE COMBINED HYPERVOLUME FILE
+    ### Save combined hypervolume file
 
     tryCatch({
       saveRDS(hv_list, combined_file)
       print(paste("Saved combined hypervolumes to:", basename(combined_file)))
     }, error = function(e) {
-      warning(paste("Could not save combined hypervolume file:", e$message))
+      warning(paste0("WARNING: Could not save combined hypervolume file: ", e$message))
     })
   }
-
-  ### CREATE PLOTS
-
-  if (create_plot && length(model_vars) >= 2) {
-    print("Creating hypervolume plots")
-
-    for (fold in fold_ids) {
-      tryCatch({
-        suppressMessages(
-          plot(hv_list[[paste0("fold", fold)]], pairplot = TRUE, show.3d = FALSE,
-               main = paste("Fold", fold, "Hypervolume"))
-        )
-      }, error = function(e) {
-        warning(paste("Could not create plot for Fold", fold))
-      })
-    }
-
-    if (length(hv_list) > 1) {
-      tryCatch({
-        hv_joined <- suppressMessages(do.call(hypervolume_join, hv_list))
-
-        suppressMessages(
-          plot(hv_joined, pairplot = TRUE, show.3d = FALSE,
-               main = paste("Hypervolume Comparison:", length(hv_list), "Folds"),
-               colors = rainbow(length(hv_list)))
-        )
-      }, error = function(e) {
-        warning("Could not create comparison plot")
-      })
-    }
-  } else if (create_plot && length(model_vars) < 2) {
-    print("Skipping plots: need at least 2 variables")
-  }
-
-  ### SUMMARY STATISTICS
-
-  print("SUMMARY STATISTICS")
 
   volumes <- sapply(hv_list, function(h) {
     tryCatch(get_volume(h), error = function(e) NA)
   })
   print(volumes)
 
-  ### PAIRWISE OVERLAPS
 
+  ### Create plots
+
+  fold_ids <- sort(unique(occ_df$fold))
+  print(paste("Detected", length(fold_ids), "folds:", paste(fold_ids, collapse = ", ")))
+
+  ### --- Define Dark2 color palette for folds ---
+  fold_colors <- viridis::viridis(n = length(fold_ids), option = "turbo")
+  names(fold_colors) <- paste0("fold", fold_ids)
+
+  ### --- Create plots ---
+  plots_list <- list()  # store individual fold plots
+  combined_plot <- NULL # store combined hypervolume plot
+
+  if (create_plot && length(model_vars) >= 2) {
+    print("Creating and saving hypervolume plots...")
+
+    # Individual fold plots
+    for (fold in fold_ids) {
+      file_name <- file.path(output_dir, paste0("Hypervolume_Fold", fold, ".png"))
+
+      tryCatch({
+        png(filename = file_name, width = 1200, height = 1000, res = 150)
+        suppressMessages(
+          plot(hv_list[[paste0("fold", fold)]], pairplot = TRUE, show.3d = FALSE,
+               main = paste("Fold", fold, "Hypervolume"),
+               colors = fold_colors[paste0("fold", fold)])
+        )
+        dev.off()
+        print(paste("Saved Fold", fold, "hypervolume plot to", file_name))
+      }, error = function(e) {
+        warning(paste0("WARNING: Could not create/save plot for Fold ", fold, ": ", e$message))
+        if (dev.cur() > 1) dev.off()
+      })
+    }
+
+    # Combined hypervolume plot
+    if (length(hv_list) > 1) {
+      combined_file <- file.path(output_dir, "Hypervolume_Comparison.png")
+      tryCatch({
+        png(filename = combined_file, width = 1400, height = 1200, res = 150)
+        hv_joined <- suppressMessages(do.call(hypervolume_join, hv_list))
+        suppressMessages(
+          plot(hv_joined, pairplot = TRUE, show.3d = FALSE,
+               main = paste("Hypervolume Comparison:", length(hv_list), "Folds"),
+               colors = fold_colors)
+        )
+        dev.off()
+        print(paste("Saved combined hypervolume plot to", combined_file))
+      }, error = function(e) {
+        warning(paste0("WARNING: Could not create/save combined plot: ", e$message))
+        if (dev.cur() > 1) dev.off()
+      })
+    }
+  }
+
+  ### --- Pairwise overlap statistics ---
   overlap_stats <- list()
   if (length(hv_list) > 1) {
     print("Calculating pairwise overlaps...")
@@ -383,10 +401,30 @@ build_hypervolume_models <- function(partition_results,
                           check.memory = FALSE, verbose = FALSE)
         )
         stats <- suppressMessages(hypervolume_overlap_statistics(hv_set))
-        overlap_stats[[pair_label]] <- stats
+
+        # Safely extract percent overlap
+        if (is.list(stats) && "percent_volume_overlap" %in% names(stats)) {
+          pct <- stats$percent_volume_overlap
+        } else if (is.numeric(stats)) {
+          pct <- stats[1]  # first element is typically percent overlap
+        } else {
+          pct <- NA
+        }
+
+        overlap_stats[[pair_label]] <- pct
       }, error = function(e) {
-        warning(paste("Could not calculate overlap for", pair_label))
+        warning(paste0("WARNING: Could not calculate overlap for ", pair_label))
+        overlap_stats[[pair_label]] <- NA
       })
+    }
+
+    # Print percent overlaps
+    if (length(overlap_stats) > 0) {
+      print("=== Percent overlaps between folds ===")
+      for (pair_label in names(overlap_stats)) {
+        pct_overlap <- round(overlap_stats[[pair_label]] * 100, 2)
+        print(paste0(pair_label, ": ", pct_overlap, "%"))
+      }
     }
   }
 
@@ -396,6 +434,7 @@ build_hypervolume_models <- function(partition_results,
     hypervolumes = hv_list,
     volumes = volumes,
     overlaps = overlap_stats,
+    plots = plots_list,
     method = method,
     model_vars = model_vars,
     output_dir = output_dir,

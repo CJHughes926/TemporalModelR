@@ -35,173 +35,200 @@
 #' @importFrom rgdal readOGR
 #' @importFrom dplyr select distinct arrange across all_of
 temporally_explicit_extraction <- function(points_sp,
-                                           raster_dir,
-                                           variable_patterns,
-                                           time_cols,
-                                           xcol = NULL,
-                                           ycol = NULL,
-                                           points_crs = NULL,
-                                           output_dir,
-                                           output_prefix = "temp_explicit_df",
-                                           save_raw = TRUE,
-                                           save_scaled = TRUE,
-                                           save_scaling_params = TRUE) {
+                                            raster_dir,
+                                            variable_patterns,
+                                            time_cols,
+                                            xcol = NULL,
+                                            ycol = NULL,
+                                            points_crs = NULL,
+                                            output_dir,
+                                            output_prefix = "temp_explicit_df",
+                                            save_raw = TRUE,
+                                            save_scaled = TRUE,
+                                            save_scaling_params = TRUE) {
 
   require(raster)
   require(sp)
   require(readr)
   require(dplyr)
 
-  ### Input validation and conversion
+  ### Input validation and conversion - points
 
-  ### Handle points_sp input
   if (is.character(points_sp)) {
     if (!file.exists(points_sp)) {
-      stop(paste("Error: File does not exist:", points_sp))
+      stop(paste0("ERROR: File does not exist: ", points_sp))
     }
 
     file_ext <- tolower(tools::file_ext(points_sp))
 
     if (file_ext == "csv") {
-
-      ### Require xcol, ycol, and points_crs for CSV files
       if (is.null(xcol)) {
-        stop("Error: 'xcol' is required when reading CSV files.")
+        stop("ERROR: 'xcol' is required when reading CSV files.")
       }
       if (is.null(ycol)) {
-        stop("Error: 'ycol' is required when reading CSV files.")
+        stop("ERROR: 'ycol' is required when reading CSV files.")
       }
       if (is.null(points_crs)) {
-        stop("Error: 'points_crs' is required when reading CSV files.")
+        stop("ERROR: 'points_crs' is required when reading CSV files.")
       }
 
       print(paste("Reading CSV file:", basename(points_sp)))
       points_data <- read.csv(points_sp, stringsAsFactors = FALSE)
 
       if (!xcol %in% names(points_data)) {
-        stop(paste0("Error: Column '", xcol, "' not found in CSV. Available columns: ",
-                    paste(names(points_data), collapse = ", ")))
+        stop(paste0("ERROR: Column '", xcol, "' not found in CSV. Available columns: ", paste(names(points_data), collapse = ", ")))
       }
       if (!ycol %in% names(points_data)) {
-        stop(paste0("Error: Column '", ycol, "' not found in CSV. Available columns: ",
-                    paste(names(points_data), collapse = ", ")))
+        stop(paste0("ERROR: Column '", ycol, "' not found in CSV. Available columns: ", paste(names(points_data), collapse = ", ")))
       }
 
-      coordinates(points_data) <- c(xcol, ycol)
-      proj4string(points_data) <- CRS(points_crs)
-      points_sp <- points_data
+      coords_matrix <- as.matrix(points_data[, c(xcol, ycol)])
+      data_without_coords <- points_data
+
+      points_sp_temp <- SpatialPointsDataFrame(
+        coords = coords_matrix,
+        data = data_without_coords,
+        proj4string = if (is.numeric(points_crs)) {
+          CRS(paste0("+init=epsg:", points_crs))
+        } else if (inherits(points_crs, "CRS")) {
+          points_crs
+        } else if (is.character(points_crs)) {
+          CRS(points_crs)
+        } else {
+          stop("ERROR: points_crs must be a character string (proj4 or WKT), CRS object, or numeric EPSG code")
+        }
+      )
+
+      points_sp <- points_sp_temp
 
     } else if (file_ext %in% c("shp", "geojson", "gpkg")) {
       print(paste("Reading spatial file:", basename(points_sp)))
-      points_sp <- rgdal::readOGR(points_sp)
+      points_sp <- rgdal::readOGR(points_sp, verbose = FALSE)
     } else {
-      stop(paste("Error: Unsupported file format:", file_ext,
-                 "Supported formats: .csv, .shp, .geojson, .gpkg"))
+      stop(paste0("ERROR: Unsupported file format: ", file_ext, " Supported formats: .csv, .shp, .geojson, .gpkg"))
     }
 
   } else if (is.data.frame(points_sp)) {
-
-    ### Require xcol, ycol, and points_crs for data frames
     if (is.null(xcol)) {
-      stop("Error: 'xcol' is required when providing a data frame.")
+      stop("ERROR: 'xcol' is required when providing a data frame.")
     }
     if (is.null(ycol)) {
-      stop("Error: 'ycol' is required when providing a data frame.")
+      stop("ERROR: 'ycol' is required when providing a data frame.")
     }
     if (is.null(points_crs)) {
-      stop("Error: 'points_crs' is required when providing a data frame.")
+      stop("ERROR: 'points_crs' is required when providing a data frame.")
     }
 
     print("Converting data frame to SpatialPointsDataFrame...")
 
     if (!xcol %in% names(points_sp)) {
-      stop(paste0("Error: Column '", xcol, "' not found in data frame. Available columns: ",
-                  paste(names(points_sp), collapse = ", ")))
+      stop(paste0("ERROR: Column '", xcol, "' not found in data frame. Available columns: ", paste(names(points_sp), collapse = ", ")))
     }
     if (!ycol %in% names(points_sp)) {
-      stop(paste0("Error: Column '", ycol, "' not found in data frame. Available columns: ",
-                  paste(names(points_sp), collapse = ", ")))
+      stop(paste0("ERROR: Column '", ycol, "' not found in data frame. Available columns: ", paste(names(points_sp), collapse = ", ")))
     }
 
-    coordinates(points_sp) <- c(xcol, ycol)
-    proj4string(points_sp) <- CRS(points_crs)
+    coords_matrix <- as.matrix(points_sp[, c(xcol, ycol)])
+    data_without_coords <- points_sp
+
+    points_sp_temp <- SpatialPointsDataFrame(
+      coords = coords_matrix,
+      data = data_without_coords,
+      proj4string = if (is.numeric(points_crs)) {
+        CRS(paste0("+init=epsg:", points_crs))
+      } else if (inherits(points_crs, "CRS")) {
+        points_crs
+      } else if (is.character(points_crs)) {
+        CRS(points_crs)
+      } else {
+        stop("ERROR: points_crs must be a character string (proj4 or WKT), CRS object, or numeric EPSG code")
+      }
+    )
+
+    points_sp <- points_sp_temp
 
   } else if (!inherits(points_sp, "SpatialPointsDataFrame")) {
-    stop("Error: points_sp must be a SpatialPointsDataFrame, data frame with x/y columns, or file path")
+    stop("ERROR: points_sp must be a SpatialPointsDataFrame, data frame with x/y columns, or file path")
   }
 
   ### Validate variable_patterns format
+
   if (!is.vector(variable_patterns) || is.null(names(variable_patterns))) {
     stop(paste(
-      "Error: variable_patterns must be a named vector.",
+      "ERROR: variable_patterns must be a named vector.",
       "",
-      "### Define variable patterns as follows in a named vector:",
+      "### Example format:",
       "#",
-      "# my_variable_patterns <- c(",
-      "#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
-      "#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
-      "#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
-      "#   \"elevation\" = \"elevation\"",
+      "# variable_patterns <- c(",
+      "#   \"VariableName1\" = \"VariableName1_YEAR\",",
+      "#   \"VariableName2\" = \"VariableName2_MONTH_YEAR\",",
+      "#   \"StaticVariable\" = \"StaticVariable\"",
       "# )",
       "#",
-      "# Where:",
-      "#   - The NAME (left side) is the variable name for the output column",
-      "#   - The VALUE (right side) is the pattern to match in raster filenames",
-      "#",
-      "# For time-varying variables:",
-      "#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
-      "#   - These correspond to column names in your time_cols parameter",
-      "#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
-      "#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
-      "#",
-      "# For static variables:",
-      "#   - Use a simple pattern with no time placeholders",
-      "#   - Example: \"elevation\" = \"elevation\"",
-      sep = ""
+      "# - NAME (left): output column name",
+      "# - VALUE (right): pattern to match in raster filenames",
+      "# - Time-varying: use placeholders (YEAR, MONTH, etc.) matching time_cols",
+      "# - Static: use simple pattern with no time placeholders",
+      sep = "\n"
     ))
   }
 
   if (any(names(variable_patterns) == "")) {
-    stop("Error: All elements in variable_patterns must be named")
+    stop("ERROR: All elements in variable_patterns must be named")
   }
 
-  ### Validate time_cols is provided
+  ### Validate time_cols
+
   if (missing(time_cols)) {
     stop(paste(
-      "Error: time_cols is required. Provide a character vector of time column names.",
+      "ERROR: time_cols is required. Provide a character vector of time column names.",
       "",
       "### Examples:",
-      "#",
-      "# For single time dimension:",
       "# time_cols = \"Year\"",
-      "#",
-      "# For multiple time dimensions:",
       "# time_cols = c(\"Year\", \"Month\")",
-      "# time_cols = c(\"Year\", \"DOY\")",
       "#",
-      "# The time_cols must:",
-      "#   1. Match column names in your points data",
-      "#   2. Match placeholders used in your variable_patterns",
-      sep = ""
+      "# Must match: (1) column names in points data, (2) placeholders in variable_patterns",
+      sep = "\n"
     ))
   }
 
   if (!is.character(time_cols) || length(time_cols) == 0) {
-    stop("time_cols must be a character vector with at least one time column name")
+    stop("ERROR: time_cols must be a character vector with at least one time column name")
   }
 
-  ### Validate time_cols exist in data
   missing_cols <- setdiff(time_cols, names(points_sp@data))
   if (length(missing_cols) > 0) {
-    stop(paste("Error: The following time_cols are missing from the input data:",
-               paste(missing_cols, collapse = ", "),
-               "Available columns:",
-               paste(names(points_sp@data), collapse = ", ")))
+    stop(paste0("ERROR: The following time_cols are missing from the input data: ",
+                paste(missing_cols, collapse = ", "),
+                " Available columns: ",
+                paste(names(points_sp@data), collapse = ", ")))
   }
 
-  ### Identify dynamic vs static variables early for validation
-  dynamic_vars_temp <- c()
-  static_vars_temp <- c()
+  ### Validate raster directory
+
+  if (!dir.exists(raster_dir)) {
+    stop(paste0("ERROR: raster_dir does not exist: ", raster_dir))
+  }
+
+  all_files <- list.files(path = raster_dir, pattern = "tif",
+                          recursive = TRUE, full.names = TRUE)
+
+  if (length(all_files) == 0) {
+    stop(paste0("ERROR: No .tif files found in raster_dir: ", raster_dir))
+  }
+
+  print(paste("Found", length(all_files), "raster files"))
+
+  ### Create output directory
+
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+  print(paste("Processing", nrow(points_sp@data), "points"))
+
+  ### Determine static vs dynamic variables
+
+  static_vars <- c()
+  dynamic_vars <- c()
 
   for (var_name in names(variable_patterns)) {
     pattern <- variable_patterns[var_name]
@@ -210,18 +237,17 @@ temporally_explicit_extraction <- function(points_sp,
     }))
 
     if (has_time_component) {
-      dynamic_vars_temp <- c(dynamic_vars_temp, var_name)
+      dynamic_vars <- c(dynamic_vars, var_name)
     } else {
-      static_vars_temp <- c(static_vars_temp, var_name)
+      static_vars <- c(static_vars, var_name)
     }
   }
 
   ### Validate time_cols match variable_patterns
 
-  if (length(dynamic_vars_temp) > 0) {
-    ### Extract time placeholders from dynamic variable patterns only
+  if (length(dynamic_vars) > 0) {
     pattern_time_placeholders <- c()
-    for (var_name in dynamic_vars_temp) {
+    for (var_name in dynamic_vars) {
       pattern <- variable_patterns[var_name]
       pattern_parts <- strsplit(pattern, "_")[[1]]
 
@@ -240,7 +266,7 @@ temporally_explicit_extraction <- function(points_sp,
 
     if (length(missing_in_patterns) > 0 && length(pattern_time_placeholders) > 0) {
       warning(paste(
-        "Warning: time_cols includes columns not found as placeholders in variable_patterns:",
+        "WARNING: time_cols includes columns not found as placeholders in variable_patterns:",
         paste(missing_in_patterns, collapse = ", "),
         "This may indicate a mismatch between your time_cols and variable_patterns.",
         "",
@@ -251,69 +277,30 @@ temporally_explicit_extraction <- function(points_sp,
 
     if (length(extra_in_patterns) > 0) {
       stop(paste(
-        "Error: variable_patterns contain time placeholders not specified in time_cols:",
+        "ERROR: variable_patterns contain time placeholders not in time_cols:",
         paste(extra_in_patterns, collapse = ", "),
         "",
         "Your time_cols:", paste(time_cols, collapse = ", "),
-        "Placeholders found in variable_patterns:", paste(pattern_time_placeholders, collapse = ", "),
+        "Placeholders in patterns:", paste(pattern_time_placeholders, collapse = ", "),
         "",
-        "### To fix this issue:",
-        "#",
-        "# Option 1: Add missing time columns to time_cols:",
+        "### Fix by adding missing columns to time_cols:",
         "# time_cols = c(\"", paste(c(time_cols, tolower(extra_in_patterns)), collapse = "\", \""), "\")",
-        "#",
-        "# Option 2: Update your variable_patterns to match time_cols:",
-        "# Ensure all placeholders in patterns (YEAR, MONTH, etc.) are in time_cols",
-        "#",
-        "# Example of matching time_cols and patterns:",
-        "# time_cols = c(\"Year\", \"Month\")",
-        "# variable_patterns = c(",
-        "#   \"Temperature\" = \"Temperature_YEAR_MONTH\",",
-        "#   \"Precipitation\" = \"Precipitation_YEAR_MONTH\"",
-        "# )",
-        sep = ""
+        sep = "\n"
       ))
     }
   }
 
   ### Check for missing values in time columns
+
   n_original <- nrow(points_sp@data)
   for (tc in time_cols) {
     n_missing <- sum(is.na(points_sp@data[[tc]]))
     if (n_missing > 0) {
       pct_missing <- round(n_missing / n_original * 100, 2)
-      warning(paste0("Warning: ", n_missing, " rows (", pct_missing,
+      warning(paste0("WARNING: ", n_missing, " rows (", pct_missing,
                      "%) have missing values in time column '", tc, "'"))
     }
   }
-
-  ### Validate raster_dir
-  if (!dir.exists(raster_dir)) {
-    stop(paste("Error: Raster directory does not exist:", raster_dir))
-  }
-
-  ### Create output directory
-  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-
-  print(paste("Processing", nrow(points_sp@data), "points"))
-
-  ### Initialize columns for each variable
-  for (var_name in names(variable_patterns)) {
-    points_sp[[var_name]] <- NA
-  }
-
-  ### Get all files in raster directory
-  all_files <- list.files(path = raster_dir, pattern = "tif",
-                          recursive = TRUE, full.names = TRUE)
-  print(paste("Found", length(all_files), "raster files"))
-
-  if (length(all_files) == 0) {
-    stop(paste("Error: No .tif files found in raster directory:", raster_dir))
-  }
-
-  ### Use previously identified variable types
-  static_vars <- static_vars_temp
-  dynamic_vars <- dynamic_vars_temp
 
   print(paste("Dynamic variables:", ifelse(length(dynamic_vars) > 0,
                                            paste(dynamic_vars, collapse = ", "),
@@ -322,8 +309,16 @@ temporally_explicit_extraction <- function(points_sp,
                                           paste(static_vars, collapse = ", "),
                                           "none")))
 
-  ### Extract static variables first
+  ### Initialize variable columns
+
+  for (var in names(variable_patterns)) {
+    points_sp@data[[var]] <- NA
+  }
+
+  ### Extract static variables
+
   static_vars_extracted <- 0
+
   if (length(static_vars) > 0) {
     print("Extracting static variables...")
     static_rasters_found <- c()
@@ -354,11 +349,10 @@ temporally_explicit_extraction <- function(points_sp,
         points_sp@data[[var_name]] <- values
         static_vars_extracted <- static_vars_extracted + 1
       } else {
-        print(paste("Warning: No file found for", var_name, "matching pattern:", search_pattern))
+        print(paste("WARNING: No file found for", var_name, "matching pattern:", search_pattern))
       }
     }
 
-    ### Print confirmation of static rasters found
     if (length(static_rasters_found) > 0) {
       print(paste("Found", length(static_rasters_found), "static raster(s):"))
       for (rf in static_rasters_found) {
@@ -367,154 +361,125 @@ temporally_explicit_extraction <- function(points_sp,
     }
   }
 
-  ### Get unique time combinations and sort them
-  time_combinations <- points_sp@data %>%
-    dplyr::select(all_of(time_cols)) %>%
-    dplyr::distinct() %>%
-    dplyr::arrange(across(all_of(time_cols)))
+  ### Extract dynamic variables
 
-  print(paste("Extracting values for", nrow(time_combinations), "time periods..."))
-
-  ### Extract values for each time combination
   dynamic_vars_extracted <- 0
-  for (i in 1:nrow(time_combinations)) {
-    time_values <- time_combinations[i, ]
 
-    time_filter <- rep(TRUE, nrow(points_sp@data))
-    for (tc in time_cols) {
-      time_filter <- time_filter & (points_sp@data[[tc]] == time_values[[tc]])
-    }
-    points_subset <- points_sp[time_filter, ]
+  if (length(dynamic_vars) > 0) {
+    print("Extracting dynamic variables...")
 
-    ### Print time period information
-    time_label <- paste(sapply(time_cols, function(tc) {
-      paste0(tc, "=", time_values[[tc]])
-    }), collapse = ", ")
-    print(paste0("Processing time period ", i, "/", nrow(time_combinations), ": ", time_label))
+    invisible(time_combinations <- points_sp@data %>%
+                select(all_of(time_cols)) %>%
+                distinct() %>%
+                arrange(across(all_of(time_cols))))
 
-    ### Collect rasters found for this time period
-    rasters_found <- c()
+    print(paste("Extracting values for", nrow(time_combinations), "time periods..."))
 
-    ### Extract dynamic variables
-    for (var_name in dynamic_vars) {
-      search_pattern <- variable_patterns[var_name]
+    for (i in 1:nrow(time_combinations)) {
+      time_values <- time_combinations[i, , drop = FALSE]
 
-      time_value_list <- list()
+      time_filter <- rep(TRUE, nrow(points_sp@data))
       for (tc in time_cols) {
-        time_value_list[[tc]] <- as.character(time_values[[tc]])
-        search_pattern <- gsub(tc, time_value_list[[tc]],
-                               search_pattern, ignore.case = TRUE)
+        time_filter <- time_filter & (points_sp@data[[tc]] == time_values[[1, tc]])
       }
+      points_subset <- points_sp[time_filter, ]
 
-      pattern_parts <- strsplit(search_pattern, "_")[[1]]
-      first_part <- var_name
+      time_label <- paste(sapply(time_cols, function(tc) {
+        paste0(tc, "=", time_values[[1, tc]])
+      }), collapse = ", ")
+      n_points <- sum(time_filter)
+      print(paste0("Processing time period ", i, "/", nrow(time_combinations), ": ", time_label, " (", n_points, " points)"))
 
-      matching_files <- all_files[sapply(all_files, function(f) {
-        filename <- basename(f)
+      rasters_found <- c()
 
-        starts_correctly <- grepl(paste0("^", first_part), filename, ignore.case = TRUE)
+      for (var_name in dynamic_vars) {
+        search_pattern <- variable_patterns[var_name]
 
-        all_parts_present <- all(sapply(pattern_parts, function(part) {
-          grepl(part, filename, ignore.case = TRUE)
-        }))
-
-        time_values_bounded <- all(sapply(names(time_value_list), function(tc) {
-          time_val <- time_value_list[[tc]]
-          grepl(paste0("(^|_)", time_val, "(_|\\.)"), filename, ignore.case = TRUE)
-        }))
-
-        starts_correctly && all_parts_present && time_values_bounded
-      })]
-
-      if (length(matching_files) > 0) {
-        raster_file <- matching_files[1]
-        rasters_found <- c(rasters_found, basename(raster_file))
-        raster_layer <- raster(raster_file)
-        values <- raster::extract(raster_layer, points_subset)
-        points_sp@data[time_filter, var_name] <- values
-        if (i == 1) {
-          dynamic_vars_extracted <- dynamic_vars_extracted + 1
+        time_value_list <- list()
+        for (tc in time_cols) {
+          time_value_list[[tc]] <- as.character(time_values[[1, tc]])
+          search_pattern <- gsub(tc, time_value_list[[tc]],
+                                 search_pattern, ignore.case = TRUE)
         }
-      } else {
-        print(paste("Warning: No file found for", var_name, "matching pattern:", search_pattern))
-      }
-    }
 
-    ### Print confirmation of rasters found
-    if (length(rasters_found) > 0) {
-      print(paste("Found", length(rasters_found), "raster(s):"))
-      for (rf in rasters_found) {
-        print(paste("  -", rf))
+        pattern_parts <- strsplit(search_pattern, "_")[[1]]
+        first_part <- var_name
+
+        matching_files <- all_files[sapply(all_files, function(f) {
+          filename <- basename(f)
+
+          starts_correctly <- grepl(paste0("^", first_part), filename, ignore.case = TRUE)
+
+          all_parts_present <- all(sapply(pattern_parts, function(part) {
+            grepl(part, filename, ignore.case = TRUE)
+          }))
+
+          time_values_bounded <- all(sapply(names(time_value_list), function(tc) {
+            time_val <- time_value_list[[tc]]
+            grepl(paste0("(^|_)", time_val, "(_|\\.)"), filename, ignore.case = TRUE)
+          }))
+
+          starts_correctly && all_parts_present && time_values_bounded
+        })]
+
+        if (length(matching_files) > 0) {
+          raster_file <- matching_files[1]
+          rasters_found <- c(rasters_found, basename(raster_file))
+          raster_layer <- raster(raster_file)
+          values <- raster::extract(raster_layer, points_subset)
+          points_sp@data[time_filter, var_name] <- values
+          if (i == 1) {
+            dynamic_vars_extracted <- dynamic_vars_extracted + 1
+          }
+        } else {
+          print(paste("WARNING: No file found for", var_name, "matching pattern:", search_pattern))
+        }
+      }
+
+      if (length(rasters_found) > 0) {
+        print(paste("Found", length(rasters_found), "raster(s):"))
+        for (rf in rasters_found) {
+          print(paste("  -", rf))
+        }
       }
     }
   }
 
   ### Check if no variables were extracted
+
   total_vars_extracted <- static_vars_extracted + dynamic_vars_extracted
   if (total_vars_extracted == 0) {
     stop(paste(
-      "Error: No raster files could be matched for any of the specified variables.",
+      "ERROR: No raster files could be matched for any variables.",
       "",
-      "### Define variable patterns as follows in a named vector:",
-      "#",
-      "# my_variable_patterns <- c(",
-      "#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
-      "#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
-      "#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
-      "#   \"elevation\" = \"elevation\"",
+      "### Example variable_patterns:",
+      "# variable_patterns <- c(",
+      "#   \"VariableName1\" = \"VariableName1_YEAR\",",
+      "#   \"VariableName2\" = \"VariableName2_MONTH_YEAR\",",
+      "#   \"StaticVariable\" = \"StaticVariable\"",
       "# )",
       "#",
-      "# Where:",
-      "#   - The NAME (left side) is the variable name for the output column",
-      "#   - The VALUE (right side) is the pattern to match in raster filenames",
-      "#",
-      "# For time-varying variables:",
-      "#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
-      "#   - These correspond to column names in your time_cols parameter",
-      "#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
-      "#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
-      "#",
-      "# For static variables:",
-      "#   - Use a simple pattern with no time placeholders",
-      "#   - Example: \"elevation\" = \"elevation\"",
-      sep = ""
+      "# Ensure patterns match your actual raster filenames",
+      sep = "\n"
     ))
   }
 
-  ### Check if only static variables were extracted
   if (static_vars_extracted > 0 && dynamic_vars_extracted == 0 && length(dynamic_vars) > 0) {
     stop(paste(
-      "Error: Only static variables could be matched. No raster files found for dynamic variables.",
+      "ERROR: Only static variables matched. No raster files found for dynamic variables.",
       "",
-      "### Define variable patterns as follows in a named vector:",
-      "#",
-      "# my_variable_patterns <- c(",
-      "#   \"Developed_Percentage2\" = \"Developed_Percentage2_YEAR\",",
-      "#   \"Open_Percentage2\" = \"Open_Percentage2_YEAR\",",
-      "#   \"Forest_Percentage2\" = \"Forest_Percentage2_YEAR\",",
-      "#   \"elevation\" = \"elevation\"",
-      "# )",
-      "#",
-      "# Where:",
-      "#   - The NAME (left side) is the variable name for the output column",
-      "#   - The VALUE (right side) is the pattern to match in raster filenames",
-      "#",
-      "# For time-varying variables:",
-      "#   - Use placeholders like YEAR, MONTH, DAY in the pattern",
-      "#   - These correspond to column names in your time_cols parameter",
-      "#   - Example: \"Forest_YEAR\" with time_cols = \"YEAR\"",
-      "#   - Example: \"Temp_MONTH_YEAR\" with time_cols = c(\"MONTH\", \"YEAR\")",
-      "#",
-      "# For static variables:",
-      "#   - Use a simple pattern with no time placeholders",
-      "#   - Example: \"elevation\" = \"elevation\"",
-      sep = ""
+      "### Check that:",
+      "# 1. Raster filenames contain time values (e.g., 2020, 2021)",
+      "# 2. variable_patterns use correct placeholders matching time_cols",
+      "# 3. Time values in filenames match values in your points data",
+      sep = "\n"
     ))
   }
 
   print("Value extraction complete")
 
-  ### Save raw values if requested
+  ### Save raw values
+
   if (save_raw) {
     raw_output_file <- file.path(output_dir, paste0(output_prefix, "_Raw_Values.csv"))
     write.csv(points_sp@data, raw_output_file, row.names = FALSE)
@@ -522,6 +487,7 @@ temporally_explicit_extraction <- function(points_sp,
   }
 
   ### Calculate scaling parameters
+
   print("Calculating scaling parameters...")
   scaling_params <- data.frame(
     variable = character(),
@@ -546,18 +512,20 @@ temporally_explicit_extraction <- function(points_sp,
         stringsAsFactors = FALSE
       ))
     } else {
-      print(paste("Warning: No valid values found for", var_name))
+      print(paste("WARNING: No valid values found for", var_name))
     }
   }
 
-  ### Save scaling parameters if requested
+  ### Save scaling parameters
+
   if (save_scaling_params) {
     params_file <- file.path(output_dir, paste0(output_prefix, "_Scaling_Parameters.csv"))
     write.csv(scaling_params, params_file, row.names = FALSE)
     print(paste("Scaling parameters saved to:", basename(params_file)))
   }
 
-  ### Apply scaling and save if requested
+  ### Apply scaling and save
+
   if (save_scaled) {
     print("Applying scaling...")
     scaled_data <- points_sp@data
@@ -570,7 +538,7 @@ temporally_explicit_extraction <- function(points_sp,
         var_sd <- var_params$sd
         scaled_data[[var_name]] <- (scaled_data[[var_name]] - var_mean) / var_sd
       } else {
-        print(paste("Warning: No scaling parameters found for", var_name))
+        print(paste("WARNING: No scaling parameters found for", var_name))
       }
     }
 
