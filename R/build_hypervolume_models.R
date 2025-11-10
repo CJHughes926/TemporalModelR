@@ -20,7 +20,7 @@
 #' @importFrom tools file_ext
 #' @importFrom grDevices rainbow
 #' @importFrom graphics plot
-build_hypervolume_models1 <- function(partition_results,
+build_hypervolume_models <- function(partition_results,
                                       model_vars,
                                       method,
                                       output_dir = "./Hypervolume_Models",
