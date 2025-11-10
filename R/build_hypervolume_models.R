@@ -21,12 +21,12 @@
 #' @importFrom grDevices rainbow
 #' @importFrom graphics plot
 build_hypervolume_models <- function(partition_results,
-                                      model_vars,
-                                      method,
-                                      output_dir = "./Hypervolume_Models",
-                                      hypervolume_params = list(),
-                                      create_plot = TRUE,
-                                      overwrite = FALSE) {
+                                     model_vars,
+                                     method,
+                                     output_dir = "./Hypervolume_Models",
+                                     hypervolume_params = list(),
+                                     create_plot = TRUE,
+                                     overwrite = FALSE) {
 
   require(hypervolume)
   require(dplyr)
@@ -336,7 +336,6 @@ build_hypervolume_models <- function(partition_results,
   fold_ids <- sort(unique(occ_df$fold))
   print(paste("Detected", length(fold_ids), "folds:", paste(fold_ids, collapse = ", ")))
 
-  ### --- Define Dark2 color palette for folds ---
   fold_colors <- viridis::viridis(n = length(fold_ids), option = "turbo")
   names(fold_colors) <- paste0("fold", fold_ids)
 
@@ -360,13 +359,18 @@ build_hypervolume_models <- function(partition_results,
         )
         dev.off()
         print(paste("Saved Fold", fold, "hypervolume plot to", file_name))
+        suppressMessages(
+          plot(hv_list[[paste0("fold", fold)]], pairplot = TRUE, show.3d = FALSE,
+               main = paste("Fold", fold, "Hypervolume (Interactive Display)"),
+               colors = fold_colors[paste0("fold", fold)])
+        )
+
       }, error = function(e) {
         warning(paste0("WARNING: Could not create/save plot for Fold ", fold, ": ", e$message))
         if (dev.cur() > 1) dev.off()
       })
     }
 
-    # Combined hypervolume plot
     if (length(hv_list) > 1) {
       combined_file <- file.path(output_dir, "Hypervolume_Comparison.png")
       tryCatch({
@@ -379,6 +383,13 @@ build_hypervolume_models <- function(partition_results,
         )
         dev.off()
         print(paste("Saved combined hypervolume plot to", combined_file))
+
+        suppressMessages(
+          plot(hv_joined, pairplot = TRUE, show.3d = FALSE,
+               main = paste("Hypervolume Comparison (Interactive Display):", length(hv_list), "Folds"),
+               colors = fold_colors)
+        )
+
       }, error = function(e) {
         warning(paste0("WARNING: Could not create/save combined plot: ", e$message))
         if (dev.cur() > 1) dev.off()
@@ -402,11 +413,10 @@ build_hypervolume_models <- function(partition_results,
         )
         stats <- suppressMessages(hypervolume_overlap_statistics(hv_set))
 
-        # Safely extract percent overlap
         if (is.list(stats) && "percent_volume_overlap" %in% names(stats)) {
           pct <- stats$percent_volume_overlap
         } else if (is.numeric(stats)) {
-          pct <- stats[1]  # first element is typically percent overlap
+          pct <- stats[1]
         } else {
           pct <- NA
         }
@@ -418,7 +428,6 @@ build_hypervolume_models <- function(partition_results,
       })
     }
 
-    # Print percent overlaps
     if (length(overlap_stats) > 0) {
       print("=== Percent overlaps between folds ===")
       for (pair_label in names(overlap_stats)) {
