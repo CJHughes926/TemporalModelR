@@ -658,6 +658,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
   }, error = function(e) {
     warning(paste("Error saving final metrics:", e$message))
   })
-
+  rownames(all_model_data) <- NULL
   return(all_model_data)
 }
