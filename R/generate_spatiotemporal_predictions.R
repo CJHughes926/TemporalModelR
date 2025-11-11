@@ -586,6 +586,7 @@ generate_spatiotemporal_predictions <- function(partition_results,
         )
 
         all_model_data <- rbind(all_model_data, model_data)
+        rownames(metrics_file) <- NULL
 
       }, error = function(e) {
         warning(paste("Error calculating metrics for Fold", current_fold,
@@ -647,7 +648,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
   }
 
   ### FINAL SAVE OF METRICS
-
   metrics_file <- file.path(output_dir, "Model_Assessment_Metrics.csv")
   tryCatch({
     write.csv(all_model_data, metrics_file, row.names = FALSE)
@@ -658,6 +658,5 @@ generate_spatiotemporal_predictions <- function(partition_results,
   }, error = function(e) {
     warning(paste("Error saving final metrics:", e$message))
   })
-  rownames(all_model_data) <- NULL
   return(all_model_data)
 }

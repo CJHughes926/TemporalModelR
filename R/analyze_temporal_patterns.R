@@ -422,7 +422,7 @@ analyze_temporal_patterns <- function(binary_stack,
 
   par(mfrow = c(2, 2))
 
-  plot(pattern_raster,
+  raster:plot(pattern_raster,
        col = c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202"),
        main = paste("Pattern Classification\n", min(time_steps), "-", max(time_steps)),
        breaks = c(0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5),
@@ -433,11 +433,11 @@ analyze_temporal_patterns <- function(binary_stack,
          fill = c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202"),
          cex = 0.6)
 
-  plot(decrease_raster,
+  raster:plot(decrease_raster,
        main = paste("Year of First Decrease\n", min(time_steps), "-", max(time_steps)),
        col = rev(heat.colors(50)))
 
-  plot(increase_raster,
+  raster:plot(increase_raster,
        main = paste("Year of First Increase\n", min(time_steps), "-", max(time_steps)),
        col = terrain.colors(50))
 
