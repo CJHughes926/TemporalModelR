@@ -190,7 +190,7 @@ analyze_temporal_patterns <- function(binary_stack,
           total_complex <- total_complex + n_complex
 
           if (is.null(time_per_pixel) && n_complex > 0) {
-            print("\nTiming sample pixels...")
+            print("Timing sample pixels...")
 
             middle_years <- tile_binary[[2:(n_years - 1)]]
             lag_stack <- tile_binary[[1:(n_years - 2)]]
