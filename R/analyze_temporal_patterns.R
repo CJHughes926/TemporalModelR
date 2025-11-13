@@ -26,17 +26,17 @@
 #' @importFrom graphics par legend
 #' @importFrom grDevices heat.colors terrain.colors
 analyze_temporal_patterns <- function(binary_stack,
-                                       summary_raster,
-                                       time_steps,
-                                       fastcpd_params = list(),
-                                       output_dir = "output",
-                                       n_tiles_x = 1,
-                                       n_tiles_y = 1,
-                                       alpha = 0.05,
-                                       spatial_autocorrelation = TRUE,
-                                       show_progress = TRUE,
-                                       estimate_time = TRUE,
-                                       overwrite = FALSE) {
+                                      summary_raster,
+                                      time_steps,
+                                      fastcpd_params = list(),
+                                      output_dir = "output",
+                                      n_tiles_x = 1,
+                                      n_tiles_y = 1,
+                                      alpha = 0.05,
+                                      spatial_autocorrelation = TRUE,
+                                      show_progress = TRUE,
+                                      estimate_time = TRUE,
+                                      overwrite = FALSE) {
 
   require(terra)
 
@@ -190,10 +190,10 @@ analyze_temporal_patterns <- function(binary_stack,
           total_complex <- total_complex + n_complex
 
           if (is.null(time_per_pixel) && n_complex > 0) {
-            print("Timing sample pixels...")
+            print("\nTiming sample pixels...")
 
-            middle_years <- subset(tile_binary, 2:(n_years - 1))
-            lag_stack <- subset(tile_binary, 1:(n_years - 2))
+            middle_years <- tile_binary[[2:(n_years - 1)]]
+            lag_stack <- tile_binary[[1:(n_years - 2)]]
 
             if (spatial_autocorrelation) {
               middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
@@ -295,8 +295,8 @@ analyze_temporal_patterns <- function(binary_stack,
       n_years <- nlyr(tile_binary)
       n_middle <- n_years - 2
 
-      middle_years <- subset(tile_binary, 2:(n_years - 1))
-      lag_stack <- subset(tile_binary, 1:(n_years - 2))
+      middle_years <- tile_binary[[2:(n_years - 1)]]
+      lag_stack <- tile_binary[[1:(n_years - 2)]]
 
       if (spatial_autocorrelation) {
         middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
@@ -346,9 +346,9 @@ analyze_temporal_patterns <- function(binary_stack,
                              fun = function(x) classify_pixel_with_years(x, n_middle, time_steps,
                                                                          fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
 
-        tile_pattern <- subset(result_matrix, 1)
-        tile_decrease <- subset(result_matrix, 2)
-        tile_increase <- subset(result_matrix, 3)
+        tile_pattern <- result_matrix[[1]]
+        tile_decrease <- result_matrix[[2]]
+        tile_increase <- result_matrix[[3]]
       }
 
       writeRaster(tile_pattern, tile_file_pattern, overwrite = TRUE,
