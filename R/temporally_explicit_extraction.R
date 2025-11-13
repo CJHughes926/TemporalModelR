@@ -35,17 +35,17 @@
 #' @importFrom readr read_csv
 #' @importFrom dplyr select distinct arrange across all_of
 temporally_explicit_extraction <- function(points_sp,
-                                            raster_dir,
-                                            variable_patterns,
-                                            time_cols,
-                                            xcol = NULL,
-                                            ycol = NULL,
-                                            points_crs = NULL,
-                                            output_dir,
-                                            output_prefix = "temp_explicit_df",
-                                            save_raw = TRUE,
-                                            save_scaled = TRUE,
-                                            save_scaling_params = TRUE) {
+                                           raster_dir,
+                                           variable_patterns,
+                                           time_cols,
+                                           xcol = NULL,
+                                           ycol = NULL,
+                                           points_crs = NULL,
+                                           output_dir,
+                                           output_prefix = "temp_explicit_df",
+                                           save_raw = TRUE,
+                                           save_scaled = TRUE,
+                                           save_scaling_params = TRUE) {
 
   require(terra)
   require(sf)
@@ -176,10 +176,15 @@ temporally_explicit_extraction <- function(points_sp,
     }
   }
 
+  ### Add coordinates back
+  coords_df <- st_coordinates(points_sp) %>% as.data.frame()
+  names(coords_df) <- c("x", "y")
+  points_with_coords <- cbind(st_drop_geometry(points_sp), coords_df)
+
   ### Save raw values
   if (save_raw) {
     raw_output_file <- file.path(output_dir, paste0(output_prefix, "_Raw_Values.csv"))
-    write.csv(st_drop_geometry(points_sp), raw_output_file, row.names=FALSE)
+    write.csv(points_with_coords, raw_output_file, row.names=FALSE)
     print(paste("Raw values saved to:", basename(raw_output_file)))
   }
 
@@ -210,6 +215,8 @@ temporally_explicit_extraction <- function(points_sp,
       if (nrow(var_params) > 0) scaled_data[[var_name]] <- (scaled_data[[var_name]] - var_params$mean) / var_params$sd
       else warning("No scaling parameters found for ", var_name)
     }
+    ### Add coordinates to scaled output
+    scaled_data <- cbind(scaled_data, coords_df)
     scaled_output_file <- file.path(output_dir, paste0(output_prefix, "_Scaled_Values.csv"))
     write.csv(scaled_data, scaled_output_file, row.names=FALSE)
     print(paste("Scaled values saved to:", basename(scaled_output_file)))
