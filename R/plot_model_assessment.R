@@ -42,6 +42,7 @@ plot_model_assessment <- function(data_file_path,
                                    separate_cbp = TRUE) {
 
   require(ggtext)
+  require(ggplot2)
   require(grid)
 
   # Validate inputs
@@ -600,10 +601,6 @@ plot_model_assessment <- function(data_file_path,
     print(plot_tp_fn)
     print(plot2)
   }
-
-  # Display summary table
-  print(knitr::kable(summary_stats, digits = 5,
-                     caption = "Model Performance Summary by Time Step (Means across all folds)"))
 
   # Print CBP and Sensitivity values for reference
   cat("\n\nMean CBP_test_E:", format(mean_cbp_e, scientific = TRUE, digits = 5), "\n")

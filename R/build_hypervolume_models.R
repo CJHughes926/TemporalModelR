@@ -103,7 +103,7 @@ build_hypervolume_models <- function(partition_results,
   }
 
   if (length(unique(folds[!is.na(folds)])) < 2) {
-    warning(paste0("WARNING: Only ", length(unique(folds[!is.na(folds)])), " unique fold detected"))
+    warning(paste0("Only ", length(unique(folds[!is.na(folds)])), " unique fold detected"))
   }
 
   print(paste("Loaded", nrow(occurrence_points), "points from partition results"))
@@ -140,21 +140,21 @@ build_hypervolume_models <- function(partition_results,
                         "chunk.size", "verbose", "samples.per.point")
       invalid_params <- setdiff(names(hypervolume_params), valid_params)
       if (length(invalid_params) > 0) {
-        warning(paste0("WARNING: Invalid parameters for gaussian method: ", paste(invalid_params, collapse = ", "),
+        warning(paste0("Invalid parameters for gaussian method: ", paste(invalid_params, collapse = ", "),
                        " Valid parameters: ", paste(valid_params, collapse = ", ")))
       }
 
       if ("quantile.requested" %in% names(hypervolume_params)) {
         qr <- hypervolume_params$quantile.requested
         if (!is.numeric(qr) || qr <= 0 || qr > 1) {
-          warning(paste0("WARNING: quantile.requested should be between 0 and 1, got: ", qr))
+          warning(paste0("quantile.requested should be between 0 and 1, got: ", qr))
         }
       }
 
       if ("quantile.requested.type" %in% names(hypervolume_params)) {
         qrt <- hypervolume_params$quantile.requested.type
         if (!qrt %in% c("probability", "volume")) {
-          warning(paste0("WARNING: quantile.requested.type should be 'probability' or 'volume', got: ", qrt))
+          warning(paste0("quantile.requested.type should be 'probability' or 'volume', got: ", qrt))
         }
       }
 
@@ -162,21 +162,21 @@ build_hypervolume_models <- function(partition_results,
       valid_params <- c("svm.nu", "svm.gamma", "chunk.size", "verbose", "samples.per.point")
       invalid_params <- setdiff(names(hypervolume_params), valid_params)
       if (length(invalid_params) > 0) {
-        warning(paste0("WARNING: Invalid parameters for svm method: ", paste(invalid_params, collapse = ", "),
+        warning(paste0("Invalid parameters for svm method: ", paste(invalid_params, collapse = ", "),
                        " Valid parameters: ", paste(valid_params, collapse = ", ")))
       }
 
       if ("svm.nu" %in% names(hypervolume_params)) {
         nu <- hypervolume_params$svm.nu
         if (!is.numeric(nu) || nu <= 0 || nu > 1) {
-          warning(paste0("WARNING: svm.nu should be between 0 and 1, got: ", nu))
+          warning(paste0("svm.nu should be between 0 and 1, got: ", nu))
         }
       }
 
       if ("svm.gamma" %in% names(hypervolume_params)) {
         gamma <- hypervolume_params$svm.gamma
         if (!is.numeric(gamma) || gamma <= 0) {
-          warning(paste0("WARNING: svm.gamma should be positive, got: ", gamma))
+          warning(paste0("svm.gamma should be positive, got: ", gamma))
         }
       }
     }
@@ -184,7 +184,7 @@ build_hypervolume_models <- function(partition_results,
     if ("samples.per.point" %in% names(hypervolume_params)) {
       spp <- hypervolume_params$samples.per.point
       if (!is.numeric(spp) || spp < 1) {
-        warning(paste0("WARNING: samples.per.point should be positive integer, got: ", spp))
+        warning(paste0("samples.per.point should be positive integer, got: ", spp))
       }
     }
   }
@@ -210,7 +210,7 @@ build_hypervolume_models <- function(partition_results,
 
   if (any(na_summary > 0)) {
     na_vars <- names(na_summary[na_summary > 0])
-    warning(paste0("WARNING: NAs in: ", paste(paste(na_vars, na_summary[na_summary > 0], sep = "="), collapse = ", ")))
+    warning(paste0("NAs in: ", paste(paste(na_vars, na_summary[na_summary > 0], sep = "="), collapse = ", ")))
   }
 
   occ_df <- occ_df[complete.cases(occ_df[, model_vars]), ]
@@ -218,7 +218,7 @@ build_hypervolume_models <- function(partition_results,
 
   if (n_removed > 0) {
     pct_removed <- round(n_removed / n_original * 100, 2)
-    warning(paste0("WARNING: Removed ", n_removed, " rows (", pct_removed, "%) with NAs. Remaining: ", nrow(occ_df)))
+    warning(paste0("Removed ", n_removed, " rows (", pct_removed, "%) with NAs. Remaining: ", nrow(occ_df)))
   }
 
   if (nrow(occ_df) == 0) {
@@ -282,7 +282,7 @@ build_hypervolume_models <- function(partition_results,
       }
 
       if (nrow(train_data) < 10) {
-        warning(paste0("WARNING: Fold ", fold, " has only ", nrow(train_data), " training points. Results may be unreliable"))
+        warning(paste0("Fold ", fold, " has only ", nrow(train_data), " training points. Results may be unreliable"))
       }
 
       var_check <- sapply(train_data, var)
@@ -311,7 +311,7 @@ build_hypervolume_models <- function(partition_results,
         vol <- get_volume(hv)
         print(paste("Fold", fold, "volume:", round(vol, 4)))
       }, error = function(e) {
-        warning(paste0("WARNING: Could not calculate volume for Fold ", fold))
+        warning(paste0("Could not calculate volume for Fold ", fold))
       })
     }
 
@@ -321,7 +321,7 @@ build_hypervolume_models <- function(partition_results,
       saveRDS(hv_list, combined_file)
       print(paste("Saved combined hypervolumes to:", basename(combined_file)))
     }, error = function(e) {
-      warning(paste0("WARNING: Could not save combined hypervolume file: ", e$message))
+      warning(paste0("Could not save combined hypervolume file: ", e$message))
     })
   }
 
@@ -366,7 +366,7 @@ build_hypervolume_models <- function(partition_results,
         )
 
       }, error = function(e) {
-        warning(paste0("WARNING: Could not create/save plot for Fold ", fold, ": ", e$message))
+        warning(paste0("Could not create/save plot for Fold ", fold, ": ", e$message))
         if (dev.cur() > 1) dev.off()
       })
     }
@@ -391,7 +391,7 @@ build_hypervolume_models <- function(partition_results,
         )
 
       }, error = function(e) {
-        warning(paste0("WARNING: Could not create/save combined plot: ", e$message))
+        warning(paste0("Could not create/save combined plot: ", e$message))
         if (dev.cur() > 1) dev.off()
       })
     }
@@ -423,7 +423,7 @@ build_hypervolume_models <- function(partition_results,
 
         overlap_stats[[pair_label]] <- pct
       }, error = function(e) {
-        warning(paste0("WARNING: Could not calculate overlap for ", pair_label))
+        warning(paste0("Could not calculate overlap for ", pair_label))
         overlap_stats[[pair_label]] <- NA
       })
     }

@@ -29,7 +29,8 @@
 #'
 #' @return Invisibly returns `NULL`. Output rasters are saved to disk.
 #'
-#' @importFrom raster raster projectRaster resample mask writeRaster crs
+#' @importFrom terra rast project resample mask writeRaster crs ext
+#' @importFrom methods is
 #' @export
 raster_align <- function(input_dir,
                          output_dir,
@@ -38,7 +39,7 @@ raster_align <- function(input_dir,
                          pattern = ".*\\.tif$",
                          overwrite = FALSE) {
 
-  require(raster)
+  require(terra)
 
   ### Validate required inputs
 
@@ -60,19 +61,25 @@ raster_align <- function(input_dir,
     stop(paste0("ERROR: Input directory does not exist: '", input_dir, "'. Please check the path and try again."))
   }
 
-  ### Handle reference_raster as either file path or raster object
+  ### Handle reference_raster as either file path, terra object, or raster object
 
   if (is.character(reference_raster)) {
     if (!file.exists(reference_raster)) {
       stop(paste0("ERROR: Reference raster file does not exist: '", reference_raster, "'. Please check the file path and try again."))
     }
-    reference_raster <- raster(reference_raster)
+    reference_raster <- terra::rast(reference_raster)
   } else if (inherits(reference_raster, "RasterLayer")) {
-    reference_raster <- reference_raster
-  } else {
-    stop(paste0("ERROR: 'reference_raster' must be either a file path (character string) or a RasterLayer object. Provided object is of class: ", class(reference_raster)[1]))
+    warning(paste0("WARNING: 'reference_raster' is a 'RasterLayer' object from the raster package.\n",
+                   "         Converting to 'SpatRaster' for terra compatibility."))
+    reference_raster <- terra::rast(reference_raster)
+  } else if (!inherits(reference_raster, "SpatRaster")) {
+    stop(paste0("ERROR: 'reference_raster' must be a file path, 'RasterLayer', or 'SpatRaster'. Provided object is of class: ", class(reference_raster)[1]))
+  }
+  if (is.na(terra::crs(reference_raster))) {
+    stop("ERROR: The reference raster has no defined CRS. Please assign a coordinate reference system before processing.")
   }
 
+  ### Replace NA values with zero in reference (for mask logic consistency)
   reference_raster[is.na(reference_raster)] <- 0
 
   ### Create output directory
@@ -123,29 +130,29 @@ raster_align <- function(input_dir,
 
   ### Process each raster
 
-  for (i in 1:length(tif_files)) {
+  for (i in seq_along(tif_files)) {
     original_file_name <- basename(tif_files[i])
     updated_file_name <- sub("\\.tif$", paste0(output_suffix, ".tif"), original_file_name)
     output_path <- file.path(output_dir, updated_file_name)
 
     print(paste0("Processing raster ", i, " of ", files_to_process, ": ", original_file_name))
 
-    r <- raster(tif_files[i])
+    r <- terra::rast(tif_files[i])
 
-    if (is.na(crs(r))) {
-      stop(paste0("ERROR: Raster '", original_file_name, "' has no defined CRS. Please assign a coordinate reference system to this raster before processing. You can use raster::crs() to set the CRS if you know what it should be."))
+    if (is.na(terra::crs(r))) {
+      stop(paste0("ERROR: Raster '", original_file_name, "' has no defined CRS. Please assign a coordinate reference system to this raster before processing."))
     }
 
-    r <- projectRaster(r, crs = crs(reference_raster))
+    r <- terra::project(r, terra::crs(reference_raster))
     print("  - Reprojected")
 
-    r <- resample(r, reference_raster, method = "bilinear")
+    r <- terra::resample(r, reference_raster, method = "bilinear")
     print("  - Resampled")
 
-    r <- mask(r, reference_raster, maskvalue = 0)
+    r <- terra::mask(r, reference_raster, maskvalue = 0)
     print("  - Masked")
 
-    writeRaster(r, output_path, format = "GTiff", overwrite = TRUE)
+    terra::writeRaster(r, output_path, overwrite = TRUE)
     print("  - Saved")
   }
 

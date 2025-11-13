@@ -7,21 +7,20 @@
 #' @param time_cols Optional character vector of time placeholders.
 #' @param output_suffix Suffix for output files.
 #' @param overwrite Overwrite existing outputs.
-#' @importFrom raster raster writeRaster
+#' @importFrom terra rast writeRaster
 #' @importFrom readr read_csv
 scale_rasters <- function(input_dir,
-                           output_dir,
-                           scaling_params_file,
-                           variable_patterns,
-                           time_cols = NULL,
-                           output_suffix = "_Scaled",
-                           overwrite = F) {
+                          output_dir,
+                          scaling_params_file,
+                          variable_patterns,
+                          time_cols = NULL,
+                          output_suffix = "_Scaled",
+                          overwrite = F) {
 
-  require(raster)
+  require(terra)
   require(readr)
 
   ### Validate variable_patterns format
-
   if (!is.vector(variable_patterns) || is.null(names(variable_patterns))) {
     stop(paste(
       "ERROR: variable_patterns must be a named vector.",
@@ -47,28 +46,23 @@ scale_rasters <- function(input_dir,
   }
 
   ### Validate input directory
-
   if (!dir.exists(input_dir)) {
     stop(paste0("ERROR: Input directory does not exist: ", input_dir))
   }
 
   ### Validate scaling parameters file
-
   if (!file.exists(scaling_params_file)) {
     stop(paste0("ERROR: Scaling parameters file does not exist: ", scaling_params_file))
   }
 
   ### Create output directory
-
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
   ### Load scaling parameters
-
   scaling_params <- read_csv(scaling_params_file, show_col_types = FALSE)
   print(paste("Loaded scaling parameters for", nrow(scaling_params), "variables"))
 
   ### Check if all variables in variable_patterns have scaling parameters
-
   missing_params <- setdiff(names(variable_patterns), scaling_params$variable)
   if (length(missing_params) > 0) {
     warning(paste0("WARNING: The following variables lack scaling parameters: ",
@@ -76,7 +70,6 @@ scale_rasters <- function(input_dir,
   }
 
   ### Get all files
-
   all_files <- list.files(path = input_dir, pattern = "tif",
                           recursive = TRUE, full.names = TRUE)
   print(paste("Found", length(all_files), "raster files"))
@@ -86,7 +79,6 @@ scale_rasters <- function(input_dir,
   }
 
   ### Print overwrite mode
-
   if (overwrite) {
     print("Overwrite mode: ON - Will process and overwrite all files")
   } else {
@@ -94,16 +86,13 @@ scale_rasters <- function(input_dir,
   }
 
   ### Determine which variables are static vs dynamic
-
   static_vars <- c()
   dynamic_vars <- c()
-
   for (var_name in names(variable_patterns)) {
     pattern <- variable_patterns[var_name]
     has_time_component <- any(sapply(time_cols, function(tc) {
       grepl(tc, pattern, ignore.case = TRUE)
     }))
-
     if (has_time_component) {
       dynamic_vars <- c(dynamic_vars, var_name)
     } else {
@@ -119,7 +108,6 @@ scale_rasters <- function(input_dir,
                                           "none")))
 
   ### Validate time_cols match variable_patterns
-
   if (length(dynamic_vars) > 0) {
     if (is.null(time_cols) || length(time_cols) == 0) {
       stop(paste(
@@ -136,7 +124,6 @@ scale_rasters <- function(input_dir,
     for (var_name in dynamic_vars) {
       pattern <- variable_patterns[var_name]
       pattern_parts <- strsplit(pattern, "_")[[1]]
-
       for (part in pattern_parts) {
         if (toupper(part) %in% toupper(time_cols)) {
           pattern_time_placeholders <- c(pattern_time_placeholders, toupper(part))
@@ -145,7 +132,6 @@ scale_rasters <- function(input_dir,
     }
 
     pattern_time_placeholders <- unique(pattern_time_placeholders)
-
     time_cols_upper <- toupper(time_cols)
     missing_in_patterns <- time_cols_upper[!time_cols_upper %in% pattern_time_placeholders]
     extra_in_patterns <- pattern_time_placeholders[!pattern_time_placeholders %in% time_cols_upper]
@@ -188,47 +174,36 @@ scale_rasters <- function(input_dir,
   }
 
   ### Scale static variables
-
   static_vars_scaled <- 0
-
   if (length(static_vars) > 0) {
     print("Processing static variables...")
-
     for (var_name in static_vars) {
       print(paste("Processing static variable:", var_name))
-
       var_params <- scaling_params[scaling_params$variable == var_name, ]
-
       if (nrow(var_params) == 0) {
         print(paste0("  Skipping ", var_name, " - no scaling parameters found"))
         next
       }
-
       var_mean <- var_params$mean
       var_sd <- var_params$sd
-
       search_pattern <- variable_patterns[var_name]
-
       candidate_files <- all_files[sapply(all_files, function(f) {
         filename <- basename(f)
         grepl(paste0("^", var_name), filename, ignore.case = TRUE)
       })]
-
       if (length(candidate_files) == 0) {
         print(paste0("  Warning: No files found for ", var_name))
         next
       }
-
       output_file <- file.path(output_dir, paste0(var_name, output_suffix, ".tif"))
-
       if (file.exists(output_file) && !overwrite) {
         print("  Skipped (already exists)")
         static_vars_scaled <- static_vars_scaled + 1
       } else {
         file <- candidate_files[1]
-        raster_layer <- raster(file)
+        raster_layer <- terra::rast(file)
         raster_scaled <- (raster_layer - var_mean) / var_sd
-        writeRaster(raster_scaled, output_file, format = "GTiff", overwrite = overwrite)
+        terra::writeRaster(raster_scaled, output_file, overwrite = overwrite)
         print("  Processed and saved")
         static_vars_scaled <- static_vars_scaled + 1
       }
@@ -236,61 +211,46 @@ scale_rasters <- function(input_dir,
   }
 
   ### Scale dynamic variables
-
   dynamic_vars_scaled <- 0
-
   if (length(dynamic_vars) > 0) {
     print("Processing dynamic variables...")
-
     for (var_name in dynamic_vars) {
-      print(paste("Processing dynamic variable:", var_name))
+
+      ### Message at start of each dynamic variable
+      print(paste("Scaling dynamic variable:", var_name))
 
       var_params <- scaling_params[scaling_params$variable == var_name, ]
-
       if (nrow(var_params) == 0) {
         print(paste0("  Skipping ", var_name, " - no scaling parameters found"))
         next
       }
-
       var_mean <- var_params$mean
       var_sd <- var_params$sd
-
       search_pattern <- variable_patterns[var_name]
-
       candidate_files <- all_files[sapply(all_files, function(f) {
         filename <- basename(f)
         grepl(paste0("^", var_name), filename, ignore.case = TRUE)
       })]
-
       if (length(candidate_files) == 0) {
         print(paste0("  Warning: No files found for ", var_name))
         next
       }
-
       print(paste("  Found", length(candidate_files), "candidate files"))
 
       time_file_pairs <- list()
-
       for (file in candidate_files) {
         filename <- basename(file)
-
         time_vals <- list()
         all_found <- TRUE
-
         filename_no_ext <- gsub("\\.(tif|TIF)$", "", filename)
         filename_parts <- strsplit(filename_no_ext, "_")[[1]]
-
         pattern_parts <- strsplit(search_pattern, "_")[[1]]
-
         for (tc in time_cols) {
           tc_positions <- which(toupper(pattern_parts) == toupper(tc))
-
           if (length(tc_positions) > 0) {
             tc_pos <- tc_positions[1]
-
             if (tc_pos <= length(filename_parts)) {
               value <- filename_parts[tc_pos]
-
               if (grepl("^\\d+$", value)) {
                 time_vals[[tc]] <- value
               } else {
@@ -317,13 +277,18 @@ scale_rasters <- function(input_dir,
           for (tc in time_cols) {
             test_pattern <- gsub(tc, time_vals[[tc]], test_pattern, ignore.case = TRUE)
           }
-
           test_parts <- strsplit(test_pattern, "_")[[1]]
           match_count <- sum(sapply(test_parts, function(part) {
             grepl(part, filename, ignore.case = TRUE)
           }))
-
           if (match_count >= length(test_parts) * 0.8) {
+            ### Check for duplicates
+            time_string <- paste(sapply(time_cols, function(tc) time_vals[[tc]]), collapse = "_")
+            output_file <- file.path(output_dir, paste0(var_name, "_", time_string, output_suffix, ".tif"))
+            if (file.exists(output_file) && !overwrite) {
+              stop(paste0("ERROR: Multiple rasters found for variable '", var_name,
+                          "' at the same time step (", time_string, ")."))
+            }
             time_file_pairs[[file]] <- time_vals
           }
         }
@@ -335,24 +300,20 @@ scale_rasters <- function(input_dir,
       }
 
       print(paste("  Processing", length(time_file_pairs), "time periods"))
-
       processed_count <- 0
       skipped_count <- 0
 
       for (file in names(time_file_pairs)) {
         time_vals <- time_file_pairs[[file]]
-
         time_string <- paste(sapply(time_cols, function(tc) time_vals[[tc]]), collapse = "_")
         output_file <- file.path(output_dir, paste0(var_name, "_", time_string, output_suffix, ".tif"))
-
         if (file.exists(output_file) && !overwrite) {
           skipped_count <- skipped_count + 1
           next
         }
-
-        raster_layer <- raster(file)
+        raster_layer <- terra::rast(file)
         raster_scaled <- (raster_layer - var_mean) / var_sd
-        writeRaster(raster_scaled, output_file, format = "GTiff", overwrite = overwrite)
+        terra::writeRaster(raster_scaled, output_file, overwrite = overwrite)
         processed_count <- processed_count + 1
       }
 
@@ -365,7 +326,6 @@ scale_rasters <- function(input_dir,
   }
 
   ### Check if no variables were scaled
-
   total_vars_scaled <- static_vars_scaled + dynamic_vars_scaled
   if (total_vars_scaled == 0) {
     stop(paste(
