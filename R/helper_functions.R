@@ -38,10 +38,7 @@ test_cp_likelihood <- function(data, cp, alpha = 0.05, use_neighbor = TRUE) {
 
 #' Permutation changepoint test (difference in means)
 #' @keywords internal
-#' @importFrom stats replicate
 test_cp_permutation <- function(data, cp, n_perm = 1000, alpha = 0.05) {
-  require(stats)
-
   n <- nrow(data)
   seg1_mean <- mean(data$y[1:cp])
   seg2_mean <- mean(data$y[(cp + 1):n])

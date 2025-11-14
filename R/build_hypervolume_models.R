@@ -80,6 +80,7 @@ build_hypervolume_models <- function(partition_results,
   require(dplyr)
   require(sf)
 
+
   ### Validate method input
 
   if (missing(method)) {

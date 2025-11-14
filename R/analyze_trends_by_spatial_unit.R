@@ -131,6 +131,9 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
   require(tidyr)
   require(ggplot2)
   require(scatterpie)
+  require(utils)
+  require(grDevices)
+
 
   ### Input validation
 

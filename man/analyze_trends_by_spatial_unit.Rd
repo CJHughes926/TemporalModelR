@@ -13,11 +13,14 @@ analyze_trends_by_spatial_unit(
   year_increase_raster,
   time_steps,
   output_dir = "output/spatial_analysis",
-  overwrite = FALSE
+  overwrite = FALSE,
+  pie_scale = 1
 )
 }
 \arguments{
-\item{shapefile_path}{Character. Path to shapefile containing spatial units
+\item{shapefile_path}{Character, sf object, or sfc object. Can be: (1) path
+to a shapefile, (2) path to a directory containing a single .shp file,
+(3) an sf object, or (4) an sfc geometry object. Spatial units are used
 for aggregation (e.g., administrative boundaries, watersheds).}
 
 \item{name_field}{Character. Name of the attribute field in the shapefile to
@@ -46,6 +49,9 @@ Default is "output/spatial_analysis".}
 
 \item{overwrite}{Logical. If TRUE, overwrites existing output files. If
 FALSE, loads existing files when available. Default is FALSE.}
+
+\item{pie_scale}{Numeric. Scaling factor for pie chart sizes in the map.
+Values > 1 make pies larger, values < 1 make them smaller. Default is 1.}
 }
 \value{
 A list containing:
@@ -102,6 +108,18 @@ spatial_results <- analyze_trends_by_spatial_unit(
   year_increase_raster = "temporal_patterns/Year_First_Increase.tif",
   time_steps = 2000:2020,
   output_dir = "spatial_analysis/"
+)
+
+spatial_units_sf <- st_read("admin_boundaries.shp")
+spatial_results <- analyze_trends_by_spatial_unit(
+  shapefile_path = spatial_units_sf,
+  name_field = "STATE_NAME",
+  binary_stack = binary_rasters,
+  pattern_raster = pattern_rast,
+  year_decrease_raster = decrease_rast,
+  year_increase_raster = increase_rast,
+  time_steps = 2000:2020,
+  pie_scale = 1.5
 )
 }
 
