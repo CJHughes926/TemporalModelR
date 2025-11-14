@@ -8,7 +8,7 @@ plot_model_assessment(
   data_file_path,
   time_column,
   facet_column = NULL,
-  cbp_threshold = 0.001,
+  cbp_threshold = 0.05,
   separate_cbp = TRUE
 )
 }

@@ -7,14 +7,11 @@
 generate_spatiotemporal_predictions(
   partition_results,
   hypervolume_results,
-  model_vars,
   time_cols,
   time_steps,
   variable_patterns,
   raster_dir,
-  mask = NULL,
   output_dir = "./Predictions",
-  combine_folds = TRUE,
   overwrite = FALSE
 )
 }

@@ -9,7 +9,7 @@ model_assessment_metrics(
   projected_raster,
   test_points_current_year,
   test_points_all_years,
-  model_vars
+  variable_patterns
 )
 }
 \description{

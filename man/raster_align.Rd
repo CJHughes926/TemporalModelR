@@ -14,39 +14,40 @@ raster_align(
 )
 }
 \arguments{
-\item{input_dir}{Character. Path to the directory containing input raster files.}
+\item{input_dir}{Character. Directory containing the input raster files.}
 
-\item{output_dir}{Character. Path to the output directory where processed rasters will be saved.}
+\item{output_dir}{Character. Directory where processed rasters will be saved.}
 
-\item{reference_raster}{Character or `RasterLayer`. File path or object of the reference raster
-used for reprojection, resampling, and masking.}
+\item{reference_raster}{Character or `SpatRaster` or `RasterLayer`.
+File path or raster object used as the alignment reference.}
 
-\item{output_suffix}{Character. Suffix appended to output raster filenames
-(default = "_Masked_Updated").}
+\item{output_suffix}{Character. Suffix appended to output filenames.
+Default is `"_Masked_Updated"`.}
 
-\item{pattern}{Character. Regex pattern to match raster files in `input_dir`
-(default = ".*\\.tif$").}
+\item{pattern}{Character. Character pattern used to match raster files within
+`input_dir`. Default is `"\\.tif$"`.}
 
-\item{overwrite}{Logical. If `TRUE`, existing output files will be overwritten.
-If `FALSE`, already processed files will be skipped (default = FALSE).}
-}
-\value{
-Invisibly returns `NULL`. Output rasters are saved to disk.
+\item{overwrite}{Logical. If `TRUE`, all files are creating overwriting files
+with the same name in a given directory. If `FALSE`,
+  existing processed files are skipped. Default is `FALSE`.}
 }
 \description{
-This utility function aligns a batch of raster files within a directory to a
-given reference raster. It performs reprojection, resampling, and masking
-operations so that all rasters share the same CRS, resolution, and spatial
-extent. The processed rasters are saved to an output directory with a
-specified suffix.
+This utility function standardizes multiple raster files so that they share
+the same CRS, resolution, and spatial extent as a reference raster. Useful
+for ensuring that all rasters are properly aligned and don't cause errors later
+on in modeling or analyses.
 }
 \details{
-The function iterates through all raster files matching the pattern in
-`input_dir`. Each raster is reprojected to the CRS of the reference raster,
-resampled using bilinear interpolation, and masked using the reference
-raster’s non-NA area. The final rasters are written to `output_dir` in
-GeoTIFF format.
+Aligns a batch of raster files to a specified reference raster by performing
+reprojection, resampling, and masking operations. All output rasters are
+written to an output directory with a user-defined filename suffix.
 
-This is especially useful when working with multi-source raster datasets that
-must be aligned before stacking or extracting values.
+
+For each raster in `input_dir` matching `pattern`, the function:
+\enumerate{
+  \item Reprojects it to the CRS of the reference raster.
+  \item Resamples it (bilinear) to match the reference resolution.
+  \item Masks values outside the reference raster's non-`NA` area.
+  \item Saves the result as a GeoTIFF to `output_dir`.
+}
 }

@@ -11,7 +11,7 @@ scale_rasters(
   variable_patterns,
   time_cols = NULL,
   output_suffix = "_Scaled",
-  overwrite = TRUE
+  overwrite = F
 )
 }
 \arguments{

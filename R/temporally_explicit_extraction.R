@@ -4,8 +4,8 @@
 #' @description
 #' For each unique combination in \code{time_cols}, matches rasters by
 #' \code{variable_patterns}, extracts values at \code{points_sp}, writes raw
-#' values, per-variable scaling parameters (mean, sd) for use in \code{\link{scale_rasters}}, and a
-#' table of z-scaled values.
+#' values, per-variable scaling parameters (mean, sd), and optionally a z-scaled
+#' table.
 #'
 #' @param points_sp A \code{sf} object, a \code{SpatialPointsDataFrame}, a path
 #'   to a CSV/SHP/GEOJSON/GPKG, or a data.frame with coordinate columns
@@ -16,14 +16,6 @@
 #' @param variable_patterns Named character vector mapping variable names to
 #'   filename patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must
 #'   match \code{time_cols}. Static variables have no placeholders.
-#'
-#'   **Examples of properly formatted raster patterns:**
-#'   \itemize{
-#'     \item \code{c("bio1" = "bio1_YEAR")}
-#'     \item \code{c("temp" = "temp_YEAR_MONTH")}
-#'     \item \code{c("elevation" = "elevation")}  (static)
-#'     \item \code{c("ndvi" = "NDVI_YEAR")}  (case-insensitive)
-#'   }
 #'
 #' @param time_cols Character vector of time column names present in the point
 #'   data (e.g., \code{c("YEAR")}, \code{c("YEAR","MONTH")}).
@@ -49,10 +41,25 @@
 #' are matched by substituting time values into pattern placeholders and
 #' requiring all components to appear in the filename.
 #'
+#' @examples
+#' # Examples of correctly formatted variable patterns:
+#' variable_patterns <- c(
+#'   "bio1" = "bio1_YEAR",
+#'   "temp" = "temp_YEAR_MONTH",
+#'   "elevation" = "elevation",  # static variable
+#'   "ndvi" = "NDVI_YEAR"         # dynamic variable
+#' )
+#'
+#' time_cols <- c("YEAR", "MONTH")
+#'
+#' # These patterns will match raster filenames like:
+#' # "bio1_2020.tif", "temp_2020_07.tif", "elevation.tif", "NDVI_2020.tif"
+#'
 #' @importFrom terra rast extract crs vect
 #' @importFrom sf st_as_sf st_transform st_read st_drop_geometry
 #' @importFrom readr read_csv
 #' @importFrom dplyr select distinct arrange across all_of
+
 temporally_explicit_extraction <- function(points_sp,
                                            raster_dir,
                                            variable_patterns,

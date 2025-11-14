@@ -16,7 +16,6 @@ spatiotemporal_partition(
   n_spatial = 8,
   blocking_priority = NULL,
   max_imbalance = 0.2,
-  max_retries = 10,
   generate_plots = TRUE,
   output_file = NULL
 )
@@ -42,11 +41,11 @@ spatiotemporal_partition(
 
 \item{max_imbalance}{Max allowed fold-size imbalance (proportion).}
 
-\item{max_retries}{Number of random attempts to improve balance.}
-
 \item{generate_plots}{Logical; draw summary plots.}
 
 \item{output_file}{Optional \code{.rds} path to save results.}
+
+\item{max_retries}{Number of random attempts to improve balance.}
 }
 \value{
 A list with: \code{folds} (data.frame), \code{points_sf} (sf), \code{voronoi} (sf),

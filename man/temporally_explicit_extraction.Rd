@@ -20,21 +20,31 @@ temporally_explicit_extraction(
 )
 }
 \arguments{
-\item{points_sp}{A \code{SpatialPointsDataFrame}, a path to a CSV/SHP/GEOJSON/GPKG,
-or a data.frame with coordinate columns (see \code{xcol}, \code{ycol}, \code{points_crs}).}
+\item{points_sp}{A \code{sf} object, a \code{SpatialPointsDataFrame}, a path
+to a CSV/SHP/GEOJSON/GPKG, or a data.frame with coordinate columns
+(see \code{xcol}, \code{ycol}, \code{points_crs}).}
 
 \item{raster_dir}{Directory containing source rasters (.tif).}
 
-\item{variable_patterns}{Named character vector mapping variable names to filename
-patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must match \code{time_cols}.
-Static variables have no placeholders (e.g., \code{"elevation" = "elevation"}).}
+\item{variable_patterns}{Named character vector mapping variable names to
+  filename patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must
+  match \code{time_cols}. Static variables have no placeholders.
 
-\item{time_cols}{Character vector of time column names present in \code{points_sp} data.}
+  **Examples of properly formatted raster patterns:**
+  \itemize{
+    \item \code{c("bio1" = "bio1_YEAR")}
+    \item \code{c("temp" = "temp_YEAR_MONTH")}
+    \item \code{c("elevation" = "elevation")}  (static)
+    \item \code{c("ndvi" = "NDVI_YEAR")}  (case-insensitive)
+  }}
 
-\item{xcol, ycol}{Optional. Names of longitude/latitude columns when \code{points_sp} is a CSV or data.frame.}
+\item{time_cols}{Character vector of time column names present in the point
+data (e.g., \code{c("YEAR")}, \code{c("YEAR","MONTH")}).}
 
-\item{points_crs}{Optional. CRS string (e.g., \code{"+proj=longlat +datum=WGS84"}) when
-\code{points_sp} is a CSV or data.frame.}
+\item{xcol, ycol}{Optional coordinate column names when reading CSV or
+data.frame inputs.}
+
+\item{points_crs}{Optional CRS string when reading CSV or data.frame inputs.}
 
 \item{output_dir}{Directory to write outputs.}
 
@@ -44,22 +54,17 @@ Static variables have no placeholders (e.g., \code{"elevation" = "elevation"}).}
 
 \item{save_scaled}{Logical; write z-scaled values CSV.}
 
-\item{save_scaling_params}{Logical; write per-variable means/SDs CSV.}
-}
-\value{
-Invisibly returns \code{NULL}. Side effects: writes
-  \code{*_Raw_Values.csv}, \code{*_Scaling_Parameters.csv}, and optionally \code{*_Scaled_Values.csv}.
+\item{save_scaling_params}{Logical; write CSV of per-variable means and SDs.}
 }
 \description{
 For each unique combination in \code{time_cols}, matches rasters by
-  \code{variable_patterns}, extracts values at \code{points_sp}, writes raw values,
-  per-variable scaling parameters (mean, sd), and optionally a z-scaled table.
+\code{variable_patterns}, extracts values at \code{points_sp}, writes raw
+values, per-variable scaling parameters (mean, sd) for use in \code{\link{scale_rasters}}, and a
+table of z-scaled values.
 }
 \details{
-Dynamic variables are detected when their pattern contains any of \code{time_cols}
-placeholders; static variables are extracted once. Filenames are matched by
-variable prefix and placeholder substitution (bounded by underscores or extension).
-}
-\seealso{
-\code{\link{scale_rasters}} for applying saved scaling to rasters.
+Dynamic variables are detected when patterns contain placeholders matching
+names in \code{time_cols}. Static variables are extracted once. Raster files
+are matched by substituting time values into pattern placeholders and
+requiring all components to appear in the filename.
 }

@@ -8,12 +8,12 @@ analyze_temporal_patterns(
   binary_stack,
   summary_raster,
   time_steps,
-  method,
+  fastcpd_params = list(),
   output_dir = "output",
   n_tiles_x = 1,
   n_tiles_y = 1,
-  overlap = 10,
   alpha = 0.05,
+  spatial_autocorrelation = TRUE,
   show_progress = TRUE,
   estimate_time = TRUE,
   overwrite = FALSE
@@ -26,21 +26,21 @@ analyze_temporal_patterns(
 
 \item{time_steps}{Integer vector of time labels (same length as layers).}
 
-\item{method}{Character; changepoint/selection criterion (e.g., "BIC", "MBIC", "MDL").}
-
 \item{output_dir}{Output directory.}
 
 \item{n_tiles_x, n_tiles_y}{Number of tiles in x/y.}
 
-\item{overlap}{Overlap (in cells) between tiles.}
-
 \item{alpha}{Significance level.}
+
+\item{spatial_autocorrelation}{Logical; if TRUE (default), includes neighbor variable in analysis. If FALSE, spatial autocorrelation is not considered.}
 
 \item{show_progress}{Logical; show progress bar.}
 
 \item{estimate_time}{Logical; quick runtime estimate from sampled pixels.}
 
 \item{overwrite}{Logical; overwrite existing outputs.}
+
+\item{method}{Character; changepoint/selection criterion (e.g., "BIC", "MBIC", "MDL").}
 }
 \value{
 A list with rasters: \code{pattern}, \code{year_decrease}, \code{year_increase}.

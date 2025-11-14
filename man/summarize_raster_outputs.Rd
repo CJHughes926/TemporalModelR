@@ -8,7 +8,7 @@ summarize_raster_outputs(
   predictions_dir,
   output_dir = NULL,
   file_pattern = "Prediction_.*\\\\.tif$",
-  overwrite = TRUE
+  overwrite = F
 )
 }
 \arguments{
