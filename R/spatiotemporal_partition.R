@@ -76,8 +76,7 @@
 #'   st_union st_intersection st_drop_geometry st_sfc
 #' @importFrom dplyr select all_of
 #' @importFrom ggplot2 ggplot geom_sf aes coord_sf theme_minimal theme
-#'   element_text labs geom_histogram geom_col geom_hline
-#' @importFrom viridis scale_fill_viridis_d
+#'   element_text labs geom_histogram geom_col geom_hline scale_fill_viridis_d
 #' @importFrom deldir deldir tile.list
 #' @importFrom stats kmeans quantile
 #' @importFrom tools file_ext

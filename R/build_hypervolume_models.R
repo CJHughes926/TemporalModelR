@@ -64,7 +64,7 @@
 #' @importFrom hypervolume hypervolume_gaussian hypervolume_svm hypervolume_join
 #'   hypervolume_set hypervolume_overlap_statistics get_volume
 #' @importFrom sf st_drop_geometry
-#' @importFrom utils readRDS saveRDS combn
+#' @importFrom utils combn
 #' @importFrom tools file_ext
 #' @importFrom grDevices rainbow
 #' @importFrom graphics plot

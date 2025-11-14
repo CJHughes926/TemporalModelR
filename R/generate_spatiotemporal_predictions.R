@@ -72,7 +72,7 @@
 #' @importFrom raster stack
 #' @importFrom sp SpatialPointsDataFrame CRS spTransform
 #' @importFrom sf st_coordinates st_drop_geometry st_as_sf
-#' @importFrom utils write.csv readRDS saveRDS
+#' @importFrom utils write.csv
 #' @importFrom tools file_ext
 generate_spatiotemporal_predictions <- function(partition_results,
                                                 hypervolume_results,

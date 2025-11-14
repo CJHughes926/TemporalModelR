@@ -59,12 +59,13 @@
 #'
 #' @export
 #' @importFrom readr read_csv
+#' @importFrom grid grid.draw
 #' @importFrom dplyr mutate group_by summarise select arrange across all_of
 #' @importFrom ggplot2 ggplot geom_line geom_point geom_bar geom_hline
 #'   facet_wrap scale_y_log10 scale_color_manual scale_y_continuous sec_axis
 #'   labs theme_classic theme element_text aes
 #' @importFrom grid textGrob gpar
-#' @importFrom gridExtra arrangeGrob grid.draw
+#' @importFrom gridExtra arrangeGrob
 #' @importFrom scales scientific
 #' @importFrom ggtext element_markdown
 plot_model_assessment <- function(data_file_path,
