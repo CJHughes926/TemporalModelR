@@ -1,10 +1,5 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 # TemporalModelR
-
-<!-- badges: start -->
-<!-- badges: end -->
 
 TemporalModelR is an R package for building temporally explicit species
 distribution models using hypervolume-based methods. The package
@@ -65,21 +60,10 @@ The TemporalModelR workflow consists of three main phases:
 
 ## Example Workflow: DC Metro Region Analysis
 
-Here’s a complete workflow demonstrating the main functions using bird
-occurrence data from the DC Metro region (1986-2023):
-
-> **Note on Code Evaluation**: This example uses a mixed evaluation
-> strategy: - **Preprocessing and modeling steps (Steps 1-9)**: Set to
-> `eval=TRUE, message=FALSE, results='hide'` to avoid lengthy
-> computation during README generation. These steps typically take hours
-> to complete and require large spatial datasets. - **Postprocessing
-> visualization steps (Steps 10-12)**: Set to
-> `eval=TRUE, message=FALSE, results='hide'` to automatically generate
-> plots from existing analysis results when knitting the README.
->
-> To run the complete workflow from scratch, execute all chunks
-> interactively in R or set `eval=TRUE, message=FALSE, results='hide'`
-> for all chunks (be prepared for extended run times).
+This example demonstrates the complete workflow using bird occurrence
+data from the DC Metro region (1985-2023). The preprocessing and
+modeling steps are computationally intensive and are shown with
+`eval=FALSE` for documentation purposes.
 
 ``` r
 library(TemporalModelR)
@@ -92,8 +76,7 @@ library(raster)
 
 #### Step 1: Prepare Reference Raster and Study Area
 
-First, create a reference raster for your study area. This example uses
-Loudoun and Montgomery counties:
+Create a reference raster for your study area:
 
 ``` r
 counties_path <- "./DC_Metro/Shapefiles/DCMetro_Counties.shp"
@@ -101,6 +84,14 @@ reference_raster <- "./DC_Metro/reverse_water_mask_DCMetro.tif"
 
 r <- raster(reference_raster)
 counties <- st_read(counties_path)
+#> Reading layer `DCMetro_Counties' from data source 
+#>   `C:\Users\Conno\Documents\VT\TemporalModelR\DC_Metro\Shapefiles\DCMetro_Counties.shp' 
+#>   using driver `ESRI Shapefile'
+#> Simple feature collection with 21 features and 17 fields
+#> Geometry type: MULTIPOLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: -78.13137 ymin: 38.17122 xmax: -76.28756 ymax: 39.7214
+#> Geodetic CRS:  WGS 84
 
 loudoun <- counties[counties$NAMELSAD %in% c("Loudoun County", "Montgomery County"), ]
 
@@ -134,11 +125,11 @@ Reduce spatial and temporal bias in your occurrence data:
 
 ``` r
 spatiotemporal_rarefication(
-  points_sp = "./DC_Metro/simple_occupied_DC_Metro_AOU_5010.csv",
+  points_sp = "./DC_Metro/Occurrence_Data/simple_occupied_DC_Metro_AOU_5010.csv",
   xcol = "LONGDD",
   ycol = "LATDD",
   points_crs = 4326,
-  output_dir = "./DC_Metro/PointFiles_simple/",
+  output_dir = "./DC_Metro/Occurrence_Data/",
   reference_raster = r_loudoun_agg,
   time_cols = "Year"
 )
@@ -149,8 +140,8 @@ spatiotemporally rarefied occurrences.
 
 #### Step 4: Extract Environmental Values
 
-Extract land cover and elevation values at occurrence locations,
-calculating scaling parameters:
+Extract environmental values at occurrence locations, calculating
+scaling parameters:
 
 ``` r
 variable_patterns <- c(
@@ -161,14 +152,14 @@ variable_patterns <- c(
 )
 
 temporally_explicit_extraction(
-  points_sp = "./DC_Metro/PointFiles_simple/Pts_Database_OnePerPixPerTimeStep.csv",
+  points_sp = "./DC_Metro/Occurrence_Data/Pts_Database_OnePerPixPerTimeStep.csv",
   xcol = "X",
   ycol = "Y",
   points_crs = 4326,
   raster_dir = "G:/My Drive/VS_Rasters/DC_Metro/Masked_Projected_Variables_Simple/",
   variable_patterns = variable_patterns,
   time_cols = "Year",
-  output_dir = "./DC_Metro/PointFiles_simple/",
+  output_dir = "./DC_Metro/Occurrence_Data/",
   output_prefix = "temp_explicit_df"
 )
 ```
@@ -186,10 +177,10 @@ your occurrence data:
 scale_rasters(
   input_dir = "G:/My Drive/VS_Rasters/DC_Metro/Masked_Projected_Variables_Simple/",
   output_dir = "G:/My Drive/VS_Rasters/DC_Metro/Scaled_simple/",
-  scaling_params_file = "./DC_Metro/PointFiles_simple/temp_explicit_df_Scaling_Parameters.csv",
+  scaling_params_file = "./DC_Metro/Occurrence_Data/temp_explicit_df_Scaling_Parameters.csv",
   variable_patterns = variable_patterns,
   time_cols = "Year",
-  overwrite = TRUE
+  overwrite = T
 )
 ```
 
@@ -202,7 +193,7 @@ Partition occurrences into spatially and temporally independent folds:
 ``` r
 partition_results <- spatiotemporal_partition(
   reference_shapefile_path = st_geometry(loudoun),
-  points_file_path = "./DC_Metro/PointFiles_simple/temp_explicit_df_Scaled_Values.csv",
+  points_file_path = "./DC_Metro/Occurrence_Data/temp_explicit_df_Scaled_Values.csv",
   time_col = "Year",
   xcol = "x",
   ycol = "y",
@@ -213,23 +204,29 @@ partition_results <- spatiotemporal_partition(
   blocking_priority = "balanced",
   max_imbalance = 0.025,
   generate_plots = TRUE,
-  output_file = "./DC_Metro/Partitioning_simple/partitioning_results_spatial.rds"
+  output_file = "./DC_Metro/Model_Results/partitioning_results_spatial.rds"
 )
 ```
 
-<img src="man/figures/README-partition_data-1.png" width="100%" />
+<div class="figure">
+
+<img src="man/figures/README-partition_plot.png" alt="Spatiotemporal partition showing fold distribution across space and time" width="100%" />
+<p class="caption">
+Spatiotemporal partition showing fold distribution across space and time
+</p>
+
+</div>
 
 #### Step 7: Build Hypervolume Models
 
-Construct Gaussian hypervolumes for each cross-validation fold using
-land cover variables:
+Construct Gaussian hypervolumes for each cross-validation fold:
 
 ``` r
 hv_results <- build_hypervolume_models(
-  partition_results = "./DC_Metro/Partitioning_simple/partitioning_results_spatial.rds",
+  partition_results = "./DC_Metro/Model_Results/partitioning_results_spatial.rds",
   model_vars = c("Developed_Percentage2", "Open_Percentage2", "Forest_Percentage2"),
   method = "gaussian",
-  output_dir = "./DC_Metro/VirtualSpecies_Results/Hypervolume_Gaussian_simple",
+  output_dir = "./DC_Metro/Model_Results/Hypervolumes",
   hypervolume_params = list(
     quantile.requested = 0.95,
     quantile.requested.type = "probability"
@@ -239,7 +236,14 @@ hv_results <- build_hypervolume_models(
 )
 ```
 
-<img src="man/figures/README-build_hypervolumes-1.png" width="100%" /><img src="man/figures/README-build_hypervolumes-2.png" width="100%" /><img src="man/figures/README-build_hypervolumes-3.png" width="100%" /><img src="man/figures/README-build_hypervolumes-4.png" width="100%" /><img src="man/figures/README-build_hypervolumes-5.png" width="100%" />
+<div class="figure">
+
+<img src="man/figures/README-hypervolume_comparison.png" alt="Hypervolume comparison across cross-validation folds" width="100%" />
+<p class="caption">
+Hypervolume comparison across cross-validation folds
+</p>
+
+</div>
 
 #### Step 8: Generate Spatiotemporal Predictions
 
@@ -256,13 +260,13 @@ variable_patterns <- c(
 )
 
 predictions <- generate_spatiotemporal_predictions(
-  partition_results = "./DC_Metro/Partitioning_simple/partitioning_results_spatial.rds",
-  hypervolume_results = "./DC_Metro/VirtualSpecies_Results/Hypervolume_Gaussian_simple/all_hypervolumes_gaussian.rds",
+  partition_results = "./DC_Metro/Model_Results/partitioning_results_spatial.rds",
+  hypervolume_results = "./DC_Metro/Model_Results/Hypervolumes/all_hypervolumes_gaussian.rds",
   time_col = "Year",
   time_steps = time_steps,
   variable_patterns = variable_patterns,
   raster_dir = "G:/My Drive/VS_Rasters/DC_Metro/Scaled_simple/",
-  output_dir = "./predictions_from_package/",
+  output_dir = "./DC_Metro/Model_Results/Predictions/",
   overwrite = FALSE
 )
 ```
@@ -273,14 +277,42 @@ Examine model evaluation metrics across the 38-year time series:
 
 ``` r
 plot_model_assessment(
-  data_file_path = "./predictions_from_package/Model_Assessment_Metrics.csv",
+  data_file_path = "./DC_Metro/Model_Results/Predictions/Model_Assessment_Metrics.csv",
   time_column = "Year",
   separate_cbp = TRUE,
   cbp_threshold = 0.05
 )
 ```
 
-<img src="man/figures/README-plot_assessment-1.png" width="100%" /><img src="man/figures/README-plot_assessment-2.png" width="100%" /><img src="man/figures/README-plot_assessment-3.png" width="100%" /><img src="man/figures/README-plot_assessment-4.png" width="100%" />
+The `plot_model_assessment()` function generates diagnostic plots
+showing model performance over time:
+
+<div class="figure">
+
+<img src="man/figures/README-model_assessment_volume_sensitivity.png" alt="Hypervolume size and sensitivity metrics over time" width="100%" />
+<p class="caption">
+Hypervolume size and sensitivity metrics over time
+</p>
+
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-model_assessment_cbp_gspace.png" alt="Continuous Binomial Probability in Geographic Space (G-space)" width="100%" />
+<p class="caption">
+Continuous Binomial Probability in Geographic Space (G-space)
+</p>
+
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-model_assessment_cbp_espace.png" alt="Continuous Binomial Probability in Environmental Space (E-space)" width="100%" />
+<p class="caption">
+Continuous Binomial Probability in Environmental Space (E-space)
+</p>
+
+</div>
 
 ### Phase 3: Postprocessing
 
@@ -290,11 +322,21 @@ Summarize predictions across all models to identify areas of agreement:
 
 ``` r
 summary_results <- summarize_raster_outputs(
-  predictions_dir = "./predictions_from_package/",
-  output_dir = "./DC_Metro/VirtualSpecies_Results/Binary_Summaries_simple",
+  predictions_dir = "./DC_Metro/Model_Results/Predictions/",
+  output_dir = "./DC_Metro/Model_Results/Summary",
   overwrite = TRUE
 )
 ```
+
+<div class="figure">
+
+<img src="man/figures/README-summary_raster.png" alt="Summary raster showing proportion of years with suitable habitat (1986-2023)" width="80%" />
+<p class="caption">
+Summary raster showing proportion of years with suitable habitat
+(1986-2023)
+</p>
+
+</div>
 
 #### Step 11: Identify Temporal Patterns
 
@@ -309,7 +351,7 @@ pattern_results <- analyze_temporal_patterns(
   summary_raster = summary_results$summary_raster,
   time_steps = time_steps,
   fastcpd_params = list(method = "BIC"),
-  output_dir = "./output3",
+  output_dir = "./DC_Metro/Model_Results/Temporal_Patterns",
   spatial_autocorrelation = TRUE,
   n_tiles_x = 2,
   n_tiles_y = 2,
@@ -319,51 +361,102 @@ pattern_results <- analyze_temporal_patterns(
 )
 ```
 
-<img src="man/figures/README-analyze_patterns-1.png" width="100%" />
+<div class="figure">
+
+<img src="man/figures/README-pattern_classification.png" alt="Temporal pattern classification showing habitat trends across the DC Metro region" width="80%" />
+<p class="caption">
+Temporal pattern classification showing habitat trends across the DC
+Metro region
+</p>
+
+</div>
 
 The classification identifies seven pattern types:
 
 - **Never Suitable** (dark red): Areas that remained unsuitable
   throughout
-- **Decreasing** (green): Areas experiencing habitat loss
+- **Always Suitable** (dark green): Persistently suitable areas
 - **No Pattern** (gray): Areas with stable conditions
 - **Increasing** (light green): Areas gaining suitable habitat
-- **Always Suitable** (light red): Persistently suitable areas
+- **Decreasing** (light red): Areas experiencing habitat loss
 - **Fluctuating** (purple): Areas with complex temporal dynamics
 - **No Data** (yellow): Areas outside the study region or lacking data
 
 #### Step 12: Summarize by County
 
-Aggregate temporal patterns and trends for Loudoun and Montgomery
-counties:
+Aggregate temporal patterns and trends for administrative units:
 
 ``` r
 analyze_trends_by_spatial_unit(
   shapefile_path = st_as_sf(loudoun),
   name_field = "NAMELSAD",
   binary_stack = summary_results$binary_stack,
-  pattern_raster = "./output3/pattern_raster_1986_2023.tif",
-  year_decrease_raster = "./output3/year_first_decrease_1986_2023.tif",
-  year_increase_raster = "./output3/year_first_increase_1986_2023.tif",
-  output_dir = "./output3/spatial_analysis",
+  pattern_raster = "./DC_Metro/Model_Results/Temporal_Patterns/pattern_raster_1986_2023.tif",
+  year_decrease_raster = "./DC_Metro/Model_Results/Temporal_Patterns/year_first_decrease_1986_2023.tif",
+  year_increase_raster = "./DC_Metro/Model_Results/Temporal_Patterns/year_first_increase_1986_2023.tif",
+  output_dir = "./DC_Metro/Model_Results/Spatial_Analysis",
   time_steps = time_steps,
   pie_scale = 0.5
 )
 ```
 
-<img src="man/figures/README-spatial_trends-1.png" width="100%" /><img src="man/figures/README-spatial_trends-2.png" width="100%" /><img src="man/figures/README-spatial_trends-3.png" width="100%" /><img src="man/figures/README-spatial_trends-4.png" width="100%" /><img src="man/figures/README-spatial_trends-5.png" width="100%" /><img src="man/figures/README-spatial_trends-6.png" width="100%" />
+The `analyze_trends_by_spatial_unit()` function generates comprehensive
+spatial summaries:
 
-The `analyze_trends_by_spatial_unit()` function generates multiple
-output plots and saves them to the specified output directory:
+<div class="figure">
 
-- Pattern composition maps with pie charts
-- Habitat availability time series by county
-- Annual gains and losses
-- Regional comparison plots
+<img src="man/figures/README-county_pattern_composition.png" alt="Pattern composition by county with pie charts showing temporal trend distributions" width="100%" />
+<p class="caption">
+Pattern composition by county with pie charts showing temporal trend
+distributions
+</p>
 
-This analysis reveals county-level differences in habitat suitability
-dynamics, showing how urbanization and land use change have affected
-habitat availability from 1986 to 2023.
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-county_habitat_timeseries.png" alt="Habitat availability time series by county (1986-2023)" width="100%" />
+<p class="caption">
+Habitat availability time series by county (1986-2023)
+</p>
+
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-county_gains_losses.png" alt="Annual habitat gains and losses across both counties" width="100%" />
+<p class="caption">
+Annual habitat gains and losses across both counties
+</p>
+
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-county_change_by_unit.png" alt="Gains and losses by county over time" width="100%" />
+<p class="caption">
+Gains and losses by county over time
+</p>
+
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-county_total_change.png" alt="Total habitat change by county across the entire study period" width="100%" />
+<p class="caption">
+Total habitat change by county across the entire study period
+</p>
+
+</div>
+
+<div class="figure">
+
+<img src="man/figures/README-county_faceted_timeline.png" alt="Faceted timeline showing temporal trends within each county" width="100%" />
+<p class="caption">
+Faceted timeline showing temporal trends within each county
+</p>
+
+</div>
 
 ## Key Features
 
