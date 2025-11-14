@@ -1,9 +1,39 @@
-#' Spatiotemporal rarefaction
-#' @export
+#' Spatiotemporal rarefication of point data
+#'
+#' Performs spatial and optional spatiotemporal rarefication of point datasets
+#' by retaining one point per raster pixel and, if time columns are provided,
+#' one point per pixel per time combination. Output tables are written to a
+#' specified directory.
+#'
+#' @param points_sp Input point data. May be an `sf` object, data frame,
+#'   SpatialPointsDataFrame, or a file path.
+#' @param output_dir Character. Directory where output files will be saved.
+#' @param reference_raster Raster used to define pixel boundaries for
+#'   rarefication. May be a file path or raster object.
+#' @param time_cols Character vector of column names defining temporal
+#'   grouping for spatiotemporal rarefication. Default is `NULL`.
+#' @param xcol,ycol Character. Names of coordinate columns when the input is
+#'   a data frame or CSV.
+#' @param points_crs CRS of the input points, required when coordinates are
+#'   supplied in tabular form.
+#' @param output_prefix Character. Prefix for output file names.
+#'   Default is `"Pts_Database"`.
+#'
+#' @details
+#' The function assigns each point to a raster pixel and performs:
+#' \itemize{
+#'   \item Spatial rarefication: keeps one point per pixel.
+#'   \item Spatiotemporal rarefication (if `time_cols` are provided):
+#'         keeps one point per pixel per time combination.
+#' }
+#' The resulting tables are saved as CSV files in the output directory.
+#'
 #' @importFrom terra rast res extent ncell crs extract project
 #' @importFrom sf st_as_sf st_transform st_coordinates st_write st_read
 #' @importFrom dplyr group_by across all_of slice ungroup select distinct
 #' @importFrom utils write.csv
+#' @export
+
 spatiotemporal_rarefication <- function(points_sp,
                                         output_dir,
                                         reference_raster,

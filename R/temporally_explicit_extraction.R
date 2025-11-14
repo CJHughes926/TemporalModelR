@@ -1,37 +1,56 @@
 #' Extract time-aligned raster values at points and compute scaling
 #' @export
-#' @description For each unique combination in \code{time_cols}, matches rasters by
-#'   \code{variable_patterns}, extracts values at \code{points_sp}, writes raw values,
-#'   per-variable scaling parameters (mean, sd), and optionally a z-scaled table.
 #'
-#' @param points_sp A \code{SpatialPointsDataFrame}, a path to a CSV/SHP/GEOJSON/GPKG,
-#'   or a data.frame with coordinate columns (see \code{xcol}, \code{ycol}, \code{points_crs}).
+#' @description
+#' For each unique combination in \code{time_cols}, matches rasters by
+#' \code{variable_patterns}, extracts values at \code{points_sp}, writes raw
+#' values, per-variable scaling parameters (mean, sd) for use in \code{\link{scale_rasters}}, and a
+#' table of z-scaled values.
+#'
+#' @param points_sp A \code{sf} object, a \code{SpatialPointsDataFrame}, a path
+#'   to a CSV/SHP/GEOJSON/GPKG, or a data.frame with coordinate columns
+#'   (see \code{xcol}, \code{ycol}, \code{points_crs}).
+#'
 #' @param raster_dir Directory containing source rasters (.tif).
-#' @param variable_patterns Named character vector mapping variable names to filename
-#'   patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must match \code{time_cols}.
-#'   Static variables have no placeholders (e.g., \code{"elevation" = "elevation"}).
-#' @param time_cols Character vector of time column names present in \code{points_sp} data.
-#' @param xcol,ycol Optional. Names of longitude/latitude columns when \code{points_sp} is a CSV or data.frame.
-#' @param points_crs Optional. CRS string (e.g., \code{"+proj=longlat +datum=WGS84"}) when
-#'   \code{points_sp} is a CSV or data.frame.
-#' @param output_dir Directory to write outputs.
-#' @param output_prefix Prefix for output filenames.
-#' @param save_raw Logical; write raw extracted values CSV.
-#' @param save_scaled Logical; write z-scaled values CSV.
-#' @param save_scaling_params Logical; write per-variable means/SDs CSV.
 #'
-#' @returns Invisibly returns \code{NULL}. Side effects: writes
-#'   \code{*_Raw_Values.csv}, \code{*_Scaling_Parameters.csv}, and optionally \code{*_Scaled_Values.csv}.
+#' @param variable_patterns Named character vector mapping variable names to
+#'   filename patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must
+#'   match \code{time_cols}. Static variables have no placeholders.
+#'
+#'   **Examples of properly formatted raster patterns:**
+#'   \itemize{
+#'     \item \code{c("bio1" = "bio1_YEAR")}
+#'     \item \code{c("temp" = "temp_YEAR_MONTH")}
+#'     \item \code{c("elevation" = "elevation")}  (static)
+#'     \item \code{c("ndvi" = "NDVI_YEAR")}  (case-insensitive)
+#'   }
+#'
+#' @param time_cols Character vector of time column names present in the point
+#'   data (e.g., \code{c("YEAR")}, \code{c("YEAR","MONTH")}).
+#'
+#' @param xcol,ycol Optional coordinate column names when reading CSV or
+#'   data.frame inputs.
+#'
+#' @param points_crs Optional CRS string when reading CSV or data.frame inputs.
+#'
+#' @param output_dir Directory to write outputs.
+#'
+#' @param output_prefix Prefix for output filenames.
+#'
+#' @param save_raw Logical; write raw extracted values CSV.
+#'
+#' @param save_scaled Logical; write z-scaled values CSV.
+#'
+#' @param save_scaling_params Logical; write CSV of per-variable means and SDs.
 #'
 #' @details
-#' Dynamic variables are detected when their pattern contains any of \code{time_cols}
-#' placeholders; static variables are extracted once. Filenames are matched by
-#' variable prefix and placeholder substitution (bounded by underscores or extension).
-#'
-#' @seealso \code{\link{scale_rasters}} for applying saved scaling to rasters.
+#' Dynamic variables are detected when patterns contain placeholders matching
+#' names in \code{time_cols}. Static variables are extracted once. Raster files
+#' are matched by substituting time values into pattern placeholders and
+#' requiring all components to appear in the filename.
 #'
 #' @importFrom terra rast extract crs vect
-#' @importFrom sf st_as_sf st_transform
+#' @importFrom sf st_as_sf st_transform st_read st_drop_geometry
 #' @importFrom readr read_csv
 #' @importFrom dplyr select distinct arrange across all_of
 temporally_explicit_extraction <- function(points_sp,

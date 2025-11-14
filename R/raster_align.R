@@ -31,8 +31,6 @@
 #'   \item Saves the result as a GeoTIFF to `output_dir`.
 #' }
 #'
-#' @return Processed rasters are saved to disk.
-#'
 #' @importFrom terra rast project resample mask writeRaster crs ext
 #' @importFrom methods is
 #' @export
@@ -164,3 +162,4 @@ raster_align <- function(input_dir,
   print("Processing complete!")
   return(invisible(NULL))
 }
+
