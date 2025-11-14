@@ -89,6 +89,7 @@ analyze_temporal_patterns <- function(binary_stack,
                                       overwrite = FALSE) {
 
   require(terra)
+  require(fastcpd)
 
   ### Input validation
 
