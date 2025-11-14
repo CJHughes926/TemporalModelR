@@ -5,8 +5,9 @@
 #' countries, watersheds). Generates summary tables and visualizations showing
 #' how habitat suitability patterns and trends vary spatially.
 #'
-#' @param shapefile_path Character. Path to shapefile containing spatial units
-#'   for aggregation (e.g., administrative boundaries, watersheds).
+#' @param shapefile_path Character or sf object. Path to shapefile containing
+#'   spatial units for aggregation (e.g., administrative boundaries, watersheds),
+#'   or an sf object directly.
 #' @param name_field Character. Name of the attribute field in the shapefile to
 #'   use as spatial unit identifiers.
 #' @param binary_stack SpatRaster or character. Stack of binary prediction
@@ -80,6 +81,17 @@
 #'   time_steps = 2000:2020,
 #'   output_dir = "spatial_analysis/"
 #' )
+#'
+#' spatial_units_sf <- st_read("admin_boundaries.shp")
+#' spatial_results <- analyze_trends_by_spatial_unit(
+#'   shapefile_path = spatial_units_sf,
+#'   name_field = "STATE_NAME",
+#'   binary_stack = binary_rasters,
+#'   pattern_raster = pattern_rast,
+#'   year_decrease_raster = decrease_rast,
+#'   year_increase_raster = increase_rast,
+#'   time_steps = 2000:2020
+#' )
 #' }
 #'
 #' @export
@@ -117,8 +129,16 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
 
   ### Input validation
 
-  if (!file.exists(shapefile_path)) {
-    stop(paste0("ERROR: Shapefile not found: ", shapefile_path))
+  if (inherits(shapefile_path, "sf")) {
+    spatial_units <- shapefile_path
+  } else if (is.character(shapefile_path)) {
+    if (!file.exists(shapefile_path)) {
+      stop(paste0("ERROR: Shapefile not found: ", shapefile_path))
+    }
+    print("Loading spatial units...")
+    spatial_units <- st_read(shapefile_path, quiet = TRUE)
+  } else {
+    stop("ERROR: shapefile_path must be either a file path (character) or an sf object")
   }
 
   ### Handle raster inputs as files or objects
@@ -166,10 +186,7 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
   plots_dir <- file.path(output_dir, "plots")
   if (!dir.exists(plots_dir)) dir.create(plots_dir, recursive = TRUE)
 
-  ### Load and prepare spatial units
-
-  print("Loading spatial units...")
-  spatial_units <- st_read(shapefile_path, quiet = TRUE)
+  ### Prepare spatial units
 
   spatial_units <- spatial_units %>%
     filter(!grepl("city", !!sym(name_field), ignore.case = TRUE))
