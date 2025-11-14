@@ -5,9 +5,10 @@
 #' countries, watersheds). Generates summary tables and visualizations showing
 #' how habitat suitability patterns and trends vary spatially.
 #'
-#' @param shapefile_path Character or sf object. Path to shapefile containing
-#'   spatial units for aggregation (e.g., administrative boundaries, watersheds),
-#'   or an sf object directly.
+#' @param shapefile_path Character, sf object, or sfc object. Can be: (1) path
+#'   to a shapefile, (2) path to a directory containing a single .shp file,
+#'   (3) an sf object, or (4) an sfc geometry object. Spatial units are used
+#'   for aggregation (e.g., administrative boundaries, watersheds).
 #' @param name_field Character. Name of the attribute field in the shapefile to
 #'   use as spatial unit identifiers.
 #' @param binary_stack SpatRaster or character. Stack of binary prediction
@@ -27,6 +28,8 @@
 #'   Default is "output/spatial_analysis".
 #' @param overwrite Logical. If TRUE, overwrites existing output files. If
 #'   FALSE, loads existing files when available. Default is FALSE.
+#' @param pie_scale Numeric. Scaling factor for pie chart sizes in the map.
+#'   Values > 1 make pies larger, values < 1 make them smaller. Default is 1.
 #'
 #' @return A list containing:
 #' \itemize{
@@ -90,7 +93,8 @@
 #'   pattern_raster = pattern_rast,
 #'   year_decrease_raster = decrease_rast,
 #'   year_increase_raster = increase_rast,
-#'   time_steps = 2000:2020
+#'   time_steps = 2000:2020,
+#'   pie_scale = 1.5
 #' )
 #' }
 #'
@@ -117,7 +121,8 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
                                            year_increase_raster,
                                            time_steps,
                                            output_dir = "output/spatial_analysis",
-                                           overwrite = FALSE) {
+                                           overwrite = FALSE,
+                                           pie_scale = 1) {
 
   require(sf)
   require(terra)
@@ -129,16 +134,31 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
 
   ### Input validation
 
-  if (inherits(shapefile_path, "sf")) {
+  if (inherits(shapefile_path, c("sf", "sfc"))) {
     spatial_units <- shapefile_path
+    if (inherits(spatial_units, "sfc")) {
+      spatial_units <- st_sf(geometry = spatial_units)
+    }
   } else if (is.character(shapefile_path)) {
-    if (!file.exists(shapefile_path)) {
+    if (dir.exists(shapefile_path)) {
+      shp_files <- list.files(shapefile_path, pattern = "\\.shp$", full.names = TRUE)
+      if (length(shp_files) == 0) {
+        stop(paste0("ERROR: No .shp file found in directory: ", shapefile_path))
+      }
+      if (length(shp_files) > 1) {
+        stop(paste0("ERROR: Multiple .shp files found in directory: ", shapefile_path,
+                    ". Please specify a single file."))
+      }
+      print("Loading spatial units...")
+      spatial_units <- st_read(shp_files[1], quiet = TRUE)
+    } else if (file.exists(shapefile_path)) {
+      print("Loading spatial units...")
+      spatial_units <- st_read(shapefile_path, quiet = TRUE)
+    } else {
       stop(paste0("ERROR: Shapefile not found: ", shapefile_path))
     }
-    print("Loading spatial units...")
-    spatial_units <- st_read(shapefile_path, quiet = TRUE)
   } else {
-    stop("ERROR: shapefile_path must be either a file path (character) or an sf object")
+    stop("ERROR: shapefile_path must be either a file path (character), directory path, sf object, or sfc object")
   }
 
   ### Handle raster inputs as files or objects
@@ -402,19 +422,19 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
       spatial_units_proj %>%
         mutate(coords = suppressWarnings(st_coordinates(st_point_on_surface(geometry)))) %>%
         st_drop_geometry() %>%
-        select(!!sym(name_field), coords),
+        dplyr::select(!!sym(name_field), coords),
       by = c("Spatial_Unit" = name_field)
     ) %>%
     mutate(
       x = coords[,1],
       y = coords[,2]
     ) %>%
-    select(-coords)
+    dplyr::select(-coords)
 
   pie_cols <- c("Always_Absent", "Always_Present", "No_Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed")
 
   total_pixels_all_units <- sum(overall_summary$Total_Pixels, na.rm = TRUE)
-  pie_data$radius <- sqrt(overall_summary$Total_Pixels / total_pixels_all_units) * 0.3
+  pie_data$radius <- sqrt(overall_summary$Total_Pixels / total_pixels_all_units) * 0.3 * pie_scale
 
   p_map <- ggplot() +
     geom_sf(data = spatial_units_proj, fill = NA, color = "black", size = 0.3) +
