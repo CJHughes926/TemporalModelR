@@ -2,6 +2,8 @@
 #' @keywords internal
 #' @importFrom stats glm binomial logLik pchisq coef
 test_cp_likelihood <- function(data, cp, alpha = 0.05, use_neighbor = TRUE) {
+  require(stats)
+
   n <- nrow(data)
   seg1_data <- data[1:cp, ]
   seg2_data <- data[(cp + 1):n, ]
@@ -36,7 +38,10 @@ test_cp_likelihood <- function(data, cp, alpha = 0.05, use_neighbor = TRUE) {
 
 #' Permutation changepoint test (difference in means)
 #' @keywords internal
+#' @importFrom stats replicate
 test_cp_permutation <- function(data, cp, n_perm = 1000, alpha = 0.05) {
+  require(stats)
+
   n <- nrow(data)
   seg1_mean <- mean(data$y[1:cp])
   seg2_mean <- mean(data$y[(cp + 1):n])
@@ -56,6 +61,8 @@ test_cp_permutation <- function(data, cp, n_perm = 1000, alpha = 0.05) {
 #' @keywords internal
 #' @importFrom stats pnorm
 test_cp_proportion <- function(data, cp, alpha = 0.05) {
+  require(stats)
+
   n <- nrow(data)
   seg1_y <- data$y[1:cp]
   seg2_y <- data$y[(cp + 1):n]
@@ -88,6 +95,8 @@ test_cp_proportion <- function(data, cp, alpha = 0.05) {
 #' @keywords internal
 #' @importFrom stats chisq.test
 test_cp_chisquare <- function(data, cp, alpha = 0.05) {
+  require(stats)
+
   n <- nrow(data)
   seg1_y <- data$y[1:cp]
   seg2_y <- data$y[(cp + 1):n]
@@ -223,6 +232,8 @@ classify_pattern <- function(sig_results) {
 #' @keywords internal
 #' @importFrom fastcpd fastcpd.binomial
 classify_pixel_cpd <- function(pixel_vals, n_middle, method = "MBIC", alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
+  require(fastcpd)
+
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
 
@@ -293,15 +304,13 @@ classify_pixel_cpd <- function(pixel_vals, n_middle, method = "MBIC", alpha = 0.
   return(pattern_codes[pattern])
 }
 
-library(raster)
-library(fastcpd)
-library(dplyr)
-
 #' Classify a pixel and extract first increase/decrease years
 #' @keywords internal
 #' @importFrom fastcpd fastcpd.binomial
 classify_pixel_with_years <- function(pixel_vals, n_middle, time_steps,
                                       method = method, alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
+
+  require(fastcpd)
 
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
