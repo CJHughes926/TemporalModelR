@@ -84,14 +84,6 @@ reference_raster <- "./DC_Metro/reverse_water_mask_DCMetro.tif"
 
 r <- raster(reference_raster)
 counties <- st_read(counties_path)
-#> Reading layer `DCMetro_Counties' from data source 
-#>   `C:\Users\Conno\Documents\VT\TemporalModelR\DC_Metro\Shapefiles\DCMetro_Counties.shp' 
-#>   using driver `ESRI Shapefile'
-#> Simple feature collection with 21 features and 17 fields
-#> Geometry type: MULTIPOLYGON
-#> Dimension:     XY
-#> Bounding box:  xmin: -78.13137 ymin: 38.17122 xmax: -76.28756 ymax: 39.7214
-#> Geodetic CRS:  WGS 84
 
 loudoun <- counties[counties$NAMELSAD %in% c("Loudoun County", "Montgomery County"), ]
 
@@ -102,7 +94,7 @@ if (st_crs(loudoun) != crs(r)) {
 r_loudoun <- crop(r, loudoun)
 r_loudoun <- mask(r_loudoun, loudoun)
 
-r_loudoun_agg <- aggregate(r_loudoun, fact = 9, fun = mean, na.rm = TRUE)
+Loudoun_Montgomery <- aggregate(r_loudoun, fact = 9, fun = mean, na.rm = TRUE)
 ```
 
 #### Step 2: Align Environmental Rasters
@@ -114,7 +106,7 @@ projection, extent, and resolution:
 raster_align(
   input_dir = "G:/My Drive/VS_Rasters/DC_Metro/",
   output_dir = "G:/My Drive/VS_Rasters/DC_Metro/Masked_Projected_Variables_Simple/",
-  reference_raster = r_loudoun_agg,
+  reference_raster = Loudoun_Montgomery,
   overwrite = F
 )
 ```
@@ -130,7 +122,7 @@ spatiotemporal_rarefication(
   ycol = "LATDD",
   points_crs = 4326,
   output_dir = "./DC_Metro/Occurrence_Data/",
-  reference_raster = r_loudoun_agg,
+  reference_raster = Loudoun_Montgomery,
   time_cols = "Year"
 )
 ```
@@ -457,117 +449,6 @@ Faceted timeline showing temporal trends within each county
 </p>
 
 </div>
-
-## Key Features
-
-### Temporally Explicit Modeling
-
-TemporalModelR is designed specifically for datasets where environmental
-conditions change over time. The package:
-
-- Matches environmental layers to occurrence timestamps
-- Handles both static (e.g., elevation) and dynamic (e.g., land cover)
-  variables
-- Generates predictions for each time period in your study
-
-### Hypervolume-Based Approach
-
-Rather than traditional presence-background methods, TemporalModelR uses
-hypervolumes to characterize species’ environmental niches:
-
-- **Gaussian kernel density estimation** for smooth, probabilistic niche
-  boundaries
-- **One-class SVM** for complex, non-linear niche shapes
-- Evaluation in both geographic space (G-space) and environmental space
-  (E-space)
-
-### Spatiotemporal Cross-Validation
-
-The package implements sophisticated spatial and temporal partitioning:
-
-- Creates spatially and temporally independent folds
-- Generates Voronoi tessellations for spatial blocks
-- Balances fold sizes across space and time
-- Produces diagnostic plots for validation strategy assessment
-
-### Comprehensive Temporal Analysis
-
-Advanced changepoint detection identifies temporal trends:
-
-- Classifies pixels as Never Suitable, Always Suitable, Increasing,
-  Decreasing, No Pattern, or Fluctuating
-- Accounts for spatial autocorrelation in pattern detection
-- Identifies time periods when significant changes occurred
-- Visualizes patterns across user-defined spatial units
-
-## Function Reference
-
-### Preprocessing Functions
-
-- `raster_align()` - Align rasters to common
-  projection/extent/resolution
-- `spatiotemporal_rarefication()` - Rarefy occurrence data
-  spatiotemporally
-- `temporally_explicit_extraction()` - Extract environmental values at
-  occurrences
-- `scale_rasters()` - Standardize rasters using occurrence data
-  statistics
-- `spatiotemporal_partition()` - Create spatiotemporal cross-validation
-  folds
-
-### Modeling Functions
-
-- `build_hypervolume_models()` - Build hypervolumes across CV folds
-- `model_assessment_metrics()` - Calculate evaluation metrics (G-space
-  and E-space)
-- `generate_spatiotemporal_predictions()` - Project models across space
-  and time
-
-### Postprocessing Functions
-
-- `summarize_raster_outputs()` - Create consensus predictions
-- `analyze_temporal_patterns()` - Identify temporal trends via
-  changepoint detection
-- `plot_model_assessment()` - Visualize model performance over time
-- `analyze_trends_by_spatial_unit()` - Aggregate trends by spatial units
-
-## Data Requirements
-
-### Occurrence Data
-
-Your occurrence data should include:
-
-- Geographic coordinates (latitude/longitude or projected coordinates)
-- Temporal information (e.g., year, month)
-- Species/observation identifiers
-
-Example format:
-
-    species,longitude,latitude,Year
-    Species_A,-77.5,38.9,2015
-    Species_A,-77.6,39.0,2016
-
-### Environmental Data
-
-Environmental rasters should:
-
-- Cover your study area and time period
-- Use consistent naming conventions with temporal placeholders
-- Be in a format readable by `terra` (GeoTIFF recommended)
-
-Example naming:
-
-    Developed_Percentage2_1990.tif
-    Developed_Percentage2_2000.tif
-    Forest_Percentage2_1990.tif
-    elevation.tif  (static variables have no time component)
-
-### Spatial Units (Optional)
-
-For regional summaries, provide:
-
-- Polygon shapefile of administrative/ecological boundaries
-- Attribute field with unique names for each unit
 
 ## Citation
 
