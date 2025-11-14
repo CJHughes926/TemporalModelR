@@ -1,20 +1,68 @@
-#' Build hypervolume models across folds
+#' Build Hypervolume Models Across Cross-Validation Folds
 #'
-#' Fits per-fold hypervolumes (Gaussian KDE or one-class SVM), saves/loads a combined RDS, plots (optional), and returns volumes and overlaps.
+#' Modeling function that constructs hypervolume models for each
+#' cross-validation fold using either Gaussian kernel density estimation or
+#' one-class SVM. Each hypervolume reserves one fold as testing data and uses
+#' remaining folds as training data.
 #'
-#' @param partition_results List or .rds path from spatiotemporal_partition().
-#' @param model_vars Character vector of predictor column names.
-#' @param method "gaussian" or "svm".
-#' @param output_dir Output directory.
-#' @param hypervolume_params Named list of args passed to the selected hypervolume function.
-#' @param create_plot Logical.
-#' @param overwrite Logical.
+#' @param partition_results List or character. Output from
+#'   \code{\link{spatiotemporal_partition}} or path to .rds file containing
+#'   partition results.
+#' @param model_vars Character vector. Names of predictor columns to use in
+#'   hypervolume construction.
+#' @param method Character. Hypervolume method, either "gaussian" for Gaussian
+#'   kernel density estimation or "svm" for one-class SVM. Required parameter.
+#' @param output_dir Character. Directory to write output files. Default is
+#'   "./Hypervolume_Models".
+#' @param hypervolume_params Named list. Additional parameters passed to
+#'   \code{\link[hypervolume]{hypervolume_gaussian}} or
+#'   \code{\link[hypervolume]{hypervolume_svm}}. Default is empty list.
+#' @param create_plot Logical. If TRUE, generates visualization plots of
+#'   hypervolumes. If FALSE, skips plot generation. Default is TRUE.
+#' @param overwrite Logical. If TRUE, overwrites existing hypervolume files.
+#'   If FALSE, loads existing files when available. Default is FALSE.
 #'
-#' @return A list with elements: \code{hypervolumes}, \code{volumes}, \code{overlaps}, \code{method}, \code{model_vars}, \code{output_dir}, \code{combined_file}.
+#' @return A list containing:
+#' \itemize{
+#'   \item hypervolumes: list of hypervolume objects for each fold
+#'   \item volumes: numeric vector of hypervolume sizes
+#'   \item overlaps: matrix of pairwise hypervolume overlaps
+#'   \item method: character indicating method used
+#'   \item model_vars: character vector of variables used
+#'   \item output_dir: path to output directory
+#'   \item combined_file: path to saved .rds file
+#' }
+#'
+#' @details
+#' For N folds, constructs N hypervolumes where each reserves one fold for
+#' testing. Overlap statistics quantify similarity between hypervolumes, with
+#' low overlap suggesting distinct environmental spaces across folds.
+#'
+#' Hypervolume models are used by \code{\link{generate_spatiotemporal_predictions}}
+#' to project habitat suitability across space and time.
+#'
+#' @seealso
+#' Preprocessing: \code{\link{spatiotemporal_partition}}
+#'
+#' Modeling: \code{\link{generate_spatiotemporal_predictions}},
+#' \code{\link{model_assessment_metrics}}
+#'
+#' External: \code{\link[hypervolume]{hypervolume_gaussian}},
+#' \code{\link[hypervolume]{hypervolume_svm}}
+#'
+#' @examples
+#' \dontrun{
+#' hypervolumes <- build_hypervolume_models(
+#'   partition_results = "partition_results.rds",
+#'   model_vars = c("bio1", "bio12", "elevation"),
+#'   method = "gaussian",
+#'   output_dir = "hypervolume_models/"
+#' )
+#' }
 #'
 #' @export
 #' @importFrom hypervolume hypervolume_gaussian hypervolume_svm hypervolume_join
-#' @importFrom hypervolume hypervolume_set hypervolume_overlap_statistics get_volume
+#'   hypervolume_set hypervolume_overlap_statistics get_volume
 #' @importFrom sf st_drop_geometry
 #' @importFrom utils readRDS saveRDS combn
 #' @importFrom tools file_ext

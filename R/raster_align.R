@@ -1,40 +1,49 @@
-#' Align and Mask Raster Files to a Reference Raster
+#' Align and Standardize Raster Files to a Reference Raster
 #'
-#' Aligns a batch of raster files to a specified reference raster by performing
-#' reprojection, resampling, and masking operations. All output rasters are
-#' written to an output directory with a user-defined filename suffix.
-#'
-#' @description
-#' This utility function standardizes multiple raster files so that they share
-#' the same CRS, resolution, and spatial extent as a reference raster. Useful
-#' for ensuring that all rasters are properly aligned and don't cause errors later
-#' on in modeling or analyses.
+#' Preprocessing function that aligns a batch of raster files to a specified
+#' reference raster by performing reprojection, resampling, and masking
+#' operations. Ensures all rasters share identical CRS, resolution, and spatial
+#' extent for downstream analyses.
 #'
 #' @param input_dir Character. Directory containing the input raster files.
 #' @param output_dir Character. Directory where processed rasters will be saved.
-#' @param reference_raster Character or `SpatRaster` or `RasterLayer`.
-#'   File path or raster object used as the alignment reference.
-#' @param output_suffix Character. Suffix appended to output filenames.
-#'   Default is `"_Masked_Updated"`.
-#' @param pattern Character. Character pattern used to match raster files within
-#'   `input_dir`. Default is `"\\.tif$"`.
-#' @param overwrite Logical. If `TRUE`, all files are creating overwriting files
-#' with the same name in a given directory. If `FALSE`,
-#'   existing processed files are skipped. Default is `FALSE`.
+#' @param reference_raster Character, SpatRaster, or RasterLayer. File path or
+#'   raster object used as the alignment reference.
+#' @param output_suffix Character. Suffix appended to output filenames. Default
+#'   is "_Masked_Updated".
+#' @param pattern Character. Pattern used to match raster files within input_dir.
+#'   Default is "\\.tif$".
+#' @param overwrite Logical. If TRUE, existing processed files are overwritten.
+#'   If FALSE, existing files are skipped. Default is FALSE.
 #'
 #' @details
-#' For each raster in `input_dir` matching `pattern`, the function:
+#' For each raster in input_dir matching pattern, the function:
 #' \enumerate{
-#'   \item Reprojects it to the CRS of the reference raster.
-#'   \item Resamples it (bilinear) to match the reference resolution.
-#'   \item Masks values outside the reference raster's non-`NA` area.
-#'   \item Saves the result as a GeoTIFF to `output_dir`.
+#'   \item Reprojects to the CRS of the reference raster
+#'   \item Resamples using bilinear interpolation to match reference resolution
+#'   \item Masks values outside the reference raster's non-NA area
+#'   \item Saves the result as a GeoTIFF to output_dir
 #' }
 #'
-#' @importFrom terra rast project resample mask writeRaster crs ext
-#' @importFrom methods is
+#' This preprocessing step ensures spatial alignment before applying
+#' \code{\link{temporally_explicit_extraction}} or \code{\link{scale_rasters}}.
+#'
+#' @seealso
+#' Preprocessing: \code{\link{scale_rasters}}, \code{\link{temporally_explicit_extraction}}
+#'
+#' @examples
+#' \dontrun{
+#' raster_align(
+#'   input_dir = "raw_rasters/",
+#'   output_dir = "aligned_rasters/",
+#'   reference_raster = "reference.tif",
+#'   output_suffix = "_aligned"
+#' )
+#' }
+#'
 #' @export
-
+#' @importFrom terra rast project resample mask writeRaster crs
+#' @importFrom methods is
 raster_align <- function(input_dir,
                          output_dir,
                          reference_raster,

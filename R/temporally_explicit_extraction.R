@@ -1,65 +1,75 @@
-#' Extract time-aligned raster values at points and compute scaling
-#' @export
+#' Extract Time-Aligned Environmental Values at Species Occurrences
 #'
-#' @description
-#' For each unique combination in \code{time_cols}, matches rasters by
-#' \code{variable_patterns}, extracts values at \code{points_sp}, writes raw
-#' values, per-variable scaling parameters (mean, sd), and optionally a z-scaled
-#' table.
+#' Preprocessing function that extracts raster values to species occurrence
+#' records based on temporal components. Matches environmental layers to
+#' occurrence timestamps and computes scaling parameters for standardization.
 #'
-#' @param points_sp A \code{sf} object, a \code{SpatialPointsDataFrame}, a path
-#'   to a CSV/SHP/GEOJSON/GPKG, or a data.frame with coordinate columns
-#'   (see \code{xcol}, \code{ycol}, \code{points_crs}).
-#'
-#' @param raster_dir Directory containing source rasters (.tif).
-#'
+#' @param points_sp sf object, SpatialPointsDataFrame, file path to
+#'   .csv/.shp/.geojson/.gpkg, or data frame with coordinate columns.
+#' @param raster_dir Character. Directory containing source raster files (.tif).
 #' @param variable_patterns Named character vector mapping variable names to
-#'   filename patterns. Time placeholders (e.g., \code{YEAR}, \code{MONTH}) must
-#'   match \code{time_cols}. Static variables have no placeholders.
-#'
+#'   filename patterns. Time placeholders (e.g., YEAR, MONTH) must match
+#'   time_cols. Static variables have no placeholders.
 #' @param time_cols Character vector of time column names present in the point
-#'   data (e.g., \code{c("YEAR")}, \code{c("YEAR","MONTH")}).
-#'
-#' @param xcol,ycol Optional coordinate column names when reading CSV or
-#'   data.frame inputs.
-#'
-#' @param points_crs Optional CRS string when reading CSV or data.frame inputs.
-#'
-#' @param output_dir Directory to write outputs.
-#'
-#' @param output_prefix Prefix for output filenames.
-#'
-#' @param save_raw Logical; write raw extracted values CSV.
-#'
-#' @param save_scaled Logical; write z-scaled values CSV.
-#'
-#' @param save_scaling_params Logical; write CSV of per-variable means and SDs.
+#'   data (e.g., c("YEAR"), c("YEAR", "MONTH")).
+#' @param xcol Character. Coordinate column name when reading CSV or data frame
+#'   inputs. Optional.
+#' @param ycol Character. Coordinate column name when reading CSV or data frame
+#'   inputs. Optional.
+#' @param points_crs Character or CRS object. CRS when reading CSV or data frame
+#'   inputs. Optional.
+#' @param output_dir Character. Directory to write output files.
+#' @param output_prefix Character. Prefix for output filenames. Default is
+#'   "temp_explicit_df".
+#' @param save_raw Logical. If TRUE, writes raw extracted values CSV. If FALSE,
+#'   skips raw values output. Default is TRUE.
+#' @param save_scaled Logical. If TRUE, writes z-scaled values CSV. If FALSE,
+#'   skips scaled values output. Default is TRUE.
+#' @param save_scaling_params Logical. If TRUE, writes CSV of per-variable means
+#'   and standard deviations. If FALSE, skips scaling parameters output. Default
+#'   is TRUE.
 #'
 #' @details
 #' Dynamic variables are detected when patterns contain placeholders matching
-#' names in \code{time_cols}. Static variables are extracted once. Raster files
-#' are matched by substituting time values into pattern placeholders and
-#' requiring all components to appear in the filename.
+#' time_cols. Static variables are extracted once. Raster files are matched by
+#' substituting time values into pattern placeholders.
+#'
+#' Output CSV files are written to output_dir containing raw values, scaled
+#' values, and scaling parameters.
+#'
+#' Scaling parameters (mean and standard deviation) are computed across all
+#' occurrence records for each variable. These parameters should be used with
+#' \code{\link{scale_rasters}} to standardize prediction layers.
+#'
+#' @seealso
+#' Preprocessing: \code{\link{spatiotemporal_rarefication}},
+#' \code{\link{scale_rasters}}, \code{\link{spatiotemporal_partition}}
 #'
 #' @examples
-#' # Examples of correctly formatted variable patterns:
+#' \dontrun{
 #' variable_patterns <- c(
 #'   "bio1" = "bio1_YEAR",
 #'   "temp" = "temp_YEAR_MONTH",
-#'   "elevation" = "elevation",  # static variable
-#'   "ndvi" = "NDVI_YEAR"         # dynamic variable
+#'   "elevation" = "elevation"
 #' )
 #'
-#' time_cols <- c("YEAR", "MONTH")
+#' temporally_explicit_extraction(
+#'   points_sp = "occurrences.csv",
+#'   raster_dir = "environmental_layers/",
+#'   variable_patterns = variable_patterns,
+#'   time_cols = c("YEAR", "MONTH"),
+#'   xcol = "longitude",
+#'   ycol = "latitude",
+#'   points_crs = "EPSG:4326",
+#'   output_dir = "extracted_values/"
+#' )
+#' }
 #'
-#' # These patterns will match raster filenames like:
-#' # "bio1_2020.tif", "temp_2020_07.tif", "elevation.tif", "NDVI_2020.tif"
-#'
+#' @export
 #' @importFrom terra rast extract crs vect
-#' @importFrom sf st_as_sf st_transform st_read st_drop_geometry
-#' @importFrom readr read_csv
+#' @importFrom sf st_as_sf st_transform st_read st_drop_geometry st_coordinates
 #' @importFrom dplyr select distinct arrange across all_of
-
+#' @importFrom utils read.csv write.csv
 temporally_explicit_extraction <- function(points_sp,
                                            raster_dir,
                                            variable_patterns,

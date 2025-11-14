@@ -1,28 +1,82 @@
-#' Spatiotemporal cross-validation partitioning
+#' Spatiotemporal Cross-Validation Partitioning
 #'
-#' Creates spatial and/or temporal folds with optional Voronoi visualization and balance checks.
+#' Preprocessing function that partitions species occurrence data into
+#' spatially and temporally balanced folds for cross-validation. Generates
+#' Voronoi tessellations for spatial blocks and distributes points into folds
+#' based on user-specified priorities.
 #'
-#' @param reference_shapefile_path Path to study-area polygon (or \code{sf} object).
-#' @param points_file_path Path to occurrences (\code{.csv/.shp/.geojson/.gpkg}) or data/\code{sf}.
-#' @param time_col Optional time column name for temporal blocks.
-#' @param xcol,ycol Coordinate column names when reading a CSV/data.frame.
-#' @param points_crs CRS (EPSG/proj4) for input points if not embedded.
-#' @param total_folds Total number of folds.
-#' @param n_temporal Number of temporal blocks.
-#' @param n_spatial Number of spatial blocks.
-#' @param blocking_priority One of \code{"balanced"}, \code{"spatial"}, \code{"temporal"}.
-#' @param max_imbalance Max allowed fold-size imbalance (proportion).
-#' @param max_retries Number of random attempts to improve balance.
-#' @param generate_plots Logical; draw summary plots.
-#' @param output_file Optional \code{.rds} path to save results.
+#' @param reference_shapefile_path Character or sf object. Path to study area
+#'   polygon or sf polygon object.
+#' @param points_file_path Character, sf object, or data frame. Path to
+#'   occurrence data (.csv/.shp/.geojson/.gpkg) or spatial object.
+#' @param time_col Character. Column name for temporal blocking. Default is
+#'   NULL for spatial-only partitioning.
+#' @param xcol Character. Coordinate column name when reading CSV or data frame.
+#'   Optional.
+#' @param ycol Character. Coordinate column name when reading CSV or data frame.
+#'   Optional.
+#' @param points_crs Character or CRS object. CRS for input points if not
+#'   embedded. Optional.
+#' @param total_folds Integer. Total number of folds for cross-validation.
+#'   Default is 4.
+#' @param n_temporal Integer. Number of temporal blocks. Default is 2.
+#' @param n_spatial Integer. Number of spatial blocks. Default is 8.
+#' @param blocking_priority Character. One of "balanced", "spatial", or
+#'   "temporal". Determines fold assignment strategy. Currently only "balanced"
+#'   is fully implemented.
+#' @param max_imbalance Numeric. Maximum allowed fold size imbalance as a
+#'   proportion. Default is 0.05.
+#' @param generate_plots Logical. If TRUE, draws summary plots of fold
+#'   distribution. If FALSE, skips plot generation. Default is TRUE.
+#' @param output_file Character. Optional path to save results as .rds file.
+#'   Default is NULL.
 #'
-#' @return A list with: \code{folds} (data.frame), \code{points_sf} (sf), \code{voronoi} (sf),
-#'   \code{summary} (data.frame), \code{plots} (ggplot objects).
+#' @return A list containing:
+#' \itemize{
+#'   \item folds: data frame with fold assignments
+#'   \item points_sf: sf object of occurrence points
+#'   \item voronoi: sf object of Voronoi polygons
+#'   \item summary: data frame of fold statistics
+#'   \item plots: list of ggplot objects
+#' }
+#'
+#' @details
+#' The function creates spatial blocks using k-means clustering and optional
+#' temporal blocks from time_col. Points are distributed into folds based on
+#' blocking_priority to balance spatial and temporal coverage.
+#'
+#' Partitioned data are used as input for \code{\link{build_hypervolume_models}}
+#' to ensure spatially and temporally independent cross-validation.
+#'
+#' @seealso
+#' Preprocessing: \code{\link{spatiotemporal_rarefication}},
+#' \code{\link{temporally_explicit_extraction}}
+#'
+#' Modeling: \code{\link{build_hypervolume_models}}
+#'
+#' @examples
+#' \dontrun{
+#' partition_results <- spatiotemporal_partition(
+#'   reference_shapefile_path = "study_area.shp",
+#'   points_file_path = "occurrences.csv",
+#'   time_col = "Year",
+#'   xcol = "longitude",
+#'   ycol = "latitude",
+#'   points_crs = "EPSG:4326",
+#'   total_folds = 4,
+#'   n_temporal = 2,
+#'   n_spatial = 8,
+#'   total_folds = 5,
+#'   blocking_priority = "balanced"
+#' )
+#' }
 #'
 #' @export
-#' @importFrom sf st_read st_as_sf st_transform st_coordinates st_crs st_bbox st_union st_intersection st_drop_geometry st_sfc
+#' @importFrom sf st_read st_as_sf st_transform st_coordinates st_crs st_bbox
+#'   st_union st_intersection st_drop_geometry st_sfc
 #' @importFrom dplyr select all_of
-#' @importFrom ggplot2 ggplot geom_sf aes coord_sf theme_minimal theme element_text labs geom_histogram geom_col geom_hline
+#' @importFrom ggplot2 ggplot geom_sf aes coord_sf theme_minimal theme
+#'   element_text labs geom_histogram geom_col geom_hline
 #' @importFrom viridis scale_fill_viridis_d
 #' @importFrom deldir deldir tile.list
 #' @importFrom stats kmeans quantile
@@ -38,7 +92,7 @@ spatiotemporal_partition <- function(
     n_temporal = 2,
     n_spatial = 8,
     blocking_priority = NULL,
-    max_imbalance = 0.2,
+    max_imbalance = 0.05,
     generate_plots = TRUE,
     output_file = NULL
 ) {

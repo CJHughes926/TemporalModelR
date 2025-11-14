@@ -1,6 +1,72 @@
-#' Generate spatiotemporal predictions from hypervolumes
-#' @keywords internal
-#' @details Expects outputs from \code{build_hypervolume_models()} and a helper \code{model_assessment_metrics()} in scope.
+#' Generate Spatiotemporal Predictions from Hypervolume Models
+#'
+#' Modeling function that generates temporally explicit habitat suitability
+#' predictions by projecting hypervolume models onto environmental raster stacks
+#' for each time period. Produces binary prediction rasters and comprehensive
+#' evaluation metrics.
+#'
+#' @param partition_results List or character. Output from
+#'   \code{\link{spatiotemporal_partition}} or path to .rds file.
+#' @param hypervolume_results List or character. Output from
+#'   \code{\link{build_hypervolume_models}} or path to .rds file.
+#' @param raster_dir Character. Directory containing scaled environmental
+#'   rasters. Should contain output from \code{\link{scale_rasters}}.
+#' @param variable_patterns Named character vector mapping variable names to
+#'   raster filename patterns. Must match patterns used in
+#'   \code{\link{temporally_explicit_extraction}}.
+#' @param time_cols Character vector. Time column names for temporal matching.
+#' @param output_dir Character. Directory to write prediction rasters and
+#'   evaluation tables.
+#' @param output_prefix Character. Prefix for output filenames. Default is
+#'   "predictions".
+#' @param threshold Numeric. Threshold for binary classification. Default is
+#'   0.5.
+#' @param overwrite Logical. If TRUE, overwrites existing prediction files. If
+#'   FALSE, skips files that already exist. Default is FALSE.
+#'
+#' @return Invisibly returns a list containing:
+#' \itemize{
+#'   \item assessment_table: data frame of evaluation metrics for all
+#'     fold-time period combinations
+#'   \item prediction_files: character vector of paths to prediction rasters
+#' }
+#'
+#' @details
+#' For each cross-validation fold and time period, projects the hypervolume
+#' model onto scaled environmental rasters using
+#' \code{\link[hypervolume]{hypervolume_project}}. Generates binary predictions
+#' and calculates assessment metrics via
+#' \code{\link{model_assessment_metrics}}.
+#'
+#' Output prediction rasters serve as input for
+#' \code{\link{summarize_raster_outputs}} and subsequent temporal pattern
+#' analyses.
+#'
+#' @seealso
+#' Preprocessing: \code{\link{scale_rasters}},
+#' \code{\link{spatiotemporal_partition}}
+#'
+#' Modeling: \code{\link{build_hypervolume_models}},
+#' \code{\link{model_assessment_metrics}}
+#'
+#' Postprocessing: \code{\link{summarize_raster_outputs}},
+#' \code{\link{plot_model_assessment}}
+#'
+#' External: \code{\link[hypervolume]{hypervolume_project}}
+#'
+#' @examples
+#' \dontrun{
+#' predictions <- generate_spatiotemporal_predictions(
+#'   partition_results = "partition_results.rds",
+#'   hypervolume_results = "hypervolume_models.rds",
+#'   raster_dir = "scaled_rasters/",
+#'   variable_patterns = c("bio1" = "bio1_YEAR", "bio12" = "bio12_YEAR"),
+#'   time_cols = "YEAR",
+#'   output_dir = "predictions/"
+#' )
+#' }
+#'
+#' @export
 #' @importFrom hypervolume hypervolume_project
 #' @importFrom terra rast nlyr writeRaster mask
 #' @importFrom raster stack

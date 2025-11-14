@@ -1,27 +1,77 @@
-#' Analyze temporal patterns in binary raster time series
+#' Analyze Temporal Patterns in Binary Raster Time Series
 #'
-#' Splits a binary raster stack into tiles, classifies per-pixel temporal patterns (e.g., increase/decrease) using a chosen method, and writes pattern and change-year rasters.
+#' Postprocessing function that applies changepoint detection methods to
+#' identify temporal trends in habitat suitability across consecutive
+#' predictions. Classifies pixels into pattern categories and identifies time
+#' periods of significant change.
 #'
-#' @param binary_stack RasterStack/Brick of binary layers across time.
-#' @param summary_raster RasterLayer with per-pixel summary (e.g., mean/persistence).
-#' @param time_steps Integer vector of time labels (same length as layers).
-#' @param method Character; changepoint/selection criterion (e.g., "BIC", "MBIC", "MDL").
-#' @param output_dir Output directory.
-#' @param n_tiles_x,n_tiles_y Number of tiles in x/y.
-#' @param alpha Significance level.
-#' @param spatial_autocorrelation Logical; if TRUE (default), includes neighbor variable in analysis. If FALSE, spatial autocorrelation is not considered.
-#' @param show_progress Logical; show progress bar.
-#' @param estimate_time Logical; quick runtime estimate from sampled pixels.
-#' @param overwrite Logical; overwrite existing outputs.
+#' @param binary_stack RasterStack, RasterBrick, or character. Stack of binary
+#'   raster layers across time, or path to directory containing binary rasters.
+#'   Typically from \code{\link{summarize_raster_outputs}}.
+#' @param summary_raster RasterLayer. Per-pixel summary statistic (e.g., mean
+#'   suitability across time). From \code{\link{summarize_raster_outputs}}.
+#' @param time_steps Integer vector. Time labels corresponding to raster layers
+#'   (same length as number of layers).
+#' @param fastcpd_params List. Named list of parameters passed to fastcpd
+#'   changepoint detection function. Default is empty list.
+#' @param output_dir Character. Output directory for pattern rasters. Default is
+#'   "output".
+#' @param n_tiles_x Integer. Number of tiles in x direction for parallel
+#'   processing. Default is 1.
+#' @param n_tiles_y Integer. Number of tiles in y direction for parallel
+#'   processing. Default is 1.
+#' @param alpha Numeric. Significance level for changepoint detection. Default
+#'   is 0.05.
+#' @param spatial_autocorrelation Logical. If TRUE, includes neighbor variable in
+#'   analysis to account for spatial autocorrelation. If FALSE, spatial
+#'   autocorrelation is not considered. Default is TRUE.
+#' @param show_progress Logical. If TRUE, displays progress bar during
+#'   processing. If FALSE, runs silently. Default is TRUE.
+#' @param estimate_time Logical. If TRUE, estimates runtime from sampled pixels
+#'   before processing. If FALSE, proceeds directly to processing. Default is
+#'   TRUE.
+#' @param overwrite Logical. If TRUE, overwrites existing output files. If
+#'   FALSE, skips files that already exist. Default is FALSE.
 #'
-#' @return A list with rasters: \code{pattern}, \code{year_decrease}, \code{year_increase}.
+#' @return A list containing:
+#' \itemize{
+#'   \item pattern: RasterLayer classifying pixels as "Never Suitable", "Always
+#'     Suitable", "No Pattern", "Increasing Suitability", "Decreasing
+#'     Suitability", or "Fluctuating"
+#'   \item time_decrease: RasterLayer showing time period of first significant
+#'     decrease (for decreasing pixels)
+#'   \item time_increase: RasterLayer showing time period of first significant
+#'     increase (for increasing pixels)
+#' }
 #'
-#' @details Requires an auxiliary \code{classify_pixel_with_years()} function available in scope.
+#' @details
+#' Applies changepoint detection using fastcpd to identify significant temporal
+#' shifts in habitat suitability. Accounts for spatial and temporal
+#' autocorrelation when spatial_autocorrelation is TRUE. The fastcpd_params list
+#' allows customization of the changepoint detection algorithm.
 #'
-#' @seealso \code{classify_pixel_with_years}
+#' Pattern classifications enable identification of expanding, contracting, or
+#' stable habitat distributions over time.
+#'
+#' @seealso
+#' Postprocessing: \code{\link{summarize_raster_outputs}}
+#'
+#' External: \code{\link[fastcpd]{fastcpd}}
+#'
+#' @examples
+#' \dontrun{
+#' pattern_results <- analyze_temporal_patterns(
+#'   binary_stack = consensus_stack,
+#'   summary_raster = summary_raster,
+#'   time_steps = 2000:2020,
+#'   fastcpd_params = list(),
+#'   output_dir = "temporal_patterns/"
+#' )
+#' }
 #'
 #' @export
-#' @importFrom terra rast ext res crop nlyr subset focal values ncell mosaic writeRaster freq plot
+#' @importFrom terra rast ext res crop nlyr subset focal values ncell mosaic
+#'   writeRaster freq plot
 #' @importFrom utils txtProgressBar setTxtProgressBar write.csv
 #' @importFrom graphics par legend
 #' @importFrom grDevices heat.colors terrain.colors

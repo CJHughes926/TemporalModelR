@@ -1,11 +1,54 @@
-#' Summarize prediction rasters into a binary stack and mean
+#' Summarize Prediction Rasters into Consensus Outputs
+#'
+#' Postprocessing function that synthesizes multiple prediction rasters into
+#' binary consensus predictions and temporal summary statistics. Generates
+#' consensus classifications based on agreement among models and calculates
+#' habitat suitability persistence.
+#'
+#' @param predictions_dir Character. Directory containing prediction raster
+#'   files. Typically output from \code{\link{generate_spatiotemporal_predictions}}.
+#' @param output_dir Character. Output directory for consensus rasters. Defaults
+#'   to predictions_dir if not specified.
+#' @param file_pattern Character. Regular expression to match prediction files.
+#'   Default is "\\.tif$".
+#' @param overwrite Logical. If TRUE, overwrites existing output files. If
+#'   FALSE, skips files that already exist. Default is FALSE.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item binary_stack: RasterStack of binary predictions across time periods
+#'   \item summary_raster: RasterLayer showing proportion of time periods with
+#'     suitable predictions
+#' }
+#'
+#' @details
+#' For each pixel across all predictions, calculates:
+#' \itemize{
+#'   \item Binary consensus: pixel classified as suitable if majority of models
+#'     agree
+#'   \item Temporal persistence: proportion of time periods during study where
+#'     consensus predicts suitability
+#' }
+#'
+#' Consensus rasters serve as input for \code{\link{analyze_temporal_patterns}}
+#' to identify temporal trends in habitat suitability.
+#'
+#' @seealso
+#' Modeling: \code{\link{generate_spatiotemporal_predictions}}
+#'
+#' Postprocessing: \code{\link{analyze_temporal_patterns}}
+#'
+#' @examples
+#' \dontrun{
+#' summary_results <- summarize_raster_outputs(
+#'   predictions_dir = "predictions/",
+#'   output_dir = "consensus_predictions/",
+#'   overwrite = TRUE
+#' )
+#' }
+#'
 #' @export
-#' @param predictions_dir Directory with prediction rasters.
-#' @param output_dir Optional output directory (defaults to \code{predictions_dir}).
-#' @param file_pattern Regex to match prediction files.
-#' @param overwrite Overwrite existing outputs.
-#' @return A list with \code{binary_stack} (RasterStack) and \code{summary_raster} (RasterLayer).
-#' @importFrom terra rast nlyr app global writeRaster
+#' @importFrom terra rast nlyr app writeRaster
 summarize_raster_outputs <- function(predictions_dir,
                                      output_dir = NULL,
                                      file_pattern = "Prediction_.*\\.tif$",
