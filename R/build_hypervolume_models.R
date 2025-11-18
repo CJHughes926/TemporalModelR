@@ -283,13 +283,13 @@ build_hypervolume_models <- function(partition_results,
     quantile.requested = 0.95,
     quantile.requested.type = "probability",
     chunk.size = 1000,
-    verbose = TRUE
+    verbose = F
   )
   default_params_svm <- list(
     svm.nu = 0.01,
     svm.gamma = 0.5,
     chunk.size = 1000,
-    verbose = TRUE
+    verbose = F
   )
 
   ### Check for existing combined file
