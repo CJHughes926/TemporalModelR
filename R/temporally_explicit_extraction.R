@@ -184,7 +184,7 @@ temporally_explicit_extraction <- function(points_sp,
   ### Extract dynamic variables
   if (length(dynamic_vars) > 0) {
     print("Extracting dynamic variables...")
-    time_combinations <- points_sp %>% st_drop_geometry() %>% select(all_of(time_cols)) %>% distinct() %>% arrange(across(all_of(time_cols)))
+    time_combinations <- points_sp %>% st_drop_geometry() %>% dplyr::select(all_of(time_cols)) %>% distinct() %>% arrange(across(all_of(time_cols)))
     print(paste("Extracting values for", nrow(time_combinations), "time periods"))
     for (i in 1:nrow(time_combinations)) {
       time_values <- time_combinations[i, , drop=FALSE]
