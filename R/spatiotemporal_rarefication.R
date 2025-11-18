@@ -207,7 +207,7 @@ spatiotemporal_rarefication <- function(points_sp,
     print(paste("Spatiotemporal file saved:", basename(spatiotemporal_file)))
 
     time_combinations <- points_subset %>%
-      select(all_of(time_cols)) %>%
+      dplyr::select(all_of(time_cols)) %>%
       distinct() %>%
       nrow()
     print(paste("  Retained 1 point per pixel across", time_combinations, "unique time combinations"))
