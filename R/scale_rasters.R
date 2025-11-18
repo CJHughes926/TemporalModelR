@@ -255,6 +255,7 @@ scale_rasters <- function(input_dir,
   }
 
   ### Scale dynamic variables
+  ### Scale dynamic variables
   dynamic_vars_scaled <- 0
   if (length(dynamic_vars) > 0) {
     print("Processing dynamic variables...")
@@ -271,6 +272,12 @@ scale_rasters <- function(input_dir,
       var_mean <- var_params$mean
       var_sd <- var_params$sd
       search_pattern <- variable_patterns[var_name]
+
+      # Determine which time columns are actually in this variable's pattern
+      relevant_time_cols <- time_cols[sapply(time_cols, function(tc) {
+        grepl(tc, search_pattern, ignore.case = TRUE)
+      })]
+
       candidate_files <- all_files[sapply(all_files, function(f) {
         filename <- basename(f)
         grepl(paste0("^", var_name), filename, ignore.case = TRUE)
@@ -289,7 +296,9 @@ scale_rasters <- function(input_dir,
         filename_no_ext <- gsub("\\.(tif|TIF)$", "", filename)
         filename_parts <- strsplit(filename_no_ext, "_")[[1]]
         pattern_parts <- strsplit(search_pattern, "_")[[1]]
-        for (tc in time_cols) {
+
+        # Only extract time columns that are in this variable's pattern
+        for (tc in relevant_time_cols) {
           tc_positions <- which(toupper(pattern_parts) == toupper(tc))
           if (length(tc_positions) > 0) {
             tc_pos <- tc_positions[1]
@@ -316,9 +325,9 @@ scale_rasters <- function(input_dir,
           }
         }
 
-        if (all_found && length(time_vals) == length(time_cols)) {
+        if (all_found && length(time_vals) == length(relevant_time_cols)) {
           test_pattern <- search_pattern
-          for (tc in time_cols) {
+          for (tc in relevant_time_cols) {
             test_pattern <- gsub(tc, time_vals[[tc]], test_pattern, ignore.case = TRUE)
           }
           test_parts <- strsplit(test_pattern, "_")[[1]]
@@ -326,13 +335,24 @@ scale_rasters <- function(input_dir,
             grepl(part, filename, ignore.case = TRUE)
           }))
           if (match_count >= length(test_parts) * 0.8) {
-            ### Check for duplicates
-            time_string <- paste(sapply(time_cols, function(tc) time_vals[[tc]]), collapse = "_")
-            output_file <- file.path(output_dir, paste0(var_name, "_", time_string, output_suffix, ".tif"))
-            if (file.exists(output_file) && !overwrite) {
+            ### Check for duplicates in SOURCE files (not output files)
+            time_string <- paste(sapply(relevant_time_cols, function(tc) time_vals[[tc]]), collapse = "_")
+
+            # Check if we already have a source file for this time step
+            existing_match <- FALSE
+            for (existing_file in names(time_file_pairs)) {
+              existing_vals <- time_file_pairs[[existing_file]]
+              if (identical(existing_vals, time_vals)) {
+                existing_match <- TRUE
+                break
+              }
+            }
+
+            if (existing_match) {
               stop(paste0("ERROR: Multiple rasters found for variable '", var_name,
                           "' at the same time step (", time_string, ")."))
             }
+
             time_file_pairs[[file]] <- time_vals
           }
         }
@@ -349,7 +369,7 @@ scale_rasters <- function(input_dir,
 
       for (file in names(time_file_pairs)) {
         time_vals <- time_file_pairs[[file]]
-        time_string <- paste(sapply(time_cols, function(tc) time_vals[[tc]]), collapse = "_")
+        time_string <- paste(sapply(relevant_time_cols, function(tc) time_vals[[tc]]), collapse = "_")
         output_file <- file.path(output_dir, paste0(var_name, "_", time_string, output_suffix, ".tif"))
         if (file.exists(output_file) && !overwrite) {
           skipped_count <- skipped_count + 1

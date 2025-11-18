@@ -285,10 +285,18 @@ generate_spatiotemporal_predictions <- function(partition_results,
     for (var in dynamic_vars) {
       pattern <- variable_patterns[var]
       file_name <- pattern
-      for (tc in time_cols) file_name <- gsub(tc, as.character(time_values[[tc]]), file_name, ignore.case = TRUE)
+
+      # Only substitute time columns that are actually present in this pattern
+      for (tc in time_cols) {
+        if (grepl(tc, file_name, ignore.case = TRUE)) {
+          file_name <- gsub(tc, as.character(time_values[[tc]]), file_name, ignore.case = TRUE)
+        }
+      }
+
       raster_files <- c(raster_files, paste0(file_name, "_Scaled.tif"))
     }
     for (var in static_vars) raster_files <- c(raster_files, paste0(variable_patterns[var], "_Scaled.tif"))
+
     raster_paths <- file.path(raster_dir, raster_files)
     missing_files <- raster_paths[!file.exists(raster_paths)]
     if (length(missing_files) > 0) {
