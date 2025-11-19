@@ -7,8 +7,8 @@
 model_assessment_metrics(
   hypervolume_model,
   projected_raster,
-  test_points_current_year,
-  test_points_all_years,
+  test_points_current_time_step,
+  test_points_all_time_steps,
   variable_patterns
 )
 }
@@ -20,14 +20,14 @@ model_assessment_metrics(
 \item{projected_raster}{SpatRaster. Binary projection raster (0/1) from
 \code{\link[hypervolume]{hypervolume_project}}.}
 
+\item{variable_patterns}{Named character vector mapping variable names to
+raster filename patterns. Used to derive model variable names.}
+
 \item{test_points_current_year}{sf, SpatVector, or data frame. Test points
 for the current time period with model variables and coordinates.}
 
 \item{test_points_all_years}{sf, SpatVector, or data frame. Test points
 across all time periods with model variables.}
-
-\item{variable_patterns}{Named character vector mapping variable names to
-raster filename patterns. Used to derive model variable names.}
 }
 \value{
 List containing assessment metrics:

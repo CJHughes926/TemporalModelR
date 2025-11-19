@@ -11,77 +11,78 @@ spatiotemporal_partition(
   xcol = NULL,
   ycol = NULL,
   points_crs = NULL,
-  total_folds = 4,
-  n_temporal = 2,
-  n_spatial = 8,
-  blocking_priority = NULL,
+  n_spatial_folds = 0,
+  n_temporal_folds = 0,
+  n_balanced_folds = 0,
   max_imbalance = 0.05,
   generate_plots = TRUE,
   output_file = NULL
 )
 }
 \arguments{
-\item{reference_shapefile_path}{Character or sf object. Path to study area
-polygon or sf polygon object.}
+\item{reference_shapefile_path}{Character or sf object. Path to the study area
+polygon or an \code{sf} polygon object defining the study region.}
 
-\item{points_file_path}{Character, sf object, or data frame. Path to
-occurrence data (.csv/.shp/.geojson/.gpkg) or spatial object.}
+\item{points_file_path}{Character, sf object, sfc object, Spatial object, or
+data frame. Path to occurrence data (.csv, .shp, .geojson, .gpkg) or spatial object.}
 
-\item{time_col}{Character. Column name for temporal blocking. Default is
-NULL for spatial-only partitioning.}
+\item{time_col}{Character. Column name for temporal blocking. Required if using
+temporal or balanced folds.}
 
-\item{xcol}{Character. Coordinate column name when reading CSV or data frame.
-Optional.}
+\item{xcol}{Character. Name of the x-coordinate column
+when reading CSV or data frame. Required only if input is .csv, not sf or Spatial object.}
 
-\item{ycol}{Character. Coordinate column name when reading CSV or data frame.
-Optional.}
+\item{ycol}{Character. Name of the y-coordinate column
+when reading CSV or data frame. Required only if input is .csv, not sf or Spatial object.}
 
-\item{points_crs}{Character or CRS object. CRS for input points if not
-embedded. Optional.}
+\item{points_crs}{Character or CRS object. CRS of input points if not embedded.
+Required only if input is .csv, not sf or Spatial object.}
 
-\item{total_folds}{Integer. Total number of folds for cross-validation.
-Default is 4.}
+\item{n_spatial_folds}{Integer. Number of spatially explicit folds (ignored if using balanced folds).}
 
-\item{n_temporal}{Integer. Number of temporal blocks. Default is 2.}
+\item{n_temporal_folds}{Integer. Number of temporally explicit folds (ignored if using balanced folds).}
 
-\item{n_spatial}{Integer. Number of spatial blocks. Default is 8.}
+\item{n_balanced_folds}{Integer. Number of balanced folds to create, which simultaneously
+balance spatial and temporal representation. Overrides n_spatial_folds and n_temporal_folds.}
 
-\item{blocking_priority}{Character. One of "balanced", "spatial", or
-"temporal". Determines fold assignment strategy. Currently only "balanced"
-is fully implemented.}
+\item{max_imbalance}{Numeric. Maximum allowed fold size imbalance as a proportion (0–1). Default is 0.05.}
 
-\item{max_imbalance}{Numeric. Maximum allowed fold size imbalance as a
-proportion. Default is 0.05.}
+\item{generate_plots}{Logical. If TRUE, generates diagnostic plots showing fold distributions. Default is TRUE.}
 
-\item{generate_plots}{Logical. If TRUE, draws summary plots of fold
-distribution. If FALSE, skips plot generation. Default is TRUE.}
-
-\item{output_file}{Character. Optional path to save results as .rds file.
-Default is NULL.}
+\item{output_file}{Character. Optional path to save results as an \code{.rds} file.}
 }
 \value{
 A list containing:
 \itemize{
-  \item folds: data frame with fold assignments
-  \item points_sf: sf object of occurrence points
-  \item voronoi: sf object of Voronoi polygons
-  \item summary: data frame of fold statistics
-  \item plots: list of ggplot objects
+  \item \code{pts_sf}: sf object of occurrence points with assigned folds and block types.
+  \item \code{voronoi_sf}: sf object of Voronoi polygons for spatial blocks.
+  \item \code{final_fold_counts}: Table of point counts per fold.
+  \item \code{mean_per_fold}: Mean number of points per fold.
+  \item \code{imbalance}: Maximum fold imbalance as a proportion.
+  \item \code{n_spatially_exclusive_folds}: Number of spatially exclusive folds created.
+  \item \code{n_temporally_exclusive_folds}: Number of temporally exclusive folds created.
+  \item \code{n_spatial_exclusive_blocks}: Number of spatially exclusive blocks.
+  \item \code{n_shared_blocks}: Number of shared blocks across folds.
+  \item \code{plots}: List of ggplot objects (if \code{generate_plots = TRUE}).
 }
 }
 \description{
-Preprocessing function that partitions species occurrence data into
-spatially and temporally balanced folds for cross-validation. Generates
-Voronoi tessellations for spatial blocks and distributes points into folds
-based on user-specified priorities.
+Preprocesses species occurrence data by partitioning it into spatially and
+temporally structured folds for cross-validation. Supports creation of
+balanced folds, spatial-only, temporal-only, or spatiotemporal folds.
+Generates spatial blocks using k-means clustering and assigns points to
+folds according to user-defined strategies.
 }
 \details{
-The function creates spatial blocks using k-means clustering and optional
-temporal blocks from time_col. Points are distributed into folds based on
-blocking_priority to balance spatial and temporal coverage.
+The function partitions data into folds using either a balanced approach
+(simultaneously optimizing spatial and temporal representation) or separate
+spatial/temporal explicit folds. Spatial blocks are generated with k-means
+clustering and visualized using Voronoi tessellation. Temporal blocks are created based on
+the \code{time_col}. Balanced folds attempt to distribute points evenly across
+folds while enforcing spatial and temporal structure.
 
-Partitioned data are used as input for \code{\link{build_hypervolume_models}}
-to ensure spatially and temporally independent cross-validation.
+Partitioned datasets are suitable for cross-validation in modeling workflows,
+ensuring spatial and temporal independence between folds.
 }
 \examples{
 \dontrun{
@@ -92,11 +93,9 @@ partition_results <- spatiotemporal_partition(
   xcol = "longitude",
   ycol = "latitude",
   points_crs = "EPSG:4326",
-  total_folds = 4,
-  n_temporal = 2,
-  n_spatial = 8,
-  total_folds = 5,
-  blocking_priority = "balanced"
+  n_balanced_folds = 4,
+  max_imbalance = 0.05,
+  generate_plots = TRUE
 )
 }
 
