@@ -255,11 +255,10 @@ generate_spatiotemporal_predictions <- function(partition_results,
   print(paste("Dynamic variables:", ifelse(length(dynamic_vars) > 0, paste(dynamic_vars, collapse = ", "), "none")))
   print(paste("Static variables:", ifelse(length(static_vars) > 0, paste(static_vars, collapse = ", "), "none")))
 
-  metrics_file <- file.path(output_dir, "Model_Assessment_Metrics.csv")  # define first
+  metrics_file <- file.path(output_dir, "Model_Assessment_Metrics.csv")
   if (overwrite || !file.exists(metrics_file)) {
     all_model_data <- data.frame()
   } else {
-    # Load existing metrics so we can append new results
     all_model_data <- tryCatch({
       read.csv(metrics_file)
     }, error = function(e) {
@@ -280,13 +279,17 @@ generate_spatiotemporal_predictions <- function(partition_results,
     print(paste("Processing time step:", time_label))
     print(paste("========================================"))
 
+    time_filter <- rep(TRUE, nrow(points_sf))
+    for (tc in time_cols) time_filter <- time_filter & (points_sf[[tc]] == time_values[[tc]])
+    n_points_at_time_step <- sum(time_filter, na.rm = TRUE)
+    print(paste("  Total points at this time step:", n_points_at_time_step))
+
     ### LOAD AND STACK RASTERS
     raster_files <- c()
     for (var in dynamic_vars) {
       pattern <- variable_patterns[var]
       file_name <- pattern
 
-      # Only substitute time columns that are actually present in this pattern
       for (tc in time_cols) {
         if (grepl(tc, file_name, ignore.case = TRUE)) {
           file_name <- gsub(tc, as.character(time_values[[tc]]), file_name, ignore.case = TRUE)
@@ -321,12 +324,15 @@ generate_spatiotemporal_predictions <- function(partition_results,
                     " dimensions, but raster stack has ", n_rasters, " layers."))
       }
 
-
-
       test_points_all <- points_sf[points_sf$fold == current_fold, ]
       time_filter <- rep(TRUE, nrow(points_sf))
       for (tc in time_cols) time_filter <- time_filter & (points_sf[[tc]] == time_values[[tc]])
-      test_points_year <- points_sf[points_sf$fold == current_fold & time_filter, ]
+      test_points_time_step <- points_sf[points_sf$fold == current_fold & time_filter, ]
+
+      print(paste("    Fold", current_fold, "test points:"))
+      print(paste("      All time steps:", nrow(test_points_all)))
+      print(paste("      Current time step:", nrow(test_points_time_step)))
+
       hv_map <- tryCatch({
         hypervolume_project(hypervolume_model, rasters = s2, type = 'inclusion', fast.or.accurate = 'fast', verbose = FALSE)
       }, error = function(e) {
@@ -337,8 +343,8 @@ generate_spatiotemporal_predictions <- function(partition_results,
       if (!is.null(hv_map)) {
         metrics <- model_assessment_metrics(hypervolume_model = hypervolume_model,
                                             projected_raster = hv_map,
-                                            test_points_current_year = test_points_year,
-                                            test_points_all_years = test_points_all,
+                                            test_points_current_time_step = test_points_time_step,
+                                            test_points_all_time_steps = test_points_all,
                                             variable_patterns = variable_patterns)
         time_data <- lapply(time_cols, function(tc) time_values[[tc]])
         names(time_data) <- time_cols
@@ -373,7 +379,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
       print(paste("  Saved combined prediction to:", basename(output_path)))
     }, error = function(e) warning(paste("Error saving combined prediction for time step", time_label, ":", e$message)))
 
-    # Save metrics after each time step
     metrics_file <- file.path(output_dir, "Model_Assessment_Metrics.csv")
     tryCatch({
       write.csv(all_model_data, metrics_file, row.names = FALSE)

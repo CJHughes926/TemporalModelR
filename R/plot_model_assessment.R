@@ -288,22 +288,22 @@ plot_model_assessment <- function(data_file_path,
 
   if (!is.null(facet_column)) {
     tp_fn_data <- all_model_data %>%
-      select(!!sym(time_column), !!sym(facet_column), Fold, TP_test_G, FN_test_G) %>%
+      dplyr::select(!!sym(time_column), !!sym(facet_column), Fold, TP_test_G, FN_test_G) %>%
       mutate(FN_test_G_neg = -FN_test_G) %>%
       filter(!is.na(TP_test_G) & !is.na(FN_test_G) & (TP_test_G > 0 | FN_test_G > 0))
 
     tp_fn_summary <- summary_stats %>%
-      select(!!sym(time_column), !!sym(facet_column), Mean_TP_G, Mean_FN_G) %>%
+      dplyr::select(!!sym(time_column), !!sym(facet_column), Mean_TP_G, Mean_FN_G) %>%
       mutate(Mean_FN_G_neg = -Mean_FN_G) %>%
       filter(!is.na(Mean_TP_G) & !is.na(Mean_FN_G) & (Mean_TP_G > 0 | Mean_FN_G > 0))
   } else {
     tp_fn_data <- all_model_data %>%
-      select(!!sym(time_column), Fold, TP_test_G, FN_test_G) %>%
+      dplyr::select(!!sym(time_column), Fold, TP_test_G, FN_test_G) %>%
       mutate(FN_test_G_neg = -FN_test_G) %>%
       filter(!is.na(TP_test_G) & !is.na(FN_test_G) & (TP_test_G > 0 | FN_test_G > 0))
 
     tp_fn_summary <- summary_stats %>%
-      select(!!sym(time_column), Mean_TP_G, Mean_FN_G) %>%
+      dplyr::select(!!sym(time_column), Mean_TP_G, Mean_FN_G) %>%
       mutate(Mean_FN_G_neg = -Mean_FN_G) %>%
       filter(!is.na(Mean_TP_G) & !is.na(Mean_FN_G) & (Mean_TP_G > 0 | Mean_FN_G > 0))
   }

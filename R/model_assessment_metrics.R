@@ -74,8 +74,8 @@
 #' @importFrom stats dbinom
 model_assessment_metrics <- function(hypervolume_model,
                                      projected_raster,
-                                     test_points_current_year,
-                                     test_points_all_years,
+                                     test_points_current_time_step,
+                                     test_points_all_time_steps,
                                      variable_patterns) {
 
   require(hypervolume)
@@ -96,12 +96,12 @@ model_assessment_metrics <- function(hypervolume_model,
     stop("ERROR: projected_raster must be a SpatRaster object")
   }
 
-  if (missing(test_points_current_year)) {
-    stop("ERROR: test_points_current_year is required")
+  if (missing(test_points_current_time_step)) {
+    stop("ERROR: test_points_current_time_step is required")
   }
 
-  if (missing(test_points_all_years)) {
-    stop("ERROR: test_points_all_years is required")
+  if (missing(test_points_all_time_steps)) {
+    stop("ERROR: test_points_all_time_steps is required")
   }
 
   ### Get hypervolume name for messages
@@ -112,26 +112,26 @@ model_assessment_metrics <- function(hypervolume_model,
   }
 
   ### Geographic space metrics (G)
-  if (inherits(test_points_current_year, "sf")) {
-    test_points_proj <- suppressWarnings(terra::vect(test_points_current_year))
+  if (inherits(test_points_current_time_step, "sf")) {
+    test_points_proj <- suppressWarnings(terra::vect(test_points_current_time_step))
     terra::crs(test_points_proj) <- terra::crs(projected_raster)
-  } else if (inherits(test_points_current_year, "SpatVector")) {
-    test_points_proj <- test_points_current_year
+  } else if (inherits(test_points_current_time_step, "SpatVector")) {
+    test_points_proj <- test_points_current_time_step
     terra::crs(test_points_proj) <- terra::crs(projected_raster)
   } else {
-    stop("test_points_current_year must be an sf or SpatVector object")
+    stop("test_points_current_time_step must be an sf or SpatVector object")
   }
 
   n_test_points_G <- nrow(test_points_proj)
   if (n_test_points_G == 0) {
-    warning(paste0("WARNING: ", hv_name, " has 0 year-specific test points - G-space metrics will not be calculated"))
+    warning(paste0("WARNING: ", hv_name, " has 0 time step-specific test points - G-space metrics will not be calculated"))
     TP_test_G <- 0; FN_test_G <- 0; sensitivity_test_G <- NA; omission_test_G <- NA; CBP_test_G <- NA
   } else {
     if (n_test_points_G < 10) {
       warning(paste0("WARNING: ", hv_name, " has only ", n_test_points_G,
-                     " year-specific test points in geographic space - results may be unreliable"))
+                     " time step-specific test points in geographic space - results may be unreliable"))
     } else {
-      print(paste("  ", hv_name, "using", n_test_points_G, "year-specific test points in geographic space"))
+      print(paste("  ", hv_name, "using", n_test_points_G, "time step-specific test points in geographic space"))
     }
 
     hv_projected_values <- terra::extract(projected_raster, test_points_proj)[,2]
@@ -160,19 +160,19 @@ model_assessment_metrics <- function(hypervolume_model,
   }
 
   ### Environmental space metrics (E)
-  if (inherits(test_points_all_years, "sf")) {
-    test_data <- st_drop_geometry(test_points_all_years)
-  } else if (inherits(test_points_all_years, "SpatVector")) {
-    test_data <- as.data.frame(test_points_all_years)
-  } else if (is.data.frame(test_points_all_years)) {
-    test_data <- test_points_all_years
+  if (inherits(test_points_all_time_steps, "sf")) {
+    test_data <- st_drop_geometry(test_points_all_time_steps)
+  } else if (inherits(test_points_all_time_steps, "SpatVector")) {
+    test_data <- as.data.frame(test_points_all_time_steps)
+  } else if (is.data.frame(test_points_all_time_steps)) {
+    test_data <- test_points_all_time_steps
   } else {
-    stop(paste0("ERROR: test_points_all_years must be sf, SpatVector, or data.frame"))
+    stop(paste0("ERROR: test_points_all_time_steps must be sf, SpatVector, or data.frame"))
   }
 
   missing_vars <- clean_model_vars[!clean_model_vars %in% names(test_data)]
   if (length(missing_vars) > 0) {
-    stop(paste0("ERROR: Missing variables in test_points_all_years: ",
+    stop(paste0("ERROR: Missing variables in test_points_all_time_steps: ",
                 paste(missing_vars, collapse = ", "),
                 " Available: ", paste(names(test_data), collapse = ", ")))
   }
