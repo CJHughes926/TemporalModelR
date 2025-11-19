@@ -195,7 +195,10 @@ model_assessment_metrics <- function(hypervolume_model,
                      " test points in environmental space - results may be unreliable"))
     }
 
-    hv_inclusion <- hypervolume_inclusion_test(hypervolume_model, test_env)
+    hv_inclusion <- suppressMessages(suppressWarnings({
+      hypervolume_inclusion_test(hypervolume_model, test_env)
+    }))
+
     TP_test_E <- sum(hv_inclusion == TRUE)
     FN_test_E <- sum(hv_inclusion == FALSE)
 
@@ -213,7 +216,9 @@ model_assessment_metrics <- function(hypervolume_model,
     }
 
     tryCatch({
-      volume_env <- get_volume(hypervolume_model)
+      volume_env <- suppressMessages(suppressWarnings({
+        get_volume(hypervolume_model)
+      }))
     }, error = function(e) {
       stop(paste0("Error calculating environmental volume for ", hv_name, ": ", e$message))
       volume_env <- NA

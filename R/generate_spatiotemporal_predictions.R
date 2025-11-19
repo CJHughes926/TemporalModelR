@@ -282,7 +282,6 @@ generate_spatiotemporal_predictions <- function(partition_results,
     time_filter <- rep(TRUE, nrow(points_sf))
     for (tc in time_cols) time_filter <- time_filter & (points_sf[[tc]] == time_values[[tc]])
     n_points_at_time_step <- sum(time_filter, na.rm = TRUE)
-    print(paste("  Total points at this time step:", n_points_at_time_step))
 
     ### LOAD AND STACK RASTERS
     raster_files <- c()
@@ -313,7 +312,7 @@ generate_spatiotemporal_predictions <- function(partition_results,
     fold_projections <- list()
     for (j in 1:n_folds) {
       current_fold <- unique_folds[j]
-      print(paste("  Processing Fold", current_fold, "..."))
+      print(paste("Processing Fold", current_fold, "..."))
       hypervolume_model <- hypervolume_models[[j]]
 
       dims <- hypervolume_model@Dimensionality
@@ -329,13 +328,10 @@ generate_spatiotemporal_predictions <- function(partition_results,
       for (tc in time_cols) time_filter <- time_filter & (points_sf[[tc]] == time_values[[tc]])
       test_points_time_step <- points_sf[points_sf$fold == current_fold & time_filter, ]
 
-      print(paste("    Fold", current_fold, "test points:"))
-      print(paste("      All time steps:", nrow(test_points_all)))
-      print(paste("      Current time step:", nrow(test_points_time_step)))
-
       hv_map <- tryCatch({
-        suppressWarnings({
-          hypervolume_project(hypervolume_model, rasters = s2, type = 'inclusion', fast.or.accurate = 'fast', verbose = FALSE) })
+        suppressMessages(suppressWarnings({
+          hypervolume_project(hypervolume_model, rasters = s2, type = 'inclusion', fast.or.accurate = 'fast', verbose = FALSE)
+        }))
       }, error = function(e) {
         warning(paste("Error projecting hypervolume for Fold", current_fold, "at time step", time_label, ":", e$message))
         NULL
