@@ -194,12 +194,8 @@ temporally_explicit_extraction <- function(points_sp,
         search_pattern <- variable_patterns[var_name]
         for (tc in time_cols) {
           time_val <- as.character(time_values[[tc]])
-          if (!is.na(suppressWarnings(as.numeric(time_val))) && nchar(time_val) == 1) {
-            time_val <- sprintf("%02d", as.numeric(time_val))
-          }
           search_pattern <- gsub(tc, time_val, search_pattern, ignore.case=TRUE)
         }
-
         matching_files <- all_files[grepl(search_pattern, basename(all_files), ignore.case=TRUE)]
 
         if (length(matching_files) > 1) {

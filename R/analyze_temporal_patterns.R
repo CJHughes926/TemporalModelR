@@ -2,8 +2,8 @@
 #'
 #' Postprocessing function that applies changepoint detection methods to
 #' identify temporal trends in habitat suitability across consecutive
-#' predictions. Classifies pixels into pattern categories and identifies time
-#' periods of significant change.
+#' predictions. Classifies pixels as stable, increasing in quality, or
+#' decreasing in quality, and identifies time periods of significant change.
 #'
 #' @param binary_stack RasterStack, RasterBrick, or character. Stack of binary
 #'   raster layers across time, or path to directory containing binary rasters.
