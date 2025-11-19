@@ -161,13 +161,15 @@ spatiotemporal_rarefication <- function(points_sp,
     }
 
     n_original <- nrow(points_sp)
-    for (tc in time_cols) {
-      n_missing <- sum(is.na(points_sp[[tc]]))
-      if (n_missing > 0) {
-        pct_missing <- round(n_missing / n_original * 100, 2)
-        warning(paste0("WARNING: ", n_missing, " rows (", pct_missing,
-                       "%) have missing values in time column '", tc, "'"))
-      }
+
+    ### Remove rows with missing values in time columns
+    points_sp <- points_sp[complete.cases(points_sp[, time_cols]), ]
+
+    n_removed <- n_original - nrow(points_sp)
+    if (n_removed > 0) {
+      pct_removed <- round(n_removed / n_original * 100, 2)
+      print(paste0("Removed ", n_removed, " rows (", pct_removed,
+                   "%) with missing values in time columns"))
     }
 
     perform_spatiotemporal <- TRUE
