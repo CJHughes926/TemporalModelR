@@ -286,7 +286,7 @@ analyze_temporal_patterns <- function(binary_stack,
         } else {
           stop(e)
         }
-      })}
+      })
     }
 
     print(paste0("Quick pixels (always absent/present): ", format(total_quick, big.mark = ",")))
@@ -425,16 +425,9 @@ analyze_temporal_patterns <- function(binary_stack,
   }
 
   ### Merge tiles
+  if (n_tiles > 1) {
+    print("Merging tiles...")
 
-  print("Merging tiles...")
-
-  if (n_tiles == 1) {
-    print("Single tile detected, skipping merge...")
-    pattern_raster <- rast(tile_files_pattern[1])
-    decrease_raster <- rast(tile_files_decrease[1])
-    increase_raster <- rast(tile_files_increase[1])
-
-  } else {
     tryCatch({
       tile_rasters_pattern <- lapply(tile_files_pattern, rast)
       pattern_raster <- do.call(mosaic, c(tile_rasters_pattern, fun = "mean"))
@@ -452,6 +445,13 @@ analyze_temporal_patterns <- function(binary_stack,
         stop(e)
       }
     })
+  } else {
+    print("Single tile detected, skipping merge...")
+
+    pattern_raster <- rast(tile_files_pattern[1])
+    decrease_raster <- rast(tile_files_decrease[1])
+    increase_raster <- rast(tile_files_increase[1])
+  }
 
   ### Save results
 
