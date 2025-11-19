@@ -142,8 +142,6 @@ analyze_temporal_patterns <- function(binary_stack,
   ### Setup output directories
 
   if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
-  tiles_dir <- file.path(output_dir, "tiles")
-  if (!dir.exists(tiles_dir)) dir.create(tiles_dir, recursive = TRUE)
 
   ### Define output files
 
@@ -168,58 +166,332 @@ analyze_temporal_patterns <- function(binary_stack,
     print("Spatial autocorrelation: DISABLED (neighbor variable excluded)")
   }
 
-  ### Calculate tile extents
+  ### Check if tiling should be skipped
 
-  print("Calculating tile extents...")
+  skip_tiling <- (is.null(n_tiles_x) || n_tiles_x == 1) && (is.null(n_tiles_y) || n_tiles_y == 1)
 
-  full_ext <- ext(binary_stack)
-  x_min <- full_ext[1]
-  x_max <- full_ext[2]
-  y_min <- full_ext[3]
-  y_max <- full_ext[4]
+  if (skip_tiling) {
+    print("Processing entire raster without tiling...")
 
-  res_vals <- res(binary_stack)
-  res_x <- res_vals[1]
-  res_y <- res_vals[2]
+    ### Time estimation for single raster
 
-  x_range <- x_max - x_min
-  y_range <- y_max - y_min
+    if (estimate_time) {
+      print("Estimating processing time...")
 
-  tile_width <- x_range / n_tiles_x
-  tile_height <- y_range / n_tiles_y
+      n_years <- nlyr(binary_stack)
+      n_middle <- n_years - 2
 
-  tile_extents <- list()
-  tile_idx <- 1
+      summary_vals <- values(summary_raster, mat = FALSE)
+      valid_indices <- which(!is.na(summary_vals))
 
-  for (i in 1:n_tiles_y) {
-    for (j in 1:n_tiles_x) {
-      tile_x_min <- x_min + (j - 1) * tile_width
-      tile_x_max <- x_min + j * tile_width
-      tile_y_min <- y_min + (i - 1) * tile_height
-      tile_y_max <- y_min + i * tile_height
+      if (length(valid_indices) > 0) {
+        mean_vals <- summary_vals[valid_indices]
+        n_quick <- sum(mean_vals < 0.01 | mean_vals > 0.99)
+        n_complex <- sum(mean_vals >= 0.01 & mean_vals <= 0.99)
 
-      tile_extents[[tile_idx]] <- ext(tile_x_min, tile_x_max, tile_y_min, tile_y_max)
-      tile_idx <- tile_idx + 1
+        print(paste0("Quick pixels (always absent/present): ", format(n_quick, big.mark = ",")))
+        print(paste0("Complex pixels (changepoint analysis): ", format(n_complex, big.mark = ",")))
+
+        if (n_complex > 0) {
+          print("Timing sample pixels...")
+
+          middle_years <- binary_stack[[2:(n_years - 1)]]
+          lag_stack <- binary_stack[[1:(n_years - 2)]]
+
+          if (spatial_autocorrelation) {
+            middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
+              focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+            }))
+            predictor_stack <- c(middle_years, lag_stack, middle_neighbor, summary_raster)
+          } else {
+            predictor_stack <- c(middle_years, lag_stack, summary_raster)
+          }
+
+          pred_vals_all <- values(predictor_stack, mat = TRUE)
+          valid_pred <- which(!is.na(pred_vals_all[, 1]))
+
+          if (spatial_autocorrelation) {
+            mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
+          } else {
+            mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
+          }
+
+          complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
+
+          sample_size <- min(100, length(complex_indices))
+          sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
+
+          start_time <- Sys.time()
+          for (idx in sample_indices) {
+            result <- classify_pixel_with_years(pred_vals_all[idx, ], n_middle,
+                                                time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+          }
+          end_time <- Sys.time()
+
+          time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
+          print(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
+
+          base_seconds <- time_per_pixel * n_complex
+          overhead <- 30
+
+          lower_seconds <- (base_seconds * 0.8) + (overhead * 0.5)
+          upper_seconds <- (base_seconds * 1.2) + (overhead * 1.5)
+
+          format_time <- function(seconds) {
+            hours <- seconds / 3600
+            minutes <- seconds / 60
+            if (hours > 1) {
+              return(paste0(round(hours, 1), " hours"))
+            } else if (minutes > 1) {
+              return(paste0(round(minutes, 1), " minutes"))
+            } else {
+              return(paste0(round(seconds, 1), " seconds"))
+            }
+          }
+
+          print(paste("Estimated processing time:", format_time(lower_seconds), "to", format_time(upper_seconds)))
+
+          rm(middle_years, lag_stack, predictor_stack, pred_vals_all)
+          if (spatial_autocorrelation) rm(middle_neighbor)
+          gc(verbose = FALSE)
+        }
+      }
     }
-  }
 
-  n_tiles <- length(tile_extents)
-  print(paste("Created", n_tiles, "tiles"))
+    ### Process entire raster
 
-  ### Time estimation
-
-  if (estimate_time) {
-    print("Estimating processing time...")
+    print("Processing raster...")
 
     n_years <- nlyr(binary_stack)
     n_middle <- n_years - 2
 
-    total_complex <- 0
-    total_quick <- 0
-    time_per_pixel <- NULL
+    middle_years <- binary_stack[[2:(n_years - 1)]]
+    lag_stack <- binary_stack[[1:(n_years - 2)]]
+
+    if (spatial_autocorrelation) {
+      middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
+        focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+      }))
+      predictor_stack <- c(middle_years, lag_stack, middle_neighbor, summary_raster)
+    } else {
+      predictor_stack <- c(middle_years, lag_stack, summary_raster)
+    }
+
+    if (show_progress) {
+      n_cells <- ncell(predictor_stack)
+      pb <- txtProgressBar(min = 0, max = n_cells, style = 3, width = 50)
+
+      pred_vals <- values(predictor_stack, mat = TRUE)
+      pattern_vals <- numeric(n_cells)
+      decrease_vals <- numeric(n_cells)
+      increase_vals <- numeric(n_cells)
+
+      for (cell_i in 1:n_cells) {
+        if (!any(is.na(pred_vals[cell_i, ]))) {
+          result <- classify_pixel_with_years(pred_vals[cell_i, ], n_middle,
+                                              time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+          pattern_vals[cell_i] <- result[1]
+          decrease_vals[cell_i] <- result[2]
+          increase_vals[cell_i] <- result[3]
+        } else {
+          pattern_vals[cell_i] <- NA
+          decrease_vals[cell_i] <- NA
+          increase_vals[cell_i] <- NA
+        }
+        if (cell_i %% 10 == 0) setTxtProgressBar(pb, cell_i)
+      }
+      close(pb)
+      print("")
+
+      pattern_raster <- rast(predictor_stack, nlyr = 1)
+      decrease_raster <- rast(predictor_stack, nlyr = 1)
+      increase_raster <- rast(predictor_stack, nlyr = 1)
+
+      values(pattern_raster) <- pattern_vals
+      values(decrease_raster) <- decrease_vals
+      values(increase_raster) <- increase_vals
+
+    } else {
+      result_matrix <- app(predictor_stack,
+                           fun = function(x) classify_pixel_with_years(x, n_middle, time_steps,
+                                                                       fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
+
+      pattern_raster <- result_matrix[[1]]
+      decrease_raster <- result_matrix[[2]]
+      increase_raster <- result_matrix[[3]]
+    }
+
+  } else {
+
+    ### Tiling process
+
+    tiles_dir <- file.path(output_dir, "tiles")
+    if (!dir.exists(tiles_dir)) dir.create(tiles_dir, recursive = TRUE)
+
+    print("Calculating tile extents...")
+
+    full_ext <- ext(binary_stack)
+    x_min <- full_ext[1]
+    x_max <- full_ext[2]
+    y_min <- full_ext[3]
+    y_max <- full_ext[4]
+
+    res_vals <- res(binary_stack)
+    res_x <- res_vals[1]
+    res_y <- res_vals[2]
+
+    x_range <- x_max - x_min
+    y_range <- y_max - y_min
+
+    tile_width <- x_range / n_tiles_x
+    tile_height <- y_range / n_tiles_y
+
+    tile_extents <- list()
+    tile_idx <- 1
+
+    for (i in 1:n_tiles_y) {
+      for (j in 1:n_tiles_x) {
+        tile_x_min <- x_min + (j - 1) * tile_width
+        tile_x_max <- x_min + j * tile_width
+        tile_y_min <- y_min + (i - 1) * tile_height
+        tile_y_max <- y_min + i * tile_height
+
+        tile_extents[[tile_idx]] <- ext(tile_x_min, tile_x_max, tile_y_min, tile_y_max)
+        tile_idx <- tile_idx + 1
+      }
+    }
+
+    n_tiles <- length(tile_extents)
+    print(paste("Created", n_tiles, "tiles"))
+
+    ### Time estimation
+
+    if (estimate_time) {
+      print("Estimating processing time...")
+
+      n_years <- nlyr(binary_stack)
+      n_middle <- n_years - 2
+
+      total_complex <- 0
+      total_quick <- 0
+      time_per_pixel <- NULL
+
+      for (tile_i in 1:n_tiles) {
+        cat(paste0("Scanning tile ", tile_i, "/", n_tiles, "...\r"))
+
+        tile_ext <- tile_extents[[tile_i]]
+
+        tryCatch({
+          suppressWarnings({
+            tile_binary <- crop(binary_stack, tile_ext)
+            tile_summary <- crop(summary_raster, tile_ext)
+          })
+
+          summary_vals <- values(tile_summary, mat = FALSE)
+          valid_indices <- which(!is.na(summary_vals))
+
+          if (length(valid_indices) > 0) {
+            mean_vals <- summary_vals[valid_indices]
+            n_quick <- sum(mean_vals < 0.01 | mean_vals > 0.99)
+            n_complex <- sum(mean_vals >= 0.01 & mean_vals <= 0.99)
+
+            total_quick <- total_quick + n_quick
+            total_complex <- total_complex + n_complex
+
+            if (is.null(time_per_pixel) && n_complex > 0) {
+              print("Timing sample pixels...")
+
+              middle_years <- tile_binary[[2:(n_years - 1)]]
+              lag_stack <- tile_binary[[1:(n_years - 2)]]
+
+              if (spatial_autocorrelation) {
+                middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
+                  focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+                }))
+                predictor_stack <- c(middle_years, lag_stack, middle_neighbor, tile_summary)
+              } else {
+                predictor_stack <- c(middle_years, lag_stack, tile_summary)
+              }
+
+              pred_vals_all <- values(predictor_stack, mat = TRUE)
+              valid_pred <- which(!is.na(pred_vals_all[, 1]))
+
+              if (spatial_autocorrelation) {
+                mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
+              } else {
+                mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
+              }
+
+              complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
+
+              sample_size <- min(100, length(complex_indices))
+              sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
+
+              start_time <- Sys.time()
+              for (idx in sample_indices) {
+                result <- classify_pixel_with_years(pred_vals_all[idx, ], n_middle,
+                                                    time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+              }
+              end_time <- Sys.time()
+
+              time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
+              print(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
+            }
+          }
+        }, error = function(e) {
+          if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
+            stop("ERROR: Memory error. Increase n_tiles_x and n_tiles_y to use smaller tiles.")
+          } else {
+            stop(e)
+          }
+        })
+      }
+
+      print(paste0("Quick pixels (always absent/present): ", format(total_quick, big.mark = ",")))
+      print(paste0("Complex pixels (changepoint analysis): ", format(total_complex, big.mark = ",")))
+
+      if (!is.null(time_per_pixel) && total_complex > 0) {
+        base_seconds <- time_per_pixel * total_complex
+        overhead_per_tile <- 15
+        total_overhead <- (overhead_per_tile * n_tiles) + 30
+
+        lower_seconds <- (base_seconds * 0.8) + (total_overhead * 0.5)
+        upper_seconds <- (base_seconds * 1.2) + (total_overhead * 1.5)
+
+        format_time <- function(seconds) {
+          hours <- seconds / 3600
+          minutes <- seconds / 60
+          if (hours > 1) {
+            return(paste0(round(hours, 1), " hours"))
+          } else if (minutes > 1) {
+            return(paste0(round(minutes, 1), " minutes"))
+          } else {
+            return(paste0(round(seconds, 1), " seconds"))
+          }
+        }
+
+        print(paste("Estimated processing time:", format_time(lower_seconds), "to", format_time(upper_seconds)))
+      }
+    }
+
+    ### Process tiles
+
+    print("Processing tiles...")
+
+    tile_files_pattern <- character(n_tiles)
+    tile_files_decrease <- character(n_tiles)
+    tile_files_increase <- character(n_tiles)
 
     for (tile_i in 1:n_tiles) {
-      cat(paste0("Scanning tile ", tile_i, "/", n_tiles, "...\r"))
+      print(paste("Processing tile", tile_i, "of", n_tiles))
+
+      tile_file_pattern <- file.path(tiles_dir, paste0("pattern_tile_", tile_i, ".tif"))
+      tile_file_decrease <- file.path(tiles_dir, paste0("decrease_tile_", tile_i, ".tif"))
+      tile_file_increase <- file.path(tiles_dir, paste0("increase_tile_", tile_i, ".tif"))
+
+      tile_files_pattern[tile_i] <- tile_file_pattern
+      tile_files_decrease[tile_i] <- tile_file_decrease
+      tile_files_increase[tile_i] <- tile_file_increase
 
       tile_ext <- tile_extents[[tile_i]]
 
@@ -229,228 +501,122 @@ analyze_temporal_patterns <- function(binary_stack,
           tile_summary <- crop(summary_raster, tile_ext)
         })
 
-        summary_vals <- values(tile_summary, mat = FALSE)
-        valid_indices <- which(!is.na(summary_vals))
+        n_years <- nlyr(tile_binary)
+        n_middle <- n_years - 2
 
-        if (length(valid_indices) > 0) {
-          mean_vals <- summary_vals[valid_indices]
-          n_quick <- sum(mean_vals < 0.01 | mean_vals > 0.99)
-          n_complex <- sum(mean_vals >= 0.01 & mean_vals <= 0.99)
+        middle_years <- tile_binary[[2:(n_years - 1)]]
+        lag_stack <- tile_binary[[1:(n_years - 2)]]
 
-          total_quick <- total_quick + n_quick
-          total_complex <- total_complex + n_complex
-
-          if (is.null(time_per_pixel) && n_complex > 0) {
-            print("Timing sample pixels...")
-
-            middle_years <- tile_binary[[2:(n_years - 1)]]
-            lag_stack <- tile_binary[[1:(n_years - 2)]]
-
-            if (spatial_autocorrelation) {
-              middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
-                focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
-              }))
-              predictor_stack <- c(middle_years, lag_stack, middle_neighbor, tile_summary)
-            } else {
-              predictor_stack <- c(middle_years, lag_stack, tile_summary)
-            }
-
-            pred_vals_all <- values(predictor_stack, mat = TRUE)
-            valid_pred <- which(!is.na(pred_vals_all[, 1]))
-
-            if (spatial_autocorrelation) {
-              mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
-            } else {
-              mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
-            }
-
-            complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
-
-            sample_size <- min(100, length(complex_indices))
-            sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
-
-            start_time <- Sys.time()
-            for (idx in sample_indices) {
-              result <- classify_pixel_with_years(pred_vals_all[idx, ], n_middle,
-                                                  time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
-            }
-            end_time <- Sys.time()
-
-            time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
-            print(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
-          }
+        if (spatial_autocorrelation) {
+          middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
+            focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+          }))
+          predictor_stack <- c(middle_years, lag_stack, middle_neighbor, tile_summary)
+        } else {
+          predictor_stack <- c(middle_years, lag_stack, tile_summary)
         }
+
+        if (show_progress) {
+          n_cells <- ncell(predictor_stack)
+          pb <- txtProgressBar(min = 0, max = n_cells, style = 3, width = 50)
+
+          pred_vals <- values(predictor_stack, mat = TRUE)
+          pattern_vals <- numeric(n_cells)
+          decrease_vals <- numeric(n_cells)
+          increase_vals <- numeric(n_cells)
+
+          for (cell_i in 1:n_cells) {
+            if (!any(is.na(pred_vals[cell_i, ]))) {
+              result <- classify_pixel_with_years(pred_vals[cell_i, ], n_middle,
+                                                  time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+              pattern_vals[cell_i] <- result[1]
+              decrease_vals[cell_i] <- result[2]
+              increase_vals[cell_i] <- result[3]
+            } else {
+              pattern_vals[cell_i] <- NA
+              decrease_vals[cell_i] <- NA
+              increase_vals[cell_i] <- NA
+            }
+            if (cell_i %% 10 == 0) setTxtProgressBar(pb, cell_i)
+          }
+          close(pb)
+          print("")
+
+          tile_pattern <- rast(predictor_stack, nlyr = 1)
+          tile_decrease <- rast(predictor_stack, nlyr = 1)
+          tile_increase <- rast(predictor_stack, nlyr = 1)
+
+          values(tile_pattern) <- pattern_vals
+          values(tile_decrease) <- decrease_vals
+          values(tile_increase) <- increase_vals
+
+        } else {
+          result_matrix <- app(predictor_stack,
+                               fun = function(x) classify_pixel_with_years(x, n_middle, time_steps,
+                                                                           fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
+
+          tile_pattern <- result_matrix[[1]]
+          tile_decrease <- result_matrix[[2]]
+          tile_increase <- result_matrix[[3]]
+        }
+
+        writeRaster(tile_pattern, tile_file_pattern, overwrite = TRUE,
+                    datatype = "INT1U", gdal = c("COMPRESS=LZW"))
+        writeRaster(tile_decrease, tile_file_decrease, overwrite = TRUE,
+                    datatype = "INT2S", gdal = c("COMPRESS=LZW"))
+        writeRaster(tile_increase, tile_file_increase, overwrite = TRUE,
+                    datatype = "INT2S", gdal = c("COMPRESS=LZW"))
+
+        rm(tile_binary, tile_summary, middle_years, lag_stack,
+           predictor_stack, tile_pattern, tile_decrease, tile_increase)
+        if (spatial_autocorrelation) rm(middle_neighbor)
+        if (exists("pred_vals")) rm(pred_vals, pattern_vals, decrease_vals, increase_vals)
+        gc(verbose = FALSE)
+
       }, error = function(e) {
         if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-          stop("ERROR: Memory error. Increase n_tiles_x and n_tiles_y to use smaller tiles.")
+          stop(paste0("ERROR: Memory error on tile ", tile_i, ". Increase n_tiles_x and n_tiles_y."))
         } else {
           stop(e)
         }
       })
     }
 
-    print(paste0("Quick pixels (always absent/present): ", format(total_quick, big.mark = ",")))
-    print(paste0("Complex pixels (changepoint analysis): ", format(total_complex, big.mark = ",")))
+    ### Merge tiles
 
-    if (!is.null(time_per_pixel) && total_complex > 0) {
-      base_seconds <- time_per_pixel * total_complex
-      overhead_per_tile <- 15
-      total_overhead <- (overhead_per_tile * n_tiles) + 30
+    if (n_tiles > 1) {
+      print("Merging tiles...")
 
-      lower_seconds <- (base_seconds * 0.8) + (total_overhead * 0.5)
-      upper_seconds <- (base_seconds * 1.2) + (total_overhead * 1.5)
+      tryCatch({
+        tile_rasters_pattern <- lapply(tile_files_pattern, rast)
+        pattern_raster <- do.call(mosaic, c(tile_rasters_pattern, fun = "mean"))
 
-      format_time <- function(seconds) {
-        hours <- seconds / 3600
-        minutes <- seconds / 60
-        if (hours > 1) {
-          return(paste0(round(hours, 1), " hours"))
-        } else if (minutes > 1) {
-          return(paste0(round(minutes, 1), " minutes"))
+        tile_rasters_decrease <- lapply(tile_files_decrease, rast)
+        decrease_raster <- do.call(mosaic, c(tile_rasters_decrease, fun = "mean"))
+
+        tile_rasters_increase <- lapply(tile_files_increase, rast)
+        increase_raster <- do.call(mosaic, c(tile_rasters_increase, fun = "mean"))
+
+      }, error = function(e) {
+        if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
+          stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
         } else {
-          return(paste0(round(seconds, 1), " seconds"))
+          stop(e)
         }
-      }
-
-      print(paste("Estimated processing time:", format_time(lower_seconds), "to", format_time(upper_seconds)))
-    }
-  }
-
-  ### Process tiles
-
-  print("Processing tiles...")
-
-  tile_files_pattern <- character(n_tiles)
-  tile_files_decrease <- character(n_tiles)
-  tile_files_increase <- character(n_tiles)
-
-  for (tile_i in 1:n_tiles) {
-    print(paste("Processing tile", tile_i, "of", n_tiles))
-
-    tile_file_pattern <- file.path(tiles_dir, paste0("pattern_tile_", tile_i, ".tif"))
-    tile_file_decrease <- file.path(tiles_dir, paste0("decrease_tile_", tile_i, ".tif"))
-    tile_file_increase <- file.path(tiles_dir, paste0("increase_tile_", tile_i, ".tif"))
-
-    tile_files_pattern[tile_i] <- tile_file_pattern
-    tile_files_decrease[tile_i] <- tile_file_decrease
-    tile_files_increase[tile_i] <- tile_file_increase
-
-    tile_ext <- tile_extents[[tile_i]]
-
-    tryCatch({
-      suppressWarnings({
-        tile_binary <- crop(binary_stack, tile_ext)
-        tile_summary <- crop(summary_raster, tile_ext)
       })
+    } else {
+      print("Single tile detected, skipping merge...")
 
-      n_years <- nlyr(tile_binary)
-      n_middle <- n_years - 2
+      pattern_raster <- rast(tile_files_pattern[1])
+      decrease_raster <- rast(tile_files_decrease[1])
+      increase_raster <- rast(tile_files_increase[1])
+    }
 
-      middle_years <- tile_binary[[2:(n_years - 1)]]
-      lag_stack <- tile_binary[[1:(n_years - 2)]]
+    ### Auto-cleanup tiles
 
-      if (spatial_autocorrelation) {
-        middle_neighbor <- rast(lapply(1:nlyr(middle_years), function(i) {
-          focal(middle_years[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
-        }))
-        predictor_stack <- c(middle_years, lag_stack, middle_neighbor, tile_summary)
-      } else {
-        predictor_stack <- c(middle_years, lag_stack, tile_summary)
-      }
-
-      if (show_progress) {
-        n_cells <- ncell(predictor_stack)
-        pb <- txtProgressBar(min = 0, max = n_cells, style = 3, width = 50)
-
-        pred_vals <- values(predictor_stack, mat = TRUE)
-        pattern_vals <- numeric(n_cells)
-        decrease_vals <- numeric(n_cells)
-        increase_vals <- numeric(n_cells)
-
-        for (cell_i in 1:n_cells) {
-          if (!any(is.na(pred_vals[cell_i, ]))) {
-            result <- classify_pixel_with_years(pred_vals[cell_i, ], n_middle,
-                                                time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
-            pattern_vals[cell_i] <- result[1]
-            decrease_vals[cell_i] <- result[2]
-            increase_vals[cell_i] <- result[3]
-          } else {
-            pattern_vals[cell_i] <- NA
-            decrease_vals[cell_i] <- NA
-            increase_vals[cell_i] <- NA
-          }
-          if (cell_i %% 10 == 0) setTxtProgressBar(pb, cell_i)
-        }
-        close(pb)
-        print("")
-
-        tile_pattern <- rast(predictor_stack, nlyr = 1)
-        tile_decrease <- rast(predictor_stack, nlyr = 1)
-        tile_increase <- rast(predictor_stack, nlyr = 1)
-
-        values(tile_pattern) <- pattern_vals
-        values(tile_decrease) <- decrease_vals
-        values(tile_increase) <- increase_vals
-
-      } else {
-        result_matrix <- app(predictor_stack,
-                             fun = function(x) classify_pixel_with_years(x, n_middle, time_steps,
-                                                                         fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
-
-        tile_pattern <- result_matrix[[1]]
-        tile_decrease <- result_matrix[[2]]
-        tile_increase <- result_matrix[[3]]
-      }
-
-      writeRaster(tile_pattern, tile_file_pattern, overwrite = TRUE,
-                  datatype = "INT1U", gdal = c("COMPRESS=LZW"))
-      writeRaster(tile_decrease, tile_file_decrease, overwrite = TRUE,
-                  datatype = "INT2S", gdal = c("COMPRESS=LZW"))
-      writeRaster(tile_increase, tile_file_increase, overwrite = TRUE,
-                  datatype = "INT2S", gdal = c("COMPRESS=LZW"))
-
-      rm(tile_binary, tile_summary, middle_years, lag_stack,
-         predictor_stack, tile_pattern, tile_decrease, tile_increase)
-      if (spatial_autocorrelation) rm(middle_neighbor)
-      if (exists("pred_vals")) rm(pred_vals, pattern_vals, decrease_vals, increase_vals)
-      gc(verbose = FALSE)
-
-    }, error = function(e) {
-      if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-        stop(paste0("ERROR: Memory error on tile ", tile_i, ". Increase n_tiles_x and n_tiles_y."))
-      } else {
-        stop(e)
-      }
-    })
-  }
-
-  ### Merge tiles
-  if (n_tiles > 1) {
-    print("Merging tiles...")
-
-    tryCatch({
-      tile_rasters_pattern <- lapply(tile_files_pattern, rast)
-      pattern_raster <- do.call(mosaic, c(tile_rasters_pattern, fun = "mean"))
-
-      tile_rasters_decrease <- lapply(tile_files_decrease, rast)
-      decrease_raster <- do.call(mosaic, c(tile_rasters_decrease, fun = "mean"))
-
-      tile_rasters_increase <- lapply(tile_files_increase, rast)
-      increase_raster <- do.call(mosaic, c(tile_rasters_increase, fun = "mean"))
-
-    }, error = function(e) {
-      if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-        stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
-      } else {
-        stop(e)
-      }
-    })
-  } else {
-    print("Single tile detected, skipping merge...")
-
-    pattern_raster <- rast(tile_files_pattern[1])
-    decrease_raster <- rast(tile_files_decrease[1])
-    increase_raster <- rast(tile_files_increase[1])
+    print("Cleaning up tile files...")
+    unlink(tiles_dir, recursive = TRUE)
+    print("Tiles removed")
   }
 
   ### Save results
@@ -470,10 +636,10 @@ analyze_temporal_patterns <- function(binary_stack,
   par(mfrow = c(2, 2))
 
   terra::plot(pattern_raster,
-       col = c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202"),
-       main = paste("Pattern Classification\n", min(time_steps), "-", max(time_steps)),
-       breaks = c(0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5),
-       legend = FALSE)
+              col = c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202"),
+              main = paste("Pattern Classification\n", min(time_steps), "-", max(time_steps)),
+              breaks = c(0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5),
+              legend = FALSE)
   legend("topright",
          legend = c("Always Absent", "Always Present", "No Pattern",
                     "Increasing", "Decreasing", "Fluctuating", "Failed"),
@@ -481,12 +647,12 @@ analyze_temporal_patterns <- function(binary_stack,
          cex = 0.6)
 
   terra::plot(decrease_raster,
-       main = paste("Year of First Decrease\n", min(time_steps), "-", max(time_steps)),
-       col = rev(heat.colors(50)))
+              main = paste("Year of First Decrease\n", min(time_steps), "-", max(time_steps)),
+              col = rev(heat.colors(50)))
 
   terra::plot(increase_raster,
-       main = paste("Year of First Increase\n", min(time_steps), "-", max(time_steps)),
-       col = terrain.colors(50))
+              main = paste("Year of First Increase\n", min(time_steps), "-", max(time_steps)),
+              col = terrain.colors(50))
 
   par(mfrow = c(1, 1))
 
@@ -494,7 +660,9 @@ analyze_temporal_patterns <- function(binary_stack,
 
   print("Analysis complete")
   print(paste("Period:", min(time_steps), "-", max(time_steps)))
-  print(paste("Tiles:", n_tiles))
+  if (!skip_tiling) {
+    print(paste("Tiles:", n_tiles))
+  }
   print(paste("Spatial autocorrelation:", ifelse(spatial_autocorrelation, "ENABLED", "DISABLED")))
 
   pattern_freq <- freq(pattern_raster)
@@ -528,12 +696,6 @@ analyze_temporal_patterns <- function(binary_stack,
     print(paste("Most common:", inc_freq$value[which.max(inc_freq$count)],
                 paste0("(", format(max(inc_freq$count), big.mark = ","), " pixels)")))
   }
-
-  ### Auto-cleanup tiles
-
-  print("Cleaning up tile files...")
-  unlink(tiles_dir, recursive = TRUE)
-  print("Tiles removed")
 
   return(list(
     pattern = pattern_raster,

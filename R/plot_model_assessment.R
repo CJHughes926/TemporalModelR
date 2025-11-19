@@ -345,8 +345,8 @@ plot_model_assessment <- function(data_file_path,
 
   if (separate_cbp) {
 
-    cbp_g_min <- min(all_model_data$CBP_test_G, na.rm = TRUE)
-    cbp_g_max <- max(all_model_data$CBP_test_G, na.rm = TRUE)
+    cbp_g_min <- min(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0], na.rm = TRUE)
+    cbp_g_max <- max(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0], na.rm = TRUE)
 
     log_g_min <- floor(log10(cbp_g_min))
     log_g_max <- ceiling(log10(cbp_g_max))
@@ -414,8 +414,8 @@ plot_model_assessment <- function(data_file_path,
       plot2 <- plot2 + facet_wrap(as.formula(paste("~", facet_column)), scales = "free_x")
     }
 
-    cbp_e_min <- min(all_model_data$CBP_test_E, na.rm = TRUE)
-    cbp_e_max <- max(all_model_data$CBP_test_E, na.rm = TRUE)
+    cbp_e_min <- min(all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0], na.rm = TRUE)
+    cbp_e_max <- max(all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0], na.rm = TRUE)
 
     log_e_min <- floor(log10(cbp_e_min))
     log_e_max <- ceiling(log10(cbp_e_max))
@@ -490,8 +490,10 @@ plot_model_assessment <- function(data_file_path,
 
   } else {
 
-    cbp_combined_min <- min(c(all_model_data$CBP_test_G, all_model_data$CBP_test_E), na.rm = TRUE)
-    cbp_combined_max <- max(c(all_model_data$CBP_test_G, all_model_data$CBP_test_E), na.rm = TRUE)
+    cbp_combined_min <- min(c(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0],
+                              all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0]), na.rm = TRUE)
+    cbp_combined_max <- max(c(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0],
+                              all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0]), na.rm = TRUE)
 
     log_combined_min <- floor(log10(cbp_combined_min))
     log_combined_max <- ceiling(log10(cbp_combined_max))
