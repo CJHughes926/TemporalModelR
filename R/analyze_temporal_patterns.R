@@ -286,7 +286,7 @@ analyze_temporal_patterns <- function(binary_stack,
         } else {
           stop(e)
         }
-      })
+      })}
     }
 
     print(paste0("Quick pixels (always absent/present): ", format(total_quick, big.mark = ",")))
