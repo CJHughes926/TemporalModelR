@@ -163,7 +163,8 @@ spatiotemporal_rarefication <- function(points_sp,
     n_original <- nrow(points_sp)
 
     ### Remove rows with missing values in time columns
-    points_sp <- points_sp[complete.cases(points_sp[, time_cols]), ]
+    points_sp <- points_sp %>%
+      filter(if_all(all_of(time_cols), ~ !is.na(.)))
 
     n_removed <- n_original - nrow(points_sp)
     if (n_removed > 0) {
