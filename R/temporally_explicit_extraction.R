@@ -192,9 +192,15 @@ temporally_explicit_extraction <- function(points_sp,
       points_subset <- points_sp[time_filter, ]
       for (var_name in dynamic_vars) {
         search_pattern <- variable_patterns[var_name]
-        for (tc in time_cols) search_pattern <- gsub(tc, as.character(time_values[[tc]]), search_pattern, ignore.case=TRUE)
-        pattern_parts <- strsplit(search_pattern, "_")[[1]]
-        matching_files <- all_files[sapply(all_files, function(f) all(sapply(pattern_parts, function(p) grepl(p, basename(f), ignore.case=TRUE))))]
+        for (tc in time_cols) {
+          time_val <- as.character(time_values[[tc]])
+          if (!is.na(suppressWarnings(as.numeric(time_val))) && nchar(time_val) == 1) {
+            time_val <- sprintf("%02d", as.numeric(time_val))
+          }
+          search_pattern <- gsub(tc, time_val, search_pattern, ignore.case=TRUE)
+        }
+
+        matching_files <- all_files[grepl(search_pattern, basename(all_files), ignore.case=TRUE)]
 
         if (length(matching_files) > 1) {
           stop(paste0("ERROR: Multiple raster files found for dynamic variable '", var_name,
