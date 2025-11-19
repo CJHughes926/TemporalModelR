@@ -124,11 +124,11 @@ model_assessment_metrics <- function(hypervolume_model,
 
   n_test_points_G <- nrow(test_points_proj)
   if (n_test_points_G == 0) {
-    warning(paste0("WARNING: ", hv_name, " has 0 time step-specific test points - G-space metrics will not be calculated"))
+    warning(paste0("", hv_name, " has 0 time step-specific test points - G-space metrics will not be calculated"))
     TP_test_G <- 0; FN_test_G <- 0; sensitivity_test_G <- NA; omission_test_G <- NA; CBP_test_G <- NA
   } else {
     if (n_test_points_G < 10) {
-      warning(paste0("WARNING: ", hv_name, " has only ", n_test_points_G,
+      warning(paste0("", hv_name, " has only ", n_test_points_G,
                      " time step-specific test points in geographic space - results may be unreliable"))
     } else {
       print(paste("  ", hv_name, "using", n_test_points_G, "time step-specific test points in geographic space"))
@@ -141,7 +141,7 @@ model_assessment_metrics <- function(hypervolume_model,
     FN_test_G <- sum(hv_projected_values == 0, na.rm = TRUE)
 
     if ((TP_test_G + FN_test_G) == 0) {
-      warning(paste0("WARNING: No valid test point extractions for ", hv_name, " in geographic space"))
+      warning(paste0("No valid test point extractions for ", hv_name, " in geographic space"))
       sensitivity_test_G <- NA; omission_test_G <- NA; CBP_test_G <- NA
     } else {
       sensitivity_test_G <- TP_test_G / (TP_test_G + FN_test_G)
@@ -153,7 +153,7 @@ model_assessment_metrics <- function(hypervolume_model,
       CBP_test_G <- if (total_area > 0) {
         dbinom(TP_test_G, size = TP_test_G + FN_test_G, prob = total_suitable_area / total_area)
       } else {
-        warning(paste0("WARNING: No valid raster cells for CBP calculation in ", hv_name))
+        warning(paste0("No valid raster cells for CBP calculation in ", hv_name))
         NA
       }
     }
@@ -183,15 +183,15 @@ model_assessment_metrics <- function(hypervolume_model,
   n_after <- nrow(test_env)
 
   if (n_before > n_after) {
-    warning(paste0("WARNING: Removed ", n_before - n_after, " test points with missing environmental data for ", hv_name))
+    warning(paste0("Removed ", n_before - n_after, " test points with missing environmental data for ", hv_name))
   }
 
   if (nrow(test_env) == 0) {
-    warning(paste0("WARNING: No complete test points for ", hv_name, " in environmental space"))
+    warning(paste0("No complete test points for ", hv_name, " in environmental space"))
     TP_test_E <- 0; FN_test_E <- 0; sensitivity_test_E <- NA; omission_test_E <- NA; CBP_test_E <- NA; volume_env <- NA
   } else {
-    if (nrow(test_env) < 10) {
-      warning(paste0("WARNING: ", hv_name, " has only ", nrow(test_env),
+    if (nrow(test_env) < 5) {
+      warning(paste0("", hv_name, " has only ", nrow(test_env),
                      " test points in environmental space - results may be unreliable"))
     }
 
@@ -200,7 +200,7 @@ model_assessment_metrics <- function(hypervolume_model,
     FN_test_E <- sum(hv_inclusion == FALSE)
 
     if ((TP_test_E + FN_test_E) == 0) {
-      warning(paste0("WARNING: No valid inclusion tests for ", hv_name, " in environmental space"))
+      warning(paste0("No valid inclusion tests for ", hv_name, " in environmental space"))
       sensitivity_test_E <- NA; omission_test_E <- NA; CBP_test_E <- NA
     } else {
       sensitivity_test_E <- TP_test_E / (TP_test_E + FN_test_E)
@@ -215,7 +215,7 @@ model_assessment_metrics <- function(hypervolume_model,
     tryCatch({
       volume_env <- get_volume(hypervolume_model)
     }, error = function(e) {
-      warning(paste0("WARNING: Error calculating environmental volume for ", hv_name, ": ", e$message))
+      stop(paste0("Error calculating environmental volume for ", hv_name, ": ", e$message))
       volume_env <- NA
     })
   }
@@ -226,7 +226,7 @@ model_assessment_metrics <- function(hypervolume_model,
     suitable_cells <- sum(values(projected_raster) == 1, na.rm = TRUE)
     volume_geo <- if (total_cells > 0) suitable_cells / total_cells else NA
   }, error = function(e) {
-    warning(paste0("WARNING: Error calculating geographic volume for ", hv_name, ": ", e$message))
+    stop(paste0("Error calculating geographic volume for ", hv_name, ": ", e$message))
     volume_geo <- NA
   })
 
