@@ -334,7 +334,8 @@ generate_spatiotemporal_predictions <- function(partition_results,
       print(paste("      Current time step:", nrow(test_points_time_step)))
 
       hv_map <- tryCatch({
-        hypervolume_project(hypervolume_model, rasters = s2, type = 'inclusion', fast.or.accurate = 'fast', verbose = FALSE)
+        suppressWarnings({
+          hypervolume_project(hypervolume_model, rasters = s2, type = 'inclusion', fast.or.accurate = 'fast', verbose = FALSE) })
       }, error = function(e) {
         warning(paste("Error projecting hypervolume for Fold", current_fold, "at time step", time_label, ":", e$message))
         NULL
