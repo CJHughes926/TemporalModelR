@@ -428,23 +428,30 @@ analyze_temporal_patterns <- function(binary_stack,
 
   print("Merging tiles...")
 
-  tryCatch({
-    tile_rasters_pattern <- lapply(tile_files_pattern, rast)
-    pattern_raster <- do.call(mosaic, c(tile_rasters_pattern, fun = "mean"))
+  if (n_tiles == 1) {
+    print("Single tile detected, skipping merge...")
+    pattern_raster <- rast(tile_files_pattern[1])
+    decrease_raster <- rast(tile_files_decrease[1])
+    increase_raster <- rast(tile_files_increase[1])
 
-    tile_rasters_decrease <- lapply(tile_files_decrease, rast)
-    decrease_raster <- do.call(mosaic, c(tile_rasters_decrease, fun = "mean"))
+  } else {
+    tryCatch({
+      tile_rasters_pattern <- lapply(tile_files_pattern, rast)
+      pattern_raster <- do.call(mosaic, c(tile_rasters_pattern, fun = "mean"))
 
-    tile_rasters_increase <- lapply(tile_files_increase, rast)
-    increase_raster <- do.call(mosaic, c(tile_rasters_increase, fun = "mean"))
+      tile_rasters_decrease <- lapply(tile_files_decrease, rast)
+      decrease_raster <- do.call(mosaic, c(tile_rasters_decrease, fun = "mean"))
 
-  }, error = function(e) {
-    if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-      stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
-    } else {
-      stop(e)
-    }
-  })
+      tile_rasters_increase <- lapply(tile_files_increase, rast)
+      increase_raster <- do.call(mosaic, c(tile_rasters_increase, fun = "mean"))
+
+    }, error = function(e) {
+      if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
+        stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
+      } else {
+        stop(e)
+      }
+    })
 
   ### Save results
 
