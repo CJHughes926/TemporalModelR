@@ -5,7 +5,7 @@ Version: 0.1.0
 Authors@R: c(
     person(
       "Connor", "Hughes",
-      email = "connorjh@vt.edu",
+      email = "connorhughes926@gmail.com",
       role = c("aut", "cre")
     ), person(
       "Mariana", "Castaneda-Guzman",
@@ -20,9 +20,28 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Imports: 
-    raster,
-    terra,
-    sp,
+Imports: 
     dplyr,
+    deldir,
+    exactextractr,
+    ggplot2,
+    ggtext,
+    graphics,
+    grDevices,
+    grid,
+    gridExtra,
+    hypervolume,
+    methods,
+    raster,
+    RColorBrewer,
     readr,
-    utils
+    scales,
+    scatterpie,
+    sf,
+    sp,
+    stats,
+    terra,
+    tidyr,
+    tools,
+    utils,
+    viridis
