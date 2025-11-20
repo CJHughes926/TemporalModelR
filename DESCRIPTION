@@ -44,3 +44,4 @@ Imports:
     tools,
     utils,
     viridis
+    fastcpd
