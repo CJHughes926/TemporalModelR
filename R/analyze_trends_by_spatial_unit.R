@@ -444,7 +444,9 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
     geom_scatterpie(aes(x = x, y = y, r = radius), data = pie_data, cols = pie_cols, color = NA) +
     scale_fill_manual(
       values = pattern_colors,
-      labels = c("Never Suitable", "Always Suitable", "No Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed")
+      breaks = c("Always_Absent", "Always_Present", "No_Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed"),
+      labels = c("Never Suitable", "Always Suitable", "No Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed"),
+      drop = FALSE
     ) +
     coord_sf() +
     labs(title = "Pattern Composition by Spatial Unit", fill = "Pattern") +
