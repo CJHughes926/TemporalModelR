@@ -215,7 +215,9 @@ plot_model_assessment <- function(data_file_path,
 
   cbp_label_function <- function(x) {
     labels <- sapply(x, function(val) {
-      if (val >= 0.0001) {
+      if (is.na(val)) {
+        return(NA)
+      } else if (val >= 0.0001) {
         format(val, scientific = FALSE, digits = 1, drop0trailing = TRUE)
       } else {
         scales::scientific(val, digits = 0)
@@ -348,8 +350,20 @@ plot_model_assessment <- function(data_file_path,
     cbp_g_min <- min(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0], na.rm = TRUE)
     cbp_g_max <- max(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0], na.rm = TRUE)
 
-    log_g_min <- floor(log10(cbp_g_min))
-    log_g_max <- ceiling(log10(cbp_g_max))
+    if (cbp_g_min >= cbp_threshold) {
+      plot_limit_min_g <- cbp_threshold
+      plot_limit_max_g <- 1
+
+      log_g_min <- floor(log10(cbp_threshold))
+      log_g_max <- 0
+    } else {
+      log_g_min <- floor(log10(cbp_g_min))
+      log_g_max <- ceiling(log10(cbp_g_max))
+
+      plot_limit_min_g <- cbp_g_min * 0.8
+      plot_limit_max_g <- cbp_g_max * 1.2
+    }
+
     log_g_range <- log_g_max - log_g_min + 1
 
     if (log_g_range <= 12) {
@@ -365,12 +379,15 @@ plot_model_assessment <- function(data_file_path,
     }
 
     all_breaks_g <- 10^seq(log_g_min, log_g_max, by = 1)
-
-    plot_limit_min_g <- cbp_g_min * 0.8
-    plot_limit_max_g <- cbp_g_max * 1.2
     breaks_in_range_g <- all_breaks_g[all_breaks_g >= plot_limit_min_g & all_breaks_g <= plot_limit_max_g]
 
-    y_breaks_g <- breaks_in_range_g[seq(1, length(breaks_in_range_g), by = skip_g)]
+    if (length(breaks_in_range_g) == 0) {
+      y_breaks_g <- all_breaks_g
+    } else if (length(breaks_in_range_g) < skip_g) {
+      y_breaks_g <- breaks_in_range_g
+    } else {
+      y_breaks_g <- breaks_in_range_g[seq(1, length(breaks_in_range_g), by = skip_g)]
+    }
 
     plot2 <- ggplot() +
       geom_hline(yintercept = cbp_threshold, color = "black", linetype = "dotted", linewidth = 1, alpha = 0.3) +
@@ -417,8 +434,20 @@ plot_model_assessment <- function(data_file_path,
     cbp_e_min <- min(all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0], na.rm = TRUE)
     cbp_e_max <- max(all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0], na.rm = TRUE)
 
-    log_e_min <- floor(log10(cbp_e_min))
-    log_e_max <- ceiling(log10(cbp_e_max))
+    if (cbp_e_min >= cbp_threshold) {
+      plot_limit_min_e <- cbp_threshold
+      plot_limit_max_e <- 1
+
+      log_e_min <- floor(log10(cbp_threshold))
+      log_e_max <- 0
+    } else {
+      log_e_min <- floor(log10(cbp_e_min))
+      log_e_max <- ceiling(log10(cbp_e_max))
+
+      plot_limit_min_e <- cbp_e_min * 0.8
+      plot_limit_max_e <- cbp_e_max * 1.2
+    }
+
     log_e_range <- log_e_max - log_e_min + 1
 
     if (log_e_range <= 12) {
@@ -434,12 +463,15 @@ plot_model_assessment <- function(data_file_path,
     }
 
     all_breaks_e <- 10^seq(log_e_min, log_e_max, by = 1)
-
-    plot_limit_min_e <- cbp_e_min * 0.8
-    plot_limit_max_e <- cbp_e_max * 1.2
     breaks_in_range_e <- all_breaks_e[all_breaks_e >= plot_limit_min_e & all_breaks_e <= plot_limit_max_e]
 
-    y_breaks_e <- breaks_in_range_e[seq(1, length(breaks_in_range_e), by = skip_e)]
+    if (length(breaks_in_range_e) == 0) {
+      y_breaks_e <- all_breaks_e
+    } else if (length(breaks_in_range_e) < skip_e) {
+      y_breaks_e <- breaks_in_range_e
+    } else {
+      y_breaks_e <- breaks_in_range_e[seq(1, length(breaks_in_range_e), by = skip_e)]
+    }
 
     plot3 <- ggplot() +
       geom_hline(yintercept = cbp_threshold, color = "black", linetype = "dotted", linewidth = 1, alpha = 0.3) +
@@ -495,8 +527,20 @@ plot_model_assessment <- function(data_file_path,
     cbp_combined_max <- max(c(all_model_data$CBP_test_G[all_model_data$CBP_test_G > 0],
                               all_model_data$CBP_test_E[all_model_data$CBP_test_E > 0]), na.rm = TRUE)
 
-    log_combined_min <- floor(log10(cbp_combined_min))
-    log_combined_max <- ceiling(log10(cbp_combined_max))
+    if (cbp_combined_min >= cbp_threshold) {
+      plot_limit_min_combined <- cbp_threshold
+      plot_limit_max_combined <- 1
+
+      log_combined_min <- floor(log10(cbp_threshold))
+      log_combined_max <- 0
+    } else {
+      log_combined_min <- floor(log10(cbp_combined_min))
+      log_combined_max <- ceiling(log10(cbp_combined_max))
+
+      plot_limit_min_combined <- cbp_combined_min * 0.8
+      plot_limit_max_combined <- cbp_combined_max * 1.2
+    }
+
     log_combined_range <- log_combined_max - log_combined_min + 1
 
     if (log_combined_range <= 12) {
@@ -512,13 +556,16 @@ plot_model_assessment <- function(data_file_path,
     }
 
     all_breaks_combined <- 10^seq(log_combined_min, log_combined_max, by = 1)
-
-    plot_limit_min_combined <- cbp_combined_min * 0.8
-    plot_limit_max_combined <- cbp_combined_max * 1.2
     breaks_in_range_combined <- all_breaks_combined[all_breaks_combined >= plot_limit_min_combined &
                                                       all_breaks_combined <= plot_limit_max_combined]
 
-    y_breaks_combined <- breaks_in_range_combined[seq(1, length(breaks_in_range_combined), by = skip_combined)]
+    if (length(breaks_in_range_combined) == 0) {
+      y_breaks_combined <- all_breaks_combined
+    } else if (length(breaks_in_range_combined) < skip_combined) {
+      y_breaks_combined <- breaks_in_range_combined
+    } else {
+      y_breaks_combined <- breaks_in_range_combined[seq(1, length(breaks_in_range_combined), by = skip_combined)]
+    }
 
     plot2 <- ggplot() +
       geom_hline(yintercept = cbp_threshold, color = "black", linetype = "dotted", linewidth = 1, alpha = 0.3) +
