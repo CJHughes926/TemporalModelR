@@ -43,5 +43,5 @@ Imports:
     tidyr,
     tools,
     utils,
-    viridis
+    viridis, 
     fastcpd
