@@ -436,6 +436,12 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
 
   pie_cols <- c("Always_Absent", "Always_Present", "No_Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed")
 
+  for (col in pie_cols) {
+    if (!col %in% names(pie_data)) {
+      pie_data[[col]] <- 0
+    }
+  }
+
   total_pixels_all_units <- sum(overall_summary$Total_Pixels, na.rm = TRUE)
   pie_data$radius <- sqrt(overall_summary$Total_Pixels / total_pixels_all_units) * 0.3 * pie_scale
 
@@ -445,9 +451,9 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
     scale_fill_manual(
       values = pattern_colors,
       breaks = c("Always_Absent", "Always_Present", "No_Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed"),
-      labels = c("Never Suitable", "Always Suitable", "No Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed"),
-      drop = FALSE
+      labels = c("Never Suitable", "Always Suitable", "No Pattern", "Increasing", "Decreasing", "Fluctuating", "Failed")
     ) +
+    guides(fill = guide_legend(override.aes = list(colour = NA))) +
     coord_sf() +
     labs(title = "Pattern Composition by Spatial Unit", fill = "Pattern") +
     theme_classic() +
