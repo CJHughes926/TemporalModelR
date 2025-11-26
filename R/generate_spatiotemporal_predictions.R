@@ -15,12 +15,15 @@
 #'   raster filename patterns. Must match patterns used in
 #'   \code{\link{temporally_explicit_extraction}}.
 #' @param time_cols Character vector. Time column names for temporal matching.
+#' @param time_steps Vector, data frame, or matrix. Time periods for which to
+#'   generate predictions. For single time column, can be a vector of values.
+#'   For multiple time columns, provide a data frame or matrix with columns
+#'   matching \code{time_cols}. Each row represents one time step to produce
+#'   predictions for
 #' @param output_dir Character. Directory to write prediction rasters and
 #'   evaluation tables.
 #' @param output_prefix Character. Prefix for output filenames. Default is
 #'   "predictions".
-#' @param threshold Numeric. Threshold for binary classification. Default is
-#'   0.5.
 #' @param overwrite Logical. If TRUE, overwrites existing prediction files. If
 #'   FALSE, skips files that already exist. Default is FALSE.
 #'
@@ -35,12 +38,11 @@
 #' For each cross-validation fold and time period, projects the hypervolume
 #' model onto scaled environmental rasters using
 #' \code{\link[hypervolume]{hypervolume_project}}. Generates binary predictions
-#' and calculates assessment metrics via
-#' \code{\link{model_assessment_metrics}}.
+#' and calculates year and fold spesific model assessment metrics.
 #'
 #' Output prediction rasters serve as input for
 #' \code{\link{summarize_raster_outputs}} and subsequent temporal pattern
-#' analyses.
+#' analyses in \code{\link{plot_model_assessment}}
 #'
 #' @seealso
 #' Preprocessing: \code{\link{scale_rasters}},
@@ -59,9 +61,10 @@
 #' predictions <- generate_spatiotemporal_predictions(
 #'   partition_results = "partition_results.rds",
 #'   hypervolume_results = "hypervolume_models.rds",
-#'   raster_dir = "scaled_rasters/",
-#'   variable_patterns = c("bio1" = "bio1_YEAR", "bio12" = "bio12_YEAR"),
 #'   time_cols = "YEAR",
+#'   time_steps = 2010:2020,
+#'   variable_patterns = c("bio1" = "bio1_YEAR", "bio12" = "bio12_YEAR"),
+#'   raster_dir = "scaled_rasters/",
 #'   output_dir = "predictions/"
 #' )
 #' }

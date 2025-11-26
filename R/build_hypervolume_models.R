@@ -45,7 +45,6 @@
 #' Preprocessing: \code{\link{spatiotemporal_partition}}
 #'
 #' Modeling: \code{\link{generate_spatiotemporal_predictions}},
-#' \code{\link{model_assessment_metrics}}
 #'
 #' External: \code{\link[hypervolume]{hypervolume_gaussian}},
 #' \code{\link[hypervolume]{hypervolume_svm}}

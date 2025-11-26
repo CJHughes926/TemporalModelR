@@ -1,3 +1,191 @@
+#' Generate time spesific model assessment metrics
+#' @keywords internal
+#' @importFrom hypervolume hypervolume_inclusion_test get_volume
+#' @importFrom terra extract values crs ncell vect
+#' @importFrom sf st_drop_geometry
+#' @importFrom dplyr select all_of
+#' @importFrom stats dbinom
+model_assessment_metrics <- function(hypervolume_model,
+                                     projected_raster,
+                                     test_points_current_time_step,
+                                     test_points_all_time_steps,
+                                     variable_patterns) {
+
+  require(hypervolume)
+  require(terra)
+  require(sf)
+  require(dplyr)
+
+  ### Derive model_vars from variable_patterns
+  model_vars <- names(variable_patterns)
+  clean_model_vars <- gsub("^X", "", model_vars)
+
+  ### Validate inputs
+  if (missing(hypervolume_model) || !inherits(hypervolume_model, "Hypervolume")) {
+    stop("ERROR: hypervolume_model must be a Hypervolume object")
+  }
+
+  if (missing(projected_raster) || !inherits(projected_raster, "SpatRaster")) {
+    stop("ERROR: projected_raster must be a SpatRaster object")
+  }
+
+  if (missing(test_points_current_time_step)) {
+    stop("ERROR: test_points_current_time_step is required")
+  }
+
+  if (missing(test_points_all_time_steps)) {
+    stop("ERROR: test_points_all_time_steps is required")
+  }
+
+  ### Get hypervolume name for messages
+  hv_name <- if (!is.null(hypervolume_model@Name) && hypervolume_model@Name != "untitled") {
+    hypervolume_model@Name
+  } else {
+    "Unknown"
+  }
+
+  ### Geographic space metrics (G)
+  if (inherits(test_points_current_time_step, "sf")) {
+    test_points_proj <- suppressWarnings(terra::vect(test_points_current_time_step))
+    terra::crs(test_points_proj) <- terra::crs(projected_raster)
+  } else if (inherits(test_points_current_time_step, "SpatVector")) {
+    test_points_proj <- test_points_current_time_step
+    terra::crs(test_points_proj) <- terra::crs(projected_raster)
+  } else {
+    stop("test_points_current_time_step must be an sf or SpatVector object")
+  }
+
+  n_test_points_G <- nrow(test_points_proj)
+  if (n_test_points_G == 0) {
+    warning(paste0("", hv_name, " has 0 time step-specific test points - G-space metrics will not be calculated"))
+    TP_test_G <- 0; FN_test_G <- 0; sensitivity_test_G <- NA; omission_test_G <- NA; CBP_test_G <- NA
+  } else {
+    if (n_test_points_G < 10) {
+      warning(paste0("", hv_name, " has only ", n_test_points_G,
+                     " time step-specific test points in geographic space - results may be unreliable"))
+    } else {
+      print(paste("  ", hv_name, "using", n_test_points_G, "time step-specific test points in geographic space"))
+    }
+
+    hv_projected_values <- terra::extract(projected_raster, test_points_proj)[,2]
+    hv_projected_values[is.na(hv_projected_values)] <- 0
+
+    TP_test_G <- sum(hv_projected_values == 1, na.rm = TRUE)
+    FN_test_G <- sum(hv_projected_values == 0, na.rm = TRUE)
+
+    if ((TP_test_G + FN_test_G) == 0) {
+      warning(paste0("No valid test point extractions for ", hv_name, " in geographic space"))
+      sensitivity_test_G <- NA; omission_test_G <- NA; CBP_test_G <- NA
+    } else {
+      sensitivity_test_G <- TP_test_G / (TP_test_G + FN_test_G)
+      omission_test_G <- 1 - sensitivity_test_G
+
+      total_area <- terra::ncell(projected_raster) - sum(is.na(values(projected_raster)))
+      total_suitable_area <- sum(values(projected_raster) == 1, na.rm = TRUE)
+
+      CBP_test_G <- if (total_area > 0) {
+        dbinom(TP_test_G, size = TP_test_G + FN_test_G, prob = total_suitable_area / total_area)
+      } else {
+        warning(paste0("No valid raster cells for CBP calculation in ", hv_name))
+        NA
+      }
+    }
+  }
+
+  ### Environmental space metrics (E)
+  if (inherits(test_points_all_time_steps, "sf")) {
+    test_data <- st_drop_geometry(test_points_all_time_steps)
+  } else if (inherits(test_points_all_time_steps, "SpatVector")) {
+    test_data <- as.data.frame(test_points_all_time_steps)
+  } else if (is.data.frame(test_points_all_time_steps)) {
+    test_data <- test_points_all_time_steps
+  } else {
+    stop(paste0("ERROR: test_points_all_time_steps must be sf, SpatVector, or data.frame"))
+  }
+
+  missing_vars <- clean_model_vars[!clean_model_vars %in% names(test_data)]
+  if (length(missing_vars) > 0) {
+    stop(paste0("ERROR: Missing variables in test_points_all_time_steps: ",
+                paste(missing_vars, collapse = ", "),
+                " Available: ", paste(names(test_data), collapse = ", ")))
+  }
+
+  test_env <- dplyr::select(test_data, all_of(clean_model_vars))
+  n_before <- nrow(test_env)
+  test_env <- test_env[complete.cases(test_env), , drop = FALSE]
+  n_after <- nrow(test_env)
+
+  if (n_before > n_after) {
+    warning(paste0("Removed ", n_before - n_after, " test points with missing environmental data for ", hv_name))
+  }
+
+  if (nrow(test_env) == 0) {
+    warning(paste0("No complete test points for ", hv_name, " in environmental space"))
+    TP_test_E <- 0; FN_test_E <- 0; sensitivity_test_E <- NA; omission_test_E <- NA; CBP_test_E <- NA; volume_env <- NA
+  } else {
+    if (nrow(test_env) < 5) {
+      warning(paste0("", hv_name, " has only ", nrow(test_env),
+                     " test points in environmental space - results may be unreliable"))
+    }
+
+    hv_inclusion <- suppressMessages(suppressWarnings({
+      hypervolume_inclusion_test(hypervolume_model, test_env)
+    }))
+
+    TP_test_E <- sum(hv_inclusion == TRUE)
+    FN_test_E <- sum(hv_inclusion == FALSE)
+
+    if ((TP_test_E + FN_test_E) == 0) {
+      warning(paste0("No valid inclusion tests for ", hv_name, " in environmental space"))
+      sensitivity_test_E <- NA; omission_test_E <- NA; CBP_test_E <- NA
+    } else {
+      sensitivity_test_E <- TP_test_E / (TP_test_E + FN_test_E)
+      omission_test_E <- 1 - sensitivity_test_E
+      total_area <- terra::ncell(projected_raster) - sum(is.na(values(projected_raster)))
+      total_suitable_area <- sum(values(projected_raster) == 1, na.rm = TRUE)
+      CBP_test_E <- if (total_area > 0) {
+        dbinom(TP_test_E, size = TP_test_E + FN_test_E, prob = total_suitable_area / total_area)
+      } else { NA }
+    }
+
+    tryCatch({
+      volume_env <- suppressMessages(suppressWarnings({
+        get_volume(hypervolume_model)
+      }))
+    }, error = function(e) {
+      stop(paste0("Error calculating environmental volume for ", hv_name, ": ", e$message))
+      volume_env <- NA
+    })
+  }
+
+  ### Volume metrics (G)
+  tryCatch({
+    total_cells <- terra::ncell(projected_raster) - sum(is.na(values(projected_raster)))
+    suitable_cells <- sum(values(projected_raster) == 1, na.rm = TRUE)
+    volume_geo <- if (total_cells > 0) suitable_cells / total_cells else NA
+  }, error = function(e) {
+    stop(paste0("Error calculating geographic volume for ", hv_name, ": ", e$message))
+    volume_geo <- NA
+  })
+
+  return(list(
+    G_volume = volume_geo,
+    TP_test_G = TP_test_G,
+    FN_test_G = FN_test_G,
+    sensitivity_test_G = sensitivity_test_G,
+    omission_test_G = omission_test_G,
+    CBP_test_G = CBP_test_G,
+    n_test_points_G = n_test_points_G,
+
+    E_volume = volume_env,
+    TP_test_E = TP_test_E,
+    FN_test_E = FN_test_E,
+    sensitivity_test_E = sensitivity_test_E,
+    omission_test_E = omission_test_E,
+    CBP_test_E = CBP_test_E,
+    n_test_points_E = n_after
+  ))
+}
 #' Likelihood-ratio changepoint test
 #' @keywords internal
 #' @importFrom stats glm binomial logLik pchisq coef

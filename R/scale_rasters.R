@@ -22,7 +22,8 @@
 #' @details
 #' Dynamic variables are detected when patterns contain placeholders
 #' corresponding to time_cols. Static variables are scaled once. Scaling applies
-#' z-score transformation: (value - mean) / sd. Scaled rasters are written to
+#' z-score transformation: (value - mean) / sd as was calculated during
+#' \code{\link{temporally_explicit_extraction}}. Scaled rasters are written to
 #' output_dir.
 #'
 #' Scaled rasters should use the same scaling parameters derived from species

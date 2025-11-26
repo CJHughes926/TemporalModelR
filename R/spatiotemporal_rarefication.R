@@ -22,9 +22,6 @@
 #' @param output_prefix Character. Prefix for output file names. Default is
 #'   "Pts_Database".
 #'
-#' @return Invisibly returns a list with summary information. CSV files are
-#'   written to output_dir containing rarefied occurrence data.
-#'
 #' @details
 #' The function assigns each point to a raster pixel and performs:
 #' \itemize{
