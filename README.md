@@ -2,31 +2,30 @@
 # TemporalModelR
 
 TemporalModelR is an R package for building temporally explicit species
-distribution models using hypervolume-based methods. The package
-provides a complete workflow from data preprocessing through model
-building, prediction, and temporal pattern analysis.
+distribution models. The package provides a complete workflow including
+generalized data pre- and post-processing, hypervolume-based temporally
+explicit model construction, and temporal pattern analysis.
 
 ## Overview
 
-TemporalModelR enables researchers to:
+TemporalModelR functions support researchers ability to:
 
-- **Preprocess spatial and temporal occurrence data** with
-  spatiotemporal rarefication
-- **Extract and scale environmental variables** matched to temporal
+- Preprocess spatial and temporal occurrence data with spatiotemporal
+  rarefication
+- Extract temporally aligned environmental variables to temporal
   occurrence records
-- **Build hypervolume models** using Gaussian kernel density or
-  one-class SVM methods
-- **Generate spatiotemporal predictions** with comprehensive model
-  evaluation metrics
-- **Analyze temporal patterns** in habitat suitability using changepoint
+- Build hypervolume models using Gaussian kernel density or one-class
+  SVM methods
+- Generate spatiotemporal predictions with comprehensive model
+  evaluation metrics across variable time scales
+- Analyze temporal patterns in habitat suitability using changepoint
   detection
-- **Summarize trends by spatial units** for regional conservation
+- Summarize trends by spatial units for regional conservation
   assessments
 
 ## Installation
 
-You can install the development version of TemporalModelR from
-[GitHub](https://github.com/) with:
+You can install the most updated version of TemporalModelR from GitHub:
 
 ``` r
 # install.packages("pak")
@@ -37,33 +36,264 @@ pak::pak("CJHughes926/TemporalModelR")
 
 The TemporalModelR workflow consists of three main phases:
 
-### 1. Preprocessing
+### Phase 1: Preprocessing
 
-- Align environmental rasters to a common projection and extent
-- Rarefy occurrence data to reduce spatial and temporal bias
-- Extract environmental values at occurrence locations
-- Scale environmental rasters for model training
+| Function | Description |
+|----|----|
+| `raster_align()` | Aligns environmental rasters to a common projection, extent, and resolution |
+| `spatiotemporal_rarefication()` | Rarefies occurrence data to reduce spatial and temporal bias |
+| `temporally_explicit_extraction()` | Extracts environmental values at occurrence locations matched to time of observation |
+| `scale_rasters()` | Standardizes environmental rasters using scaling parameters from occurrence data |
+| `spatiotemporal_partition()` | Partitions occurrences into spatially and temporally independent cross-validation folds |
 
-### 2. Modeling
+### Phase 2: Modeling
 
-- Partition occurrence data into spatiotemporal cross-validation folds
-- Build hypervolume models for each fold
-- Generate predictions across space and time
-- Evaluate model performance in geographic and environmental space
+| Function | Description |
+|----|----|
+| `build_hypervolume_models()` | Constructs Gaussian or SVM hypervolume models for each fold |
+| `generate_spatiotemporal_predictions()` | Projects hypervolumes across space and time |
+| `plot_model_assessment()` | Visualizes model performance metrics across time |
 
-### 3. Postprocessing
+### Phase 3: Postprocessing
 
-- Summarize predictions into consensus binary outputs
-- Identify temporal patterns (increasing, decreasing, stable,
-  fluctuating)
-- Analyze trends by spatial units (e.g., counties, states, watersheds)
+| Function | Description |
+|----|----|
+| `summarize_raster_outputs()` | Creates consensus binary predictions and temporal summaries |
+| `analyze_temporal_patterns()` | Classifies pixels into temporal trend categories using changepoint detection |
+| `analyze_trends_by_spatial_unit()` | Aggregates patterns and trends by administrative or ecological units |
 
-## Example Workflow: DC Metro Region Analysis
+## General Usage Guide
 
-This example demonstrates the complete workflow using bird occurrence
-data from the DC Metro region (1985-2023). The preprocessing and
-modeling steps are computationally intensive and are shown with
-`eval=FALSE` for documentation purposes.
+### Preprocessing Functions
+
+#### Aligning Rasters
+
+Before analysis, all environmental rasters must share the same
+projection, extent, and resolution. The `raster_align()` function
+handles this preprocessing step:
+
+``` r
+raster_align(
+  input_dir = "path/to/raw_rasters/",
+  output_dir = "path/to/aligned_rasters/",
+  reference_raster = my_reference_raster,
+  overwrite = FALSE
+)
+```
+
+#### Spatiotemporal Rarefication
+
+Traditional spatial rarefication retains one point per pixel, discarding
+temporal replicates. Spatiotemporal rarefication preserves valuable
+temporal information by retaining one point per pixel per time step:
+
+``` r
+spatiotemporal_rarefication(
+  points_sp = "occurrences.csv",
+  xcol = "longitude",
+  ycol = "latitude",
+  points_crs = 4326,
+  output_dir = "output/",
+  reference_raster = my_reference_raster,
+  time_cols = c("Year")
+)
+```
+
+#### Temporally Explicit Extraction
+
+This function extracts environmental values at each occurrence location
+using rasters that match the time of observation. Dynamic variables
+(like land cover) are matched to specific time steps (like year, month,
+or day), while static variables (like elevation) are extracted once.
+Where relevant, multiple time steps can be provided for a given variable
+(For example, Month and Year):
+
+``` r
+variable_patterns <- c(
+  "landcover" = "landcover_YEAR",    # Dynamic: matched to occurrence year
+  "temp" = "temp_MONTH_YEAR",    # Dynamic: matched to occurrence both month and year
+  "elevation" = "elevation"           # Static: extracted once
+)
+
+temporally_explicit_extraction(
+  points_sp = "rarefied_points.csv",
+  xcol = "X",
+  ycol = "Y",
+  points_crs = 4326,
+  raster_dir = "aligned_rasters/",
+  variable_patterns = variable_patterns,
+  time_cols = c("Year", "Month"),
+  output_dir = "output/",
+  output_prefix = "extracted_data"
+)
+```
+
+#### Scale Environmental Rasters
+
+Standardize all environmental rasters using the scaling parameters
+calculated from your occurrence data. This ensures that all raster
+values are on equivalent scales as they relate to your occurrence data,
+and prevents uneven contribution across variables to models:
+
+``` r
+scale_rasters(
+  input_dir = "aligned_rasters/",
+  output_dir = "scaled_rasters/",
+  scaling_params_file = "./output/extracted_data_Scaling_Parameters.csv",
+  variable_patterns = variable_patterns,
+  time_cols = c("Year", "Month"),
+  overwrite = T
+)
+```
+
+#### Spatiotemporal Partitioning
+
+Creates cross-validation folds that are spatially and/or temporally
+independent. This ensures that model evaluation reflects true predictive
+performance rather than spatial or temporal autocorrelation:
+
+``` r
+partition_results <- spatiotemporal_partition(
+  reference_shapefile_path = study_area_sf,
+  points_file_path = "./output/extracted_data_Scaled_Values.csv",
+  time_col = "Year",
+  xcol = "x",
+  ycol = "y",
+  points_crs = 4326,
+  n_spatial_folds = 2,
+  n_temporal_folds = 2,
+  max_imbalance = 0.05,
+  generate_plots = TRUE,
+  output_file = "partition_results.rds"
+)
+```
+
+### Modeling Functions
+
+#### Building Hypervolume Models
+
+Hypervolume models define the environmental niche as an n-dimensional
+volume in environmental space. The package supports both Gaussian kernel
+density estimation and one-class SVM methods:
+
+``` r
+hv_results <- build_hypervolume_models(
+  partition_results = "partition_results.rds",
+  model_vars = c("var1", "var2", "var3"),
+  method = "gaussian",
+  output_dir = "hypervolumes/",
+  hypervolume_params = list(
+    quantile.requested = 0.95,
+    quantile.requested.type = "probability"
+  ),
+  create_plot = TRUE,
+  overwrite = FALSE
+)
+```
+
+#### Generating Predictions
+
+Projects the hypervolume models onto geographic space for each time
+step, producing both continuous suitability surfaces and model
+assessment metrics. Supports generation across time step combinations
+(like Month and Year), but assumes variable patterns missing time steps
+are static across those time steps. For example, with these variable
+patterns
+
+variable_patterns \<- c( “landcover” = “landcover_YEAR”, “temp” =
+“temp_MONTH_YEAR”, “elevation” = “elevation” )
+
+Elevation is assumed to be static across all time steps (months and
+years), land cover is assumed to only vary across years, but remains
+static across all months within a given year, and temp is assumed to
+vary dynamically across month/year combinations.
+
+``` r
+time_steps <- expand.grid(Year = 1990:2020, Month = 1:12)
+
+predictions <- generate_spatiotemporal_predictions(
+  partition_results = "partition_results.rds",
+  hypervolume_results = "hypervolumes/all_hypervolumes_gaussian.rds",
+  time_cols = c("Year", "Month"),
+  time_steps = time_steps,
+  variable_patterns = variable_patterns,
+  raster_dir = "scaled_rasters/",
+  output_dir = "predictions/",
+  overwrite = FALSE
+)
+```
+
+### Postprocessing Functions
+
+#### Summarizing Predictions
+
+Creates consensus predictions (where all folds agree) and calculates
+proportion of years where each pixel is returned as suitable, ‘pixel
+stability’:
+
+``` r
+summary_results <- summarize_raster_outputs(
+  predictions_dir = "predictions/",
+  output_dir = "summaries/",
+  overwrite = TRUE
+)
+```
+
+#### Analyzing Temporal Patterns
+
+Uses changepoint detection to classify each pixel’s temporal trajectory
+into categories: never suitable, always suitable, stable, increasing,
+decreasing, or fluctuating.
+
+Assumes values change consecutively (supports annual or decadal changes
+that are expected to have linear change, but should not be used with
+cyclical changes like monthy predictions, unless analyzing one month
+across years) AND will fail if time series is not long enough to detect
+substantial changes over time (usually ~15 time steps minimum).
+
+For large data sets this function may take a long time.
+
+``` r
+pattern_results <- analyze_temporal_patterns(
+  binary_stack = summary_results$binary_stack,
+  summary_raster = summary_results$summary_raster,
+  time_steps = 1990:2020,
+  fastcpd_params = list(method = "BIC"),
+  output_dir = "temporal_patterns/",
+  spatial_autocorrelation = TRUE,
+  show_progress = TRUE,
+  overwrite = TRUE
+)
+```
+
+#### Summarizing by Spatial Units
+
+Aggregates temporal patterns and trends across relevant administrative
+or ecological boundaries (States, Watersheds, Countries, etc.):
+
+``` r
+spatial_results <- analyze_trends_by_spatial_unit(
+  shapefile_path = admin_boundaries,
+  name_field = "NAME",
+  binary_stack = summary_results$binary_stack,
+  pattern_raster = "temporal_patterns/pattern_raster.tif",
+  year_decrease_raster = "temporal_patterns/year_first_decrease.tif",
+  year_increase_raster = "temporal_patterns/year_first_increase.tif",
+  output_dir = "spatial_analysis/",
+  time_steps = 1990:2020,
+  pie_scale = 0.5
+)
+```
+
+## Example: Eastern Meadowlark Habitat Analysis
+
+This example demonstrates the complete TemporalModelR workflow using
+Eastern Meadowlark (*Sturnella magna*) occurrence data from the DC Metro
+region (1995-2022) and is a simplified version of the analysis avalable
+in Hughes et al. 2026 (in prep). Data to run this analysis is available
+in the supplementary material of that publication.
+
+### Setup
 
 ``` r
 library(TemporalModelR)
@@ -72,153 +302,151 @@ library(sf)
 library(raster)
 ```
 
-### Phase 1: Preprocessing
+### Prepare Study Area
 
-#### Step 1: Prepare Reference Raster and Study Area
-
-Create a reference raster for your study area:
+For this analysis, we focus on Loudoun County, VA and Montgomery County,
+MD, areas that have experienced substantial land use change in recent
+decades.
 
 ``` r
-counties_path <- "./DC_Metro/Shapefiles/DCMetro_Counties.shp"
-reference_raster <- "./DC_Metro/reverse_water_mask_DCMetro.tif"
+my_reference_raster <- "./reverse_water_mask_DCMetro.tif"
+counties_path <- "./Shapefiles/DCMetro_Counties.shp"
 
-r <- raster(reference_raster)
+r <- raster(my_reference_raster)
 counties <- st_read(counties_path)
 
 loudoun <- counties[counties$NAMELSAD %in% c("Loudoun County", "Montgomery County"), ]
-
-if (st_crs(loudoun) != crs(r)) {
-  loudoun <- st_transform(loudoun, crs(r))
-}
+loudoun <- st_transform(loudoun, crs(r))
 
 r_loudoun <- crop(r, loudoun)
 r_loudoun <- mask(r_loudoun, loudoun)
 
-Loudoun_Montgomery <- aggregate(r_loudoun, fact = 9, fun = mean, na.rm = TRUE)
+### Aggregate to coarser resolution for faster processing in this example
+r_loudoun_agg <- aggregate(r_loudoun, fact = 9, fun = mean, na.rm = TRUE)
+plot(r_loudoun_agg)
 ```
 
-#### Step 2: Align Environmental Rasters
+We generate a reference raster of the study area at a course resolution
+for use in this example.
 
-Align all environmental rasters to match your reference raster’s
-projection, extent, and resolution:
+Study area: Loudoun County, VA and Montgomery County, MD
+
+<img src="man/figures/README-study_area.png" width="80%" />
+
+### Phase 1: Preprocessing
+
+#### Step 1: Align Environmental Rasters
+
+Make sure all raters are aligned and at the relevant scale of our study
+area.
 
 ``` r
 raster_align(
-  input_dir = "G:/My Drive/VS_Rasters/DC_Metro/",
-  output_dir = "G:/My Drive/VS_Rasters/DC_Metro/Masked_Projected_Variables_Simple/",
-  reference_raster = Loudoun_Montgomery,
-  overwrite = F
+  input_dir = "./Loudoun_Montgomery_Rasters_RAW/",
+  output_dir = "./Masked_Projected_Variables/",
+  reference_raster = r_loudoun_agg,
+  overwrite = FALSE
 )
 ```
 
-#### Step 3: Rarefy Occurrence Data
+#### Step 2: Rarefy Occurrence Data
 
-Reduce spatial and temporal bias in your occurrence data:
+Rarefying our occurance data by space and time retains more points than
+just space alone.
 
 ``` r
 spatiotemporal_rarefication(
-  points_sp = "./DC_Metro/Occurrence_Data/simple_occupied_DC_Metro_AOU_5010.csv",
+  points_sp = "./Pointfiles/simple_occupied_DC_Metro_AOU_5010.csv",
   xcol = "LONGDD",
   ycol = "LATDD",
   points_crs = 4326,
-  output_dir = "./DC_Metro/Occurrence_Data/",
-  reference_raster = Loudoun_Montgomery,
-  time_cols = "Year"
+  output_dir = "./Pointfiles/",
+  reference_raster = r_loudoun_agg,
+  time_cols = c("Year")
 )
 ```
 
-This creates `Pts_Database_OnePerPixPerTimeStep.csv` with
-spatiotemporally rarefied occurrences.
+#### Step 3: Extract Environmental Values
 
-#### Step 4: Extract Environmental Values
-
-Extract environmental values at occurrence locations, calculating
-scaling parameters:
+We use three land cover variables as simple proxies for meadowlark
+habitat requirements: developed land, open land, and forest cover.
 
 ``` r
-variable_patterns <- c(
-  "Developed_Percentage2" = "Developed_Percentage2_YEAR",
-  "Open_Percentage2" = "Open_Percentage2_YEAR",
-  "Forest_Percentage2" = "Forest_Percentage2_YEAR",
-  "elevation" = "elevation"
+my_variable_patterns <- c(
+  "Developed_Percentage" = "Developed_Percentage_YEAR",
+  "Open_Percentage" = "Open_Percentage_YEAR",
+  "Forest_Percentage" = "Forest_Percentage_YEAR"
 )
 
 temporally_explicit_extraction(
-  points_sp = "./DC_Metro/Occurrence_Data/Pts_Database_OnePerPixPerTimeStep.csv",
+  points_sp = "./Pointfiles/Pts_Database_OnePerPixPerTimeStep.csv",
   xcol = "X",
   ycol = "Y",
-  points_crs = 4326,
-  raster_dir = "G:/My Drive/VS_Rasters/DC_Metro/Masked_Projected_Variables_Simple/",
-  variable_patterns = variable_patterns,
+  points_crs = 4326,  
+  raster_dir = "./Masked_Projected_Variables/",
+  variable_patterns = my_variable_patterns,
   time_cols = "Year",
-  output_dir = "./DC_Metro/Occurrence_Data/",
+  output_dir = "./Pointfiles/",
   output_prefix = "temp_explicit_df"
 )
 ```
 
-The function matches land cover rasters to occurrence years (e.g.,
-`Developed_Percentage2_1990.tif` for 1990 occurrences), while static
-variables like elevation are extracted once.
+#### Step 4: Scale Rasters
 
-#### Step 5: Scale Environmental Rasters
-
-Standardize all environmental rasters using the scaling parameters from
-your occurrence data:
+Scale all environmental rasters to ensure potential variable
+contribution is even across each environmental variable
 
 ``` r
 scale_rasters(
-  input_dir = "G:/My Drive/VS_Rasters/DC_Metro/Masked_Projected_Variables_Simple/",
-  output_dir = "G:/My Drive/VS_Rasters/DC_Metro/Scaled_simple/",
-  scaling_params_file = "./DC_Metro/Occurrence_Data/temp_explicit_df_Scaling_Parameters.csv",
-  variable_patterns = variable_patterns,
-  time_cols = "Year",
-  overwrite = T
+  input_dir = "./Masked_Projected_Variables/",
+  output_dir = "./Scaled_Variables/",
+  scaling_params_file = "./Pointfiles/temp_explicit_df_Scaling_Parameters.csv",
+  variable_patterns = my_variable_patterns,
+  time_cols = c("Year"),
+  overwrite = FALSE
 )
 ```
 
-### Phase 2: Modeling
+#### Step 5: Partition Data
 
-#### Step 6: Create Spatiotemporal Cross-Validation Folds
-
-Partition occurrences into spatially and temporally independent folds:
+We create four folds: two spatially explicit and two temporally
+explicit. This ensures our model evaluation accounts for both spatial
+and temporal structure in the data.
 
 ``` r
-partition_results <- spatiotemporal_partition(
+spatiotemporal_partition(
   reference_shapefile_path = st_geometry(loudoun),
-  points_file_path = "./DC_Metro/Occurrence_Data/temp_explicit_df_Scaled_Values.csv",
+  points_file_path = "./Pointfiles/temp_explicit_df_Scaled_Values.csv",
   time_col = "Year",
   xcol = "x",
   ycol = "y",
   points_crs = 4326,
-  total_folds = 4,
-  n_temporal = 2,
-  n_spatial = 8,
-  blocking_priority = "balanced",
+  n_spatial_folds = 2,
+  n_temporal_folds = 2,
   max_imbalance = 0.025,
   generate_plots = TRUE,
-  output_file = "./DC_Metro/Model_Results/partitioning_results_spatial.rds"
+  output_file = "./Pointfiles/partitioning_results_spatial.rds"
 )
 ```
 
-<div class="figure">
+Spatiotemporal partitioning showing fold distribution across space and
+time. Points are colored by fold assignment, with shapes indicating
+temporal blocks. Here, folds 1 and 2 are spatially explicit folds, not
+overlapping with each other in space, and folds 3 and 4 are temporally
+explicit folds, not overlapping with eachother in time.
 
-<img src="man/figures/README-partition_plot.png" alt="Spatiotemporal partition showing fold distribution across space and time" width="100%" />
-<p class="caption">
-Spatiotemporal partition showing fold distribution across space and time
-</p>
+<img src="man/figures/README-partition_plot.png" width="100%" />
 
-</div>
+### Phase 2: Modeling
 
-#### Step 7: Build Hypervolume Models
-
-Construct Gaussian hypervolumes for each cross-validation fold:
+#### Step 6: Build Hypervolume Models
 
 ``` r
-hv_results <- build_hypervolume_models(
-  partition_results = "./DC_Metro/Model_Results/partitioning_results_spatial.rds",
-  model_vars = c("Developed_Percentage2", "Open_Percentage2", "Forest_Percentage2"),
+build_hypervolume_models(
+  partition_results = "./Pointfiles/partitioning_results_spatial.rds",
+  model_vars = c("Developed_Percentage", "Open_Percentage", "Forest_Percentage"),
   method = "gaussian",
-  output_dir = "./DC_Metro/Model_Results/Hypervolumes",
+  output_dir = "./Results/Hypervolume_Gaussian_simple/",
   hypervolume_params = list(
     quantile.requested = 0.95,
     quantile.requested.type = "probability"
@@ -228,233 +456,171 @@ hv_results <- build_hypervolume_models(
 )
 ```
 
-<div class="figure">
+Hypervolume comparison across cross-validation folds. High overlap
+between folds indicates consistent niche estimation across training sets
 
-<img src="man/figures/README-hypervolume_comparison.png" alt="Hypervolume comparison across cross-validation folds" width="100%" />
-<p class="caption">
-Hypervolume comparison across cross-validation folds
-</p>
+<img src="man/figures/README-hypervolume_comparison.png" width="100%" />
 
-</div>
-
-#### Step 8: Generate Spatiotemporal Predictions
-
-Project hypervolumes across all years (1986-2023) to create habitat
-suitability predictions:
+#### Step 7: Generate Predictions
 
 ``` r
-time_steps <- 1986:2023
-
-variable_patterns <- c(
-  "Developed_Percentage2" = "Developed_Percentage2_YEAR",
-  "Open_Percentage2" = "Open_Percentage2_YEAR",
-  "Forest_Percentage2" = "Forest_Percentage2_YEAR"
+my_variable_patterns <- c(
+  "Developed_Percentage" = "Developed_Percentage_YEAR",
+  "Open_Percentage" = "Open_Percentage_YEAR",
+  "Forest_Percentage" = "Forest_Percentage_YEAR"
 )
 
-predictions <- generate_spatiotemporal_predictions(
-  partition_results = "./DC_Metro/Model_Results/partitioning_results_spatial.rds",
-  hypervolume_results = "./DC_Metro/Model_Results/Hypervolumes/all_hypervolumes_gaussian.rds",
+time_steps <- 1995:2022
+
+generate_spatiotemporal_predictions(
+  partition_results = "./Pointfiles/partitioning_results_spatial.rds",
+  hypervolume_results = "./Results/Hypervolume_Gaussian_simple/all_hypervolumes_gaussian.rds",
   time_col = "Year",
   time_steps = time_steps,
-  variable_patterns = variable_patterns,
-  raster_dir = "G:/My Drive/VS_Rasters/DC_Metro/Scaled_simple/",
-  output_dir = "./DC_Metro/Model_Results/Predictions/",
+  variable_patterns = my_variable_patterns,
+  raster_dir = "./Scaled_Variables/",
+  output_dir = "./Results/Prediction_Rasters/",
   overwrite = FALSE
 )
 ```
 
-#### Step 9: Visualize Model Performance
+#### Step 8: Assess Model Performance
 
-Examine model evaluation metrics across the 38-year time series:
+We assess model robustness both in G-space and E-space
 
 ``` r
 plot_model_assessment(
-  data_file_path = "./DC_Metro/Model_Results/Predictions/Model_Assessment_Metrics.csv",
+  data_file_path = "./Results/Prediction_Rasters/Model_Assessment_Metrics.csv",
   time_column = "Year",
   separate_cbp = TRUE,
   cbp_threshold = 0.05
 )
 ```
 
-The `plot_model_assessment()` function generates diagnostic plots
-showing model performance over time:
+Hypervolume size and sensitivity metrics over time. Dual y-axes show
+both the proportion of study area predicted as suitable and model
+sensitivity in G- and E-space.
 
-<div class="figure">
+<img src="man/figures/README-model_assessment_volume_sensitivity.png" width="100%" />
 
-<img src="man/figures/README-model_assessment_volume_sensitivity.png" alt="Hypervolume size and sensitivity metrics over time" width="100%" />
-<p class="caption">
-Hypervolume size and sensitivity metrics over time
-</p>
+Cumulative Binomial Probability in Geographic Space. Values below the
+threshold (dashed line) indicate model predictions significantly better
+than random. Beacuse this example works with a small subset of our data,
+its predictive preformance is not better than random most years when
+assessed with time-spesific metrics in g-space.
 
-</div>
+<img src="man/figures/README-model_assessment_cbp_gspace.png" width="100%" />
 
-<div class="figure">
+Cumulative Binomial Probability in Environmental Space. E-space
+assessment provides time-independent model evaluation. When evaluating
+with time independent metrics, the model results are better than random
+across all years.
 
-<img src="man/figures/README-model_assessment_cbp_gspace.png" alt="Continuous Binomial Probability in Geographic Space (G-space)" width="100%" />
-<p class="caption">
-Continuous Binomial Probability in Geographic Space (G-space)
-</p>
+<img src="man/figures/README-model_assessment_cbp_espace.png" width="100%" />
 
-</div>
-
-<div class="figure">
-
-<img src="man/figures/README-model_assessment_cbp_espace.png" alt="Continuous Binomial Probability in Environmental Space (E-space)" width="100%" />
-<p class="caption">
-Continuous Binomial Probability in Environmental Space (E-space)
-</p>
-
-</div>
+In this example, we’lll assume these metrics are satisfactory to move
+onto post processing, but we could also run additional models until one
+preforms satisfactorily for the purposes of our study.
 
 ### Phase 3: Postprocessing
 
-#### Step 10: Create Consensus Predictions
+#### Step 9: Create Consensus Predictions
 
-Summarize predictions across all models to identify areas of agreement:
+Summarize where all folds of our model agree on suitability
 
 ``` r
-summary_results <- summarize_raster_outputs(
-  predictions_dir = "./DC_Metro/Model_Results/Predictions/",
-  output_dir = "./DC_Metro/Model_Results/Summary",
+Binary_Results <- summarize_raster_outputs(
+  predictions_dir = "./Results/Prediction_Rasters/",
+  output_dir = "./Results/Binary_Summaries_simple/",
   overwrite = TRUE
 )
+
+plot(Binary_Results$binary_stack)
 ```
 
-<div class="figure">
+Here we see annual predictive rasters generated above:
 
-<img src="man/figures/README-summary_raster.png" alt="Summary raster showing proportion of years with suitable habitat (1986-2023)" width="80%" />
-<p class="caption">
-Summary raster showing proportion of years with suitable habitat
-(1986-2023)
-</p>
+<img src="man/figures/README-binary_stack.png" width="80%" />
 
-</div>
+Along with an assessment of stability across time. The resulting figure
+shows the proportion of years each pixel was predicted as suitable
+habitat (1995-2022). Darker colors indicate more consistently suitable
+areas.
 
-#### Step 11: Identify Temporal Patterns
+<img src="man/figures/README-summary_raster.png" width="80%" />
 
-Apply changepoint detection to classify pixels into temporal trend
-categories:
+#### Step 10: Identify Temporal Patterns
+
+Assess the tragectory of each pixels predictions across time to classify
+pixels as stable suitable, stable unsuitable, increasing or decreasing
+in suitability, or noisy.
 
 ``` r
-time_steps <- 1986:2023
+time_steps <- 1995:2022
 
-pattern_results <- analyze_temporal_patterns(
-  binary_stack = summary_results$binary_stack,
-  summary_raster = summary_results$summary_raster,
+results <- analyze_temporal_patterns(
+  binary_stack = Binary_Results$binary_stack,
+  summary_raster = Binary_Results$summary_raster,
   time_steps = time_steps,
   fastcpd_params = list(method = "BIC"),
-  output_dir = "./DC_Metro/Model_Results/Temporal_Patterns",
+  output_dir = "./Results/Patterns/",
   spatial_autocorrelation = TRUE,
-  n_tiles_x = 2,
-  n_tiles_y = 2,
   show_progress = TRUE,
   estimate_time = TRUE,
   overwrite = TRUE
 )
 ```
 
-<div class="figure">
+Temporal pattern classification showing habitat trends.
 
-<img src="man/figures/README-pattern_classification.png" alt="Temporal pattern classification showing habitat trends across the DC Metro region" width="80%" />
-<p class="caption">
-Temporal pattern classification showing habitat trends across the DC
-Metro region
-</p>
+<img src="man/figures/README-pattern_classification.png" width="80%" />
 
-</div>
+#### Step 11: Summarize by County
 
-The classification identifies seven pattern types:
-
-- **Never Suitable** (dark red): Areas that remained unsuitable
-  throughout
-- **Always Suitable** (dark green): Persistently suitable areas
-- **No Pattern** (gray): Areas with stable conditions
-- **Increasing** (light green): Areas gaining suitable habitat
-- **Decreasing** (light red): Areas experiencing habitat loss
-- **Fluctuating** (purple): Areas with complex temporal dynamics
-- **No Data** (yellow): Areas outside the study region or lacking data
-
-#### Step 12: Summarize by County
-
-Aggregate temporal patterns and trends for administrative units:
+Asses coarser scale patterns of habitat suitbaility across time and
+stability. This tool gives us more general summary of where and when
+habitat is most abundant, and where and when losses or gains occur.
 
 ``` r
+counties_sf <- sf::st_as_sf(loudoun)
+
 analyze_trends_by_spatial_unit(
-  shapefile_path = st_as_sf(loudoun),
+  shapefile_path = counties_sf,
   name_field = "NAMELSAD",
-  binary_stack = summary_results$binary_stack,
-  pattern_raster = "./DC_Metro/Model_Results/Temporal_Patterns/pattern_raster_1986_2023.tif",
-  year_decrease_raster = "./DC_Metro/Model_Results/Temporal_Patterns/year_first_decrease_1986_2023.tif",
-  year_increase_raster = "./DC_Metro/Model_Results/Temporal_Patterns/year_first_increase_1986_2023.tif",
-  output_dir = "./DC_Metro/Model_Results/Spatial_Analysis",
+  binary_stack = Binary_Results$binary_stack,
+  pattern_raster = "./Results/Patterns/pattern_raster_1995_2022.tif",
+  year_decrease_raster = "./Results/Patterns/year_first_decrease_1995_2022.tif",
+  year_increase_raster = "./Results/Patterns/year_first_increase_1995_2022.tif",
+  output_dir = "./Results/Spatial_Unit_Analysis/",
   time_steps = time_steps,
-  pie_scale = 0.5
+  pie_scale = 0.45
 )
 ```
 
-The `analyze_trends_by_spatial_unit()` function generates comprehensive
-spatial summaries:
+We see Loudoun county has a higher proportion of area that is suitable
+during at least one time step, but also has a higher proportion of
+pixels declining in suitability compared to Montgomery county.
 
-<div class="figure">
+<img src="man/figures/README-county_pattern_composition.png" width="100%" />
 
-<img src="man/figures/README-county_pattern_composition.png" alt="Pattern composition by county with pie charts showing temporal trend distributions" width="100%" />
-<p class="caption">
-Pattern composition by county with pie charts showing temporal trend
-distributions
-</p>
+Visualizing both counties available habitat across time shows declines
+in both counties.
 
-</div>
+<img src="man/figures/README-county_habitat_timeseries.png" width="100%" />
 
-<div class="figure">
+Another visualization pinpoints exactly where and when declines and
+inclines in suitability occur, showing that in both counties the largest
+annual declines occur primarily in the 2010’s.
 
-<img src="man/figures/README-county_habitat_timeseries.png" alt="Habitat availability time series by county (1986-2023)" width="100%" />
-<p class="caption">
-Habitat availability time series by county (1986-2023)
-</p>
-
-</div>
-
-<div class="figure">
-
-<img src="man/figures/README-county_gains_losses.png" alt="Annual habitat gains and losses across both counties" width="100%" />
-<p class="caption">
-Annual habitat gains and losses across both counties
-</p>
-
-</div>
-
-<div class="figure">
-
-<img src="man/figures/README-county_change_by_unit.png" alt="Gains and losses by county over time" width="100%" />
-<p class="caption">
-Gains and losses by county over time
-</p>
-
-</div>
-
-<div class="figure">
-
-<img src="man/figures/README-county_total_change.png" alt="Total habitat change by county across the entire study period" width="100%" />
-<p class="caption">
-Total habitat change by county across the entire study period
-</p>
-
-</div>
-
-<div class="figure">
-
-<img src="man/figures/README-county_faceted_timeline.png" alt="Faceted timeline showing temporal trends within each county" width="100%" />
-<p class="caption">
-Faceted timeline showing temporal trends within each county
-</p>
-
-</div>
+<img src="man/figures/README-county_faceted_timeline.png" width="100%" />
 
 ## Citation
 
 If you use TemporalModelR in your research, please cite:
 
-\[Citation information to be added\]
+Hughes, C., Castaneda-Guzman, M., & Escobar, L.E. (2025).
+TemporalModelR: A tool for temporally explicit species distribution
+modeling. \[Journal information to be added\]
 
 ## Getting Help
 
@@ -473,10 +639,5 @@ TemporalModelR builds on several excellent packages:
 
 - [hypervolume](https://cran.r-project.org/package=hypervolume) for
   niche modeling
-- [terra](https://cran.r-project.org/package=terra) for spatial data
-  processing
-- [sf](https://cran.r-project.org/package=sf) for vector spatial data
 - [fastcpd](https://cran.r-project.org/package=fastcpd) for changepoint
   detection
-- [exactextractr](https://cran.r-project.org/package=exactextractr) for
-  spatial aggregation

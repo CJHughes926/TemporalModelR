@@ -69,17 +69,26 @@ A list containing:
 \description{
 Preprocesses species occurrence data by partitioning it into spatially and
 temporally structured folds for cross-validation. Supports creation of
-balanced folds, spatial-only, temporal-only, or spatiotemporal folds.
+balanced folds, spatial-only folds, and temporal-only folds.
 Generates spatial blocks using k-means clustering and assigns points to
 folds according to user-defined strategies.
+Works better with smaller numbers of folds and may have difficulties creating
+balanced folds for large numbers of groups. or where sample sizes are very
+small.
 }
 \details{
 The function partitions data into folds using either a balanced approach
 (simultaneously optimizing spatial and temporal representation) or separate
-spatial/temporal explicit folds. Spatial blocks are generated with k-means
+spatial/temporal explicit folds.
+
+Spatial blocks are generated with k-means
 clustering and visualized using Voronoi tessellation. Temporal blocks are created based on
-the \code{time_col}. Balanced folds attempt to distribute points evenly across
-folds while enforcing spatial and temporal structure.
+the \code{time_col}.
+
+Spatial folds partition off spatial areas that do not overlap with other spatial folds for
+comparison, temporal folds partition off time periods that dont overlap with other temporal
+folds. Balanced folds attempt to distribute points evenly across folds while enforcing spatial
+and temporal structure.
 
 Partitioned datasets are suitable for cross-validation in modeling workflows,
 ensuring spatial and temporal independence between folds.

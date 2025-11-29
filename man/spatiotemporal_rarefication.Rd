@@ -41,10 +41,6 @@ when coordinates are supplied in tabular form.}
 \item{output_prefix}{Character. Prefix for output file names. Default is
 "Pts_Database".}
 }
-\value{
-Invisibly returns a list with summary information. CSV files are
-  written to output_dir containing rarefied occurrence data.
-}
 \description{
 Preprocessing function that rarefies species occurrence data to one point per
 raster pixel, optionally accounting for temporal components. Reduces sampling

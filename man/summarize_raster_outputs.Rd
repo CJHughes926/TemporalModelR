@@ -36,14 +36,14 @@ A list containing:
 Postprocessing function that synthesizes multiple prediction rasters into
 binary consensus predictions and temporal summary statistics. Generates
 consensus classifications based on agreement among models and calculates
-habitat suitability persistence.
+for each pixel the percentage of years with consensus suitable habitat.
 }
 \details{
 For each pixel across all predictions, calculates:
 \itemize{
   \item Binary consensus: pixel classified as suitable if majority of models
     agree
-  \item Temporal persistence: proportion of time periods during study where
+  \item Temporal stability: proportion of time periods during study where
     consensus predicts suitability
 }
 

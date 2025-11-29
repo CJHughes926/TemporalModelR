@@ -24,23 +24,24 @@ analyze_temporal_patterns(
 raster layers across time, or path to directory containing binary rasters.
 Typically from \code{\link{summarize_raster_outputs}}.}
 
-\item{summary_raster}{RasterLayer. Per-pixel summary statistic (e.g., mean
-suitability across time). From \code{\link{summarize_raster_outputs}}.}
+\item{summary_raster}{RasterLayer. Per-pixel proportion of time periods where
+a pixel is suitbale. From \code{\link{summarize_raster_outputs}}.}
 
 \item{time_steps}{Integer vector. Time labels corresponding to raster layers
 (same length as number of layers).}
 
 \item{fastcpd_params}{List. Named list of parameters passed to fastcpd
-changepoint detection function. Default is empty list.}
+changepoint detection function. Default is empty list. Supports perameterization
+from \code{\link[fastcpd_binomial]{fastcpd_binomial}}}
 
 \item{output_dir}{Character. Output directory for pattern rasters. Default is
 "output".}
 
 \item{n_tiles_x}{Integer. Number of tiles in x direction for parallel
-processing. Default is 1.}
+processing. Default is 1. Use to prevent memory errors for large rasters.}
 
 \item{n_tiles_y}{Integer. Number of tiles in y direction for parallel
-processing. Default is 1.}
+processing. Default is 1. Use to prevent memory errors for large rasters.}
 
 \item{alpha}{Numeric. Significance level for changepoint detection. Default
 is 0.05.}
@@ -62,20 +63,20 @@ FALSE, skips files that already exist. Default is FALSE.}
 \value{
 A list containing:
 \itemize{
-  \item pattern: RasterLayer classifying pixels as "Never Suitable", "Always
-    Suitable", "No Pattern", "Increasing Suitability", "Decreasing
-    Suitability", or "Fluctuating"
+  \item pattern: RasterLayer classifying pixels as 1-7, corrosponding to the values:
+  "Never Suitable", "Always Suitable", "No Pattern", "Increasing Suitability",
+  "Decreasing Suitability", or "Fluctuating"
   \item time_decrease: RasterLayer showing time period of first significant
-    decrease (for decreasing pixels)
+    decrease (for all decreasing pixels)
   \item time_increase: RasterLayer showing time period of first significant
-    increase (for increasing pixels)
+    increase (for all increasing pixels)
 }
 }
 \description{
 Postprocessing function that applies changepoint detection methods to
 identify temporal trends in habitat suitability across consecutive
-predictions. Classifies pixels into pattern categories and identifies time
-periods of significant change.
+predictions. Classifies pixels as stable, increasing in quality, or
+decreasing in quality, and identifies time periods of significant change.
 }
 \details{
 Applies changepoint detection using fastcpd to identify significant temporal
@@ -84,7 +85,11 @@ autocorrelation when spatial_autocorrelation is TRUE. The fastcpd_params list
 allows customization of the changepoint detection algorithm.
 
 Pattern classifications enable identification of expanding, contracting, or
-stable habitat distributions over time.
+stable habitat distributions over time or site level assessments of directional
+change in habitat quality.
+
+Classification code assumes consecutive and annual rasters. Time periods
+shorter than ~15 time steps may be too short to classify increases or decreases.
 }
 \examples{
 \dontrun{

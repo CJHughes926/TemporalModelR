@@ -24,6 +24,12 @@ generate_spatiotemporal_predictions(
 
 \item{time_cols}{Character vector. Time column names for temporal matching.}
 
+\item{time_steps}{Vector, data frame, or matrix. Time periods for which to
+generate predictions. For single time column, can be a vector of values.
+For multiple time columns, provide a data frame or matrix with columns
+matching \code{time_cols}. Each row represents one time step to produce
+predictions for}
+
 \item{variable_patterns}{Named character vector mapping variable names to
 raster filename patterns. Must match patterns used in
 \code{\link{temporally_explicit_extraction}}.}
@@ -39,9 +45,6 @@ FALSE, skips files that already exist. Default is FALSE.}
 
 \item{output_prefix}{Character. Prefix for output filenames. Default is
 "predictions".}
-
-\item{threshold}{Numeric. Threshold for binary classification. Default is
-0.5.}
 }
 \value{
 Invisibly returns a list containing:
@@ -61,21 +64,21 @@ evaluation metrics.
 For each cross-validation fold and time period, projects the hypervolume
 model onto scaled environmental rasters using
 \code{\link[hypervolume]{hypervolume_project}}. Generates binary predictions
-and calculates assessment metrics via
-\code{\link{model_assessment_metrics}}.
+and calculates year and fold spesific model assessment metrics.
 
 Output prediction rasters serve as input for
 \code{\link{summarize_raster_outputs}} and subsequent temporal pattern
-analyses.
+analyses in \code{\link{plot_model_assessment}}
 }
 \examples{
 \dontrun{
 predictions <- generate_spatiotemporal_predictions(
   partition_results = "partition_results.rds",
   hypervolume_results = "hypervolume_models.rds",
-  raster_dir = "scaled_rasters/",
-  variable_patterns = c("bio1" = "bio1_YEAR", "bio12" = "bio12_YEAR"),
   time_cols = "YEAR",
+  time_steps = 2010:2020,
+  variable_patterns = c("bio1" = "bio1_YEAR", "bio12" = "bio12_YEAR"),
+  raster_dir = "scaled_rasters/",
   output_dir = "predictions/"
 )
 }
