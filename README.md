@@ -1,4 +1,9 @@
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 # TemporalModelR
 
 TemporalModelR is an R package for building temporally explicit species
