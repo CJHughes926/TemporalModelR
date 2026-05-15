@@ -2,97 +2,163 @@
 % Please edit documentation in R/generate_spatiotemporal_predictions.R
 \name{generate_spatiotemporal_predictions}
 \alias{generate_spatiotemporal_predictions}
-\title{Generate Spatiotemporal Predictions from Hypervolume Models}
+\title{Generate Spatiotemporal Predictions from Temporal Models}
 \usage{
 generate_spatiotemporal_predictions(
-  partition_results,
-  hypervolume_results,
+  partition_result,
+  model_result,
+  pseudoabsence_result = NULL,
+  raster_dir,
+  variable_patterns,
   time_cols,
   time_steps,
-  variable_patterns,
-  raster_dir,
-  output_dir = "./Predictions",
-  overwrite = FALSE
+  output_dir = file.path(tempdir(), "Predictions"),
+  overwrite = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{partition_results}{List or character. Output from
-\code{\link{spatiotemporal_partition}} or path to .rds file.}
+\item{partition_result}{List or character. Output from
+\code{\link{spatiotemporal_partition}} or path to an \code{.rds}
+file containing that output.}
 
-\item{hypervolume_results}{List or character. Output from
-\code{\link{build_hypervolume_models}} or path to .rds file.}
+\item{model_result}{List or character. Output from any of
+\code{\link{build_temporal_hv}}, \code{\link{build_temporal_glm}},
+\code{\link{build_temporal_gam}}, or \code{\link{build_temporal_rf}}, or
+a path to an \code{.rds} file. Model type is detected automatically from
+the \code{model_type} field.}
 
-\item{time_cols}{Character vector. Time column names for temporal matching.}
+\item{pseudoabsence_result}{List, character, or \code{NULL}. Optional.
+Output from \code{\link{generate_absences}} or path to an
+\code{.rds} file. When supplied for presence/absence models (GLM, GAM, RF),
+the held-out pseudoabsence test points for each fold are filtered to the
+current time step and used alongside presence test points to compute
+per-timestep TN, FP, Specificity, and TSS. These columns are added to the
+timestep metrics table when pseudoabsences are available. Ignored for
+hypervolume models. Default is \code{NULL}.}
 
-\item{time_steps}{Vector, data frame, or matrix. Time periods for which to
-generate predictions. For single time column, can be a vector of values.
-For multiple time columns, provide a data frame or matrix with columns
-matching \code{time_cols}. Each row represents one time step to produce
-predictions for}
+\item{raster_dir}{Character. Directory containing environmental raster
+files (\code{.tif}), typically the output of
+\code{\link{raster_align}} or \code{\link{scale_rasters}}. File names
+must follow the patterns supplied in \code{variable_patterns}, with any
+time placeholder substituted for the corresponding value from
+\code{time_cols}.}
 
-\item{variable_patterns}{Named character vector mapping variable names to
-raster filename patterns. Must match patterns used in
-\code{\link{temporally_explicit_extraction}}.}
+\item{variable_patterns}{Named character vector mapping clean variable names
+to raster filename patterns. For time-varying variables include the time
+placeholder in the pattern (e.g. \code{"forest_cover" = "forest_cover_YEAR"});
+for static variables omit it (e.g. \code{"elevation" = "elevation"}). Time
+placeholders must match entries in \code{time_cols}.}
 
-\item{raster_dir}{Character. Directory containing scaled environmental
-rasters. Should contain output from \code{\link{scale_rasters}}.}
+\item{time_cols}{Character. Name of the column(s) containing year or time
+step values in the occurrence data. Must match \code{time_cols} used in
+\code{\link{spatiotemporal_partition}} and the time placeholders used in
+\code{variable_patterns}.}
 
-\item{output_dir}{Character. Directory to write prediction rasters and
-evaluation tables.}
+\item{time_steps}{Vector, data frame, or matrix of time periods for which
+to generate predictions.}
 
-\item{overwrite}{Logical. If TRUE, overwrites existing prediction files. If
-FALSE, skips files that already exist. Default is FALSE.}
+\item{output_dir}{Character. Directory to write prediction rasters and the
+assessment metrics CSV. Default is \code{file.path(tempdir(), "Predictions")}.}
 
-\item{output_prefix}{Character. Prefix for output filenames. Default is
-"predictions".}
+\item{overwrite}{Logical. If \code{TRUE}, overwrites existing output files.
+If \code{FALSE} (default), existing files are skipped.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing. Includes per-time-step prediction progress.}
 }
 \value{
 Invisibly returns a list containing:
 \itemize{
-  \item assessment_table: data frame of evaluation metrics for all
-    fold-time period combinations
-  \item prediction_files: character vector of paths to prediction rasters
+  \item \code{timestep_metrics}: data frame of per-fold per-time-step
+    metrics. Columns always present: \code{Fold}, the time column(s),
+    \code{Pct_Suitable}, \code{N_Pres}, \code{TP}, \code{FN},
+    \code{Sensitivity}, \code{CBP}. When \code{pseudoabsence_result} is
+    supplied for parametric models, additionally: \code{N_Abs}, \code{TN},
+    \code{FP}, \code{Specificity}, \code{TSS}. Saved as
+    \code{Timestep_Assessment_Metrics.csv}.
+  \item \code{overall_summary}: data frame of pooled metrics per fold.
+    Columns: \code{Fold}, \code{N_Timesteps}, \code{Mean_Pct_Suitable},
+    \code{Total_TP}, \code{Total_FN}, \code{Overall_Sensitivity},
+    \code{Overall_CBP}. When pseudoabsences available: additionally
+    \code{Total_TN}, \code{Total_FP}, \code{Overall_Specificity},
+    \code{Overall_TSS}.
+  \item \code{prediction_files}: character vector of paths to saved
+    prediction rasters.
+  \item \code{model_type}: character string recording the model type used.
 }
 }
 \description{
-Modeling function that generates temporally explicit habitat suitability
-predictions by projecting hypervolume models onto environmental raster stacks
-for each time period. Produces binary prediction rasters and comprehensive
-evaluation metrics.
+Generates temporally explicit habitat suitability predictions by projecting
+fitted models onto environmental raster stacks matching each time period.
+Accepts output from any of the four TemporalModelR modeling functions.
+Produces per-time-step assessment metrics showing how predictions and
+test point coverage vary over time.
 }
 \details{
-For each cross-validation fold and time period, projects the hypervolume
-model onto scaled environmental rasters using
-\code{\link[hypervolume]{hypervolume_project}}. Generates binary predictions
-and calculates year and fold spesific model assessment metrics.
+G-space predictions are produced as rasters for each time-step and fold of an
+input model.
 
-Output prediction rasters serve as input for
-\code{\link{summarize_raster_outputs}} and subsequent temporal pattern
-analyses in \code{\link{plot_model_assessment}}
+Per-timestep metrics are computed per fold per time step by extracting
+raster predictions at the held-out presence points that fall within that
+time step. \code{Pct_Suitable} records the proportion of the study area
+predicted suitable. \code{Sensitivity} shows how consistently test points are
+captured. \code{CBP} (cumulative binomial probability) tests whether the
+observed number of correctly predicted test points is better than expected
+by random placement: under the null, each point has \code{Pct_Suitable}
+probability of falling in suitable area, so
+\code{dbinom(TP, N_Test_Pts, Pct_Suitable)} gives the probability of
+observing exactly \code{TP} correct by chance. Small values indicate
+predictions are better than random.
+
+Overall model accuracy (TSS, kappa, AUC, specificity) is evaluated at
+model building time using the full held-out fold including pseudoabsences,
+printed in the console output of the relevant \code{build_temporal_*()}
+function, and stored in \code{model_result$fold_test_metrics}.
 }
 \examples{
-\dontrun{
-predictions <- generate_spatiotemporal_predictions(
-  partition_results = "partition_results.rds",
-  hypervolume_results = "hypervolume_models.rds",
-  time_cols = "YEAR",
-  time_steps = 2010:2020,
-  variable_patterns = c("bio1" = "bio1_YEAR", "bio12" = "bio12_YEAR"),
-  raster_dir = "scaled_rasters/",
-  output_dir = "predictions/"
-)
-}
+\donttest{
+  data(tmr_partition, package = "TemporalModelR")
 
+  data(tmr_glm,       package = "TemporalModelR")
+
+  data(tmr_absences,  package = "TemporalModelR")
+
+  scl_dir    <- system.file("extdata/rasters_scaled",
+                            package = "TemporalModelR")
+
+  time_steps <- expand.grid(
+    year             = 1:15,
+    season           = "Spring",
+    stringsAsFactors = FALSE
+  )
+
+  generate_spatiotemporal_predictions(
+    partition_result     = tmr_partition,
+    model_result         = tmr_glm,
+    pseudoabsence_result = tmr_absences,
+    raster_dir           = scl_dir,
+    variable_patterns    = c(
+      "elevation"    = "elevation",
+      "forest_cover" = "forest_cover_YEAR",
+      "prseas"       = "prseas_YEAR_SEASON"
+    ),
+    time_cols            = c("year", "season"),
+    time_steps           = time_steps,
+    output_dir           = tempdir(),
+    overwrite            = TRUE,
+    verbose              = FALSE
+  )
+}
 }
 \seealso{
 Preprocessing: \code{\link{scale_rasters}},
-\code{\link{spatiotemporal_partition}}
+  \code{\link{spatiotemporal_partition}}
 
-Modeling: \code{\link{build_hypervolume_models}},
-\code{\link{model_assessment_metrics}}
+Modeling: \code{\link{build_temporal_hv}},
+  \code{\link{build_temporal_glm}}, \code{\link{build_temporal_gam}},
+  \code{\link{build_temporal_rf}}
 
 Postprocessing: \code{\link{summarize_raster_outputs}},
-\code{\link{plot_model_assessment}}
-
-External: \code{\link[hypervolume]{hypervolume_project}}
+  \code{\link{plot_model_assessment}}
 }

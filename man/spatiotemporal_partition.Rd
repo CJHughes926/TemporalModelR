@@ -7,111 +7,221 @@
 spatiotemporal_partition(
   reference_shapefile_path,
   points_file_path,
-  time_col = NULL,
+  time_cols = NULL,
   xcol = NULL,
   ycol = NULL,
   points_crs = NULL,
   n_spatial_folds = 0,
   n_temporal_folds = 0,
   n_balanced_folds = 0,
+  n_random_folds = 0,
+  single_fold = FALSE,
   max_imbalance = 0.05,
-  generate_plots = TRUE,
-  output_file = NULL
+  max_attempts = 10,
+  create_plot = TRUE,
+  plot_palette = "Dark 2",
+  output_file = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{reference_shapefile_path}{Character or sf object. Path to the study area
-polygon or an \code{sf} polygon object defining the study region.}
+\item{reference_shapefile_path}{Character or sf object. Path to a polygon
+file or an \code{sf} polygon object defining the study area.}
 
-\item{points_file_path}{Character, sf object, sfc object, Spatial object, or
-data frame. Path to occurrence data (.csv, .shp, .geojson, .gpkg) or spatial object.}
+\item{points_file_path}{Character, sf object, sfc object, Spatial object,
+or data frame. Path to occurrence data (\code{.csv}, \code{.shp},
+\code{.geojson}, \code{.gpkg}) or a spatial object.}
 
-\item{time_col}{Character. Column name for temporal blocking. Required if using
-temporal or balanced folds.}
+\item{time_cols}{Character. Name of a single column containing temporal
+values (e.g. year). Used to define temporal blocks. Required when using
+temporal folds. Must be a single column name; does not support more than one
+time column unlike other functions in this package. Compound time representations
+(e.g. year + season) should be encoded into a single ordered numeric column
+before partitioning, or only one (e.g. year) should be used.}
 
-\item{xcol}{Character. Name of the x-coordinate column
-when reading CSV or data frame. Required only if input is .csv, not sf or Spatial object.}
+\item{xcol}{Character. Name of the x-coordinate column. Required when
+\code{points_file_path} is a CSV file or data frame.}
 
-\item{ycol}{Character. Name of the y-coordinate column
-when reading CSV or data frame. Required only if input is .csv, not sf or Spatial object.}
+\item{ycol}{Character. Name of the y-coordinate column. Required when
+\code{points_file_path} is a CSV file or data frame.}
 
-\item{points_crs}{Character or CRS object. CRS of input points if not embedded.
-Required only if input is .csv, not sf or Spatial object.}
+\item{points_crs}{Character or CRS object. CRS of the input points.
+Required when \code{points_file_path} is a CSV file or data frame.}
 
-\item{n_spatial_folds}{Integer. Number of spatially explicit folds (ignored if using balanced folds).}
+\item{n_spatial_folds}{Integer. Number of spatially explicit folds. Ignored
+when using random folds. Default is \code{0}.}
 
-\item{n_temporal_folds}{Integer. Number of temporally explicit folds (ignored if using balanced folds).}
+\item{n_temporal_folds}{Integer. Number of temporally explicit folds.
+When used alone (with \code{n_spatial_folds = 0}), creates temporal-only
+folds where each fold spans the full study area but covers a distinct
+slice of the time series. When combined with \code{n_spatial_folds},
+creates a spatiotemporal design. Ignored when using random folds.
+Default is \code{0}.}
 
-\item{n_balanced_folds}{Integer. Number of balanced folds to create, which simultaneously
-balance spatial and temporal representation. Overrides n_spatial_folds and n_temporal_folds.}
+\item{n_balanced_folds}{Integer. Reserved for future use. Default is
+\code{0} (disabled).}
 
-\item{max_imbalance}{Numeric. Maximum allowed fold size imbalance as a proportion (0–1). Default is 0.05.}
+\item{n_random_folds}{Integer. Number of random folds with no spatial or
+temporal structure. Overrides all other fold parameters. Default is
+\code{0}.}
 
-\item{generate_plots}{Logical. If TRUE, generates diagnostic plots showing fold distributions. Default is TRUE.}
+\item{single_fold}{Logical. If \code{TRUE}, bypasses all partitioning and
+assigns all points to a single fold (fold 1). In this mode all points are
+used for both training and testing, producing a single model trained on
+the full dataset. All downstream functions accept the result identically
+to a standard multi-fold partition. Overrides all fold count parameters.
+Default is \code{FALSE}.}
 
-\item{output_file}{Character. Optional path to save results as an \code{.rds} file.}
+\item{max_imbalance}{Numeric. Maximum allowed fold size imbalance as a
+proportion between 0 and 1. Default is \code{0.05}.}
+
+\item{max_attempts}{Integer. Maximum number of partitioning attempts for
+spatiotemporal and balanced modes. Each attempt re-runs the spatial block
+construction; the attempt with the lowest imbalance is returned. Ignored
+for random and spatial-only modes. Default is \code{10}.}
+
+\item{create_plot}{Logical. If \code{TRUE} (default), generates
+diagnostic plots showing fold distributions.}
+
+\item{plot_palette}{Character. Name of an HCL or RColorBrewer palette used
+to color folds in diagnostic plots. Accepts any HCL palette name (see
+\code{\link[grDevices]{hcl.pals}}) or, if \pkg{RColorBrewer} is installed,
+any Brewer palette name. Default is \code{"Dark 2"}.}
+
+\item{output_file}{Character. Optional path to save the result as an
+\code{.rds} file. The parent directory will be created if it does not
+exist. Default is \code{NULL}.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing. Includes the partition mode, fold
+structure, per-fold point counts, and file-save confirmation.}
 }
 \value{
-A list containing:
+Invisibly returns a list containing:
 \itemize{
-  \item \code{pts_sf}: sf object of occurrence points with assigned folds and block types.
-  \item \code{voronoi_sf}: sf object of Voronoi polygons for spatial blocks.
-  \item \code{final_fold_counts}: Table of point counts per fold.
-  \item \code{mean_per_fold}: Mean number of points per fold.
-  \item \code{imbalance}: Maximum fold imbalance as a proportion.
-  \item \code{n_spatially_exclusive_folds}: Number of spatially exclusive folds created.
-  \item \code{n_temporally_exclusive_folds}: Number of temporally exclusive folds created.
-  \item \code{n_spatial_exclusive_blocks}: Number of spatially exclusive blocks.
-  \item \code{n_shared_blocks}: Number of shared blocks across folds.
-  \item \code{plots}: List of ggplot objects (if \code{generate_plots = TRUE}).
+  \item \code{folds}: Data frame of fold assignments with a \code{fold}
+    column identifying each point's cross-validation fold.
+  \item \code{points_sf}: sf object of occurrence points with assigned
+    folds.
+  \item \code{voronoi_folds}: sf object of Voronoi polygons representing
+    the spatial fold boundaries. \code{NULL} for random folds, temporal-only
+    folds, and single-fold mode.
+  \item \code{summary}: Data frame of partitioning summary statistics.
+  \item \code{plots}: Named list of recorded plot objects when
+    \code{create_plot = TRUE}. Empty list in single-fold mode.
 }
 }
 \description{
 Preprocesses species occurrence data by partitioning it into spatially and
 temporally structured folds for cross-validation. Supports creation of
-balanced folds, spatial-only folds, and temporal-only folds.
-Generates spatial blocks using k-means clustering and assigns points to
-folds according to user-defined strategies.
-Works better with smaller numbers of folds and may have difficulties creating
-balanced folds for large numbers of groups. or where sample sizes are very
-small.
+spatial-only folds, temporal-only folds, and random folds.
 }
 \details{
-The function partitions data into folds using either a balanced approach
-(simultaneously optimizing spatial and temporal representation) or separate
-spatial/temporal explicit folds.
+Works better with smaller numbers of folds and may have difficulties
+creating even folds for large numbers of groups or where sample sizes
+are very small.
 
-Spatial blocks are generated with k-means
-clustering and visualized using Voronoi tessellation. Temporal blocks are created based on
-the \code{time_col}.
 
-Spatial folds partition off spatial areas that do not overlap with other spatial folds for
-comparison, temporal folds partition off time periods that dont overlap with other temporal
-folds. Balanced folds attempt to distribute points evenly across folds while enforcing spatial
-and temporal structure.
+The function partitions data into folds using one of five modes:
+\itemize{
+  \item \strong{Single fold}: All points are assigned to fold 1 and used
+    for both training and testing. This produces a single model trained on
+    the full dataset with no held-out validation. Useful when sample sizes
+    are too small for cross-validation, or as a final production model step
+    after cross-validation has already established model quality. Set
+    \code{single_fold = TRUE}. All downstream functions accept the result
+    identically to standard multi-fold output.
 
-Partitioned datasets are suitable for cross-validation in modeling workflows,
-ensuring spatial and temporal independence between folds.
+  \item \strong{Random}: Points are assigned to folds by random shuffling
+    with no spatial or temporal structure. Each fold is a simple random
+    sample of the full dataset, intended as a naive baseline that makes no
+    attempt to reduce spatial or temporal autocorrelation between training
+    and test sets. Use \code{n_random_folds}.
+
+  \item \strong{Spatial-only}: The study area is divided into \eqn{k}
+    contiguous spatial regions using a recursive k-d tree bisection
+    algorithm. At each step the point set is split along its longest
+    spatial axis, recursively halving until the target number of folds
+    is reached. A centroid reassignment pass then refines boundaries
+    to improve balance. Each region becomes one fold, so training
+    always occurs on data from geographically distinct areas relative
+    to the test fold. No temporal separation is imposed, meaning that
+    points from any time period may appear in any fold. Use
+    \code{n_spatial_folds} alone.
+
+  \item \strong{Temporal-only}: Each fold covers the full spatial extent
+    of the study area but is restricted to a distinct, non-overlapping
+    slice of the time series. The global time series is divided into
+    \code{n_temporal_folds} equal intervals using quantile-based breaks,
+    and all points within each interval form one fold. This design tests
+    model transferability across time while retaining full spatial coverage
+    in every fold. Use \code{n_temporal_folds} alone (with
+    \code{n_spatial_folds = 0}). Requires \code{time_cols}.
+
+  \item \strong{Spatiotemporal}: Folds are assigned using the same
+    recursive k-d tree bisection as spatial-only mode, operating on
+    the full point set to produce spatially contiguous groups. The
+    resulting groups are then split into a spatial pool
+    (\code{n_spatial_folds} folds drawn from geographically distinct
+    regions) and a temporal pool (\code{n_temporal_folds} folds each
+    restricted to a distinct slice of the time series but spanning
+    the full study area). Together the two pools assess both geographic
+    and temporal transferability in a single cross-validation design.
+    Use \code{n_spatial_folds} and \code{n_temporal_folds} together.
+    Requires \code{time_cols}.
+}
+
+Fold assignment uses a recursive k-d tree bisection algorithm that splits
+points along their longest spatial axis at each step, followed by a
+centroid reassignment pass to improve boundary regularity and point-count
+balance. Voronoi tessellation on fold centroids is used only for
+visualisation of the resulting spatial boundaries. For temporal
+mode, temporal blocks are defined by dividing the global time series
+into equal intervals using quantile-based breaks. For spatiotemporal mode,
+the typical spatial assignment is done, but with one larger spatial block
+made with enough points to represent all of the temporal folds, then the
+temporal blocking is applied to those points.
+
+Partitioned datasets are suitable for cross-validation in modeling
+workflows, ensuring spatial and/or temporal independence between folds.
 }
 \examples{
-\dontrun{
-partition_results <- spatiotemporal_partition(
-  reference_shapefile_path = "study_area.shp",
-  points_file_path = "occurrences.csv",
-  time_col = "Year",
-  xcol = "longitude",
-  ycol = "latitude",
-  points_crs = "EPSG:4326",
-  n_balanced_folds = 4,
-  max_imbalance = 0.05,
-  generate_plots = TRUE
-)
-}
+\donttest{
+  pts_file <- system.file(
+    "extdata/points/extracted_seasonal_Scaled_Values.csv",
+    package = "TemporalModelR"
+  )
 
+  ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+                          package = "TemporalModelR")
+
+  study_crs <- sf::st_crs(terra::rast(ref_file))
+
+  study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
+    sf::st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500),
+                crs = study_crs)
+  ))
+
+  spatiotemporal_partition(
+    reference_shapefile_path = study_area_sf,
+    points_file_path         = pts_file,
+    xcol                     = "x",
+    ycol                     = "y",
+    points_crs               = study_crs,
+    time_cols                = "year",
+    n_spatial_folds          = 2,
+    n_temporal_folds         = 2,
+    create_plot              = FALSE,
+    verbose                  = FALSE
+  )
+}
 }
 \seealso{
-Preprocessing: \code{\link{spatiotemporal_rarefication}},
-\code{\link{temporally_explicit_extraction}}
+Preprocessing: \code{\link{spatiotemporal_rarefaction}},
+  \code{\link{temporally_explicit_extraction}},
+  \code{\link{generate_absences}}
 
-Modeling: \code{\link{build_hypervolume_models}}
+Modeling: \code{\link{build_temporal_hv}},
+  \code{\link{build_temporal_glm}}, \code{\link{build_temporal_gam}},
+  \code{\link{build_temporal_rf}}
 }

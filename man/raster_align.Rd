@@ -10,7 +10,9 @@ raster_align(
   reference_raster,
   output_suffix = "_Masked_Updated",
   pattern = ".*\\\\.tif$",
-  overwrite = FALSE
+  resample_method = "bilinear",
+  overwrite = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -22,43 +24,70 @@ raster_align(
 raster object used as the alignment reference.}
 
 \item{output_suffix}{Character. Suffix appended to output filenames. Default
-is "_Masked_Updated".}
+is \code{"_Masked_Updated"}. Output files are named
+\code{<original_name><output_suffix>.tif}.}
 
-\item{pattern}{Character. Pattern used to match raster files within input_dir.
-Default is "\\.tif$".}
+\item{pattern}{Character. Regular expression used to match raster files
+within \code{input_dir}. Default is \code{".*\\.tif$"}.}
 
-\item{overwrite}{Logical. If TRUE, existing processed files are overwritten.
-If FALSE, existing files are skipped. Default is FALSE.}
+\item{resample_method}{Character. Resampling method passed to
+\code{\link[terra]{resample}}. Default is \code{"bilinear"}, which is
+appropriate for continuous variables. Use \code{"near"} for categorical
+rasters (e.g. land cover classes) to avoid interpolating between class
+codes. Other accepted values include \code{"cubic"} and \code{"lanczos"}.}
+
+\item{overwrite}{Logical. If \code{TRUE}, overwrites existing output files.
+If \code{FALSE} (default), existing files are skipped.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing. Includes file counts, overwrite mode,
+per-file progress, and a completion summary.}
+}
+\value{
+Invisibly returns a list containing:
+\itemize{
+  \item \code{output_files}: Character vector of file paths written to
+    \code{output_dir}.
+  \item \code{n_processed}: Integer. Number of rasters successfully processed
+    in this call (excludes skipped files when \code{overwrite = FALSE}).
+}
 }
 \description{
 Preprocessing function that aligns a batch of raster files to a specified
 reference raster by performing reprojection, resampling, and masking
 operations. Ensures all rasters share identical CRS, resolution, and spatial
-extent for downstream analyses.
+extent for later analyses.
 }
 \details{
-For each raster in input_dir matching pattern, the function:
+For each raster in \code{input_dir} matching \code{pattern}, the function:
 \enumerate{
   \item Reprojects to the CRS of the reference raster
-  \item Resamples using bilinear interpolation to match reference resolution
-  \item Masks values outside the reference raster's non-NA area
-  \item Saves the result as a GeoTIFF to output_dir
+  \item Resamples to match the reference resolution using \code{resample_method}
+  \item Masks values outside the reference raster's non-NA extent
+  \item Saves the result as a GeoTIFF to \code{output_dir}
 }
 
-This preprocessing step ensures spatial alignment before applying
-\code{\link{temporally_explicit_extraction}} or \code{\link{scale_rasters}}.
+This preprocessing step ensures spatial alignment before applying other downstream
+analyses such as \code{\link{temporally_explicit_extraction}} or \code{\link{scale_rasters}}.
 }
 \examples{
-\dontrun{
-raster_align(
-  input_dir = "raw_rasters/",
-  output_dir = "aligned_rasters/",
-  reference_raster = "reference.tif",
-  output_suffix = "_aligned"
-)
-}
+\donttest{
+  raw_dir <- system.file("extdata/rasters_raw", package = "TemporalModelR")
 
+  ref     <- file.path(raw_dir, "elevation.tif")
+
+  out_dir <- file.path(tempdir(), "aligned")
+
+  raster_align(
+    input_dir        = raw_dir,
+    output_dir       = out_dir,
+    reference_raster = ref,
+    overwrite        = TRUE,
+    verbose          = FALSE
+  )
+}
 }
 \seealso{
-Preprocessing: \code{\link{scale_rasters}}, \code{\link{temporally_explicit_extraction}}
+Preprocessing: \code{\link{scale_rasters}},
+  \code{\link{temporally_explicit_extraction}}
 }
