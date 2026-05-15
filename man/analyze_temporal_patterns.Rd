@@ -9,12 +9,12 @@ analyze_temporal_patterns(
   summary_raster,
   time_steps,
   fastcpd_params = list(),
-  output_dir = "output",
+  output_dir = NULL,
   n_tiles_x = 1,
   n_tiles_y = 1,
   alpha = 0.05,
   spatial_autocorrelation = TRUE,
-  show_progress = TRUE,
+  verbose = TRUE,
   estimate_time = TRUE,
   overwrite = FALSE
 )
@@ -25,51 +25,55 @@ raster layers across time, or path to directory containing binary rasters.
 Typically from \code{\link{summarize_raster_outputs}}.}
 
 \item{summary_raster}{RasterLayer. Per-pixel proportion of time periods where
-a pixel is suitbale. From \code{\link{summarize_raster_outputs}}.}
+a pixel is suitable. From \code{\link{summarize_raster_outputs}}.}
 
 \item{time_steps}{Integer vector. Time labels corresponding to raster layers
 (same length as number of layers).}
 
 \item{fastcpd_params}{List. Named list of parameters passed to fastcpd
-changepoint detection function. Default is empty list. Supports perameterization
-from \code{\link[fastcpd_binomial]{fastcpd_binomial}}}
+changepoint detection function. Default is empty list. Supports parameterization
+from \code{\link[fastcpd]{fastcpd_binomial}}.}
 
-\item{output_dir}{Character. Output directory for pattern rasters. Default is
-"output".}
+\item{output_dir}{Character. Optional. Output directory for pattern rasters.
+When \code{NULL} (default), rasters are written to temporary files and not
+saved persistently. Provide a path to write named output files to disk.}
 
-\item{n_tiles_x}{Integer. Number of tiles in x direction for parallel
-processing. Default is 1. Use to prevent memory errors for large rasters.}
+\item{n_tiles_x}{Integer. Number of tiles in the x direction for tiled
+processing. Default is \code{1}. Increase to reduce peak memory use for
+large rasters and prevent crashes.}
 
-\item{n_tiles_y}{Integer. Number of tiles in y direction for parallel
-processing. Default is 1. Use to prevent memory errors for large rasters.}
+\item{n_tiles_y}{Integer. Number of tiles in the y direction for tiled
+processing. Default is \code{1}. Increase to reduce peak memory use for
+large rasters and prevent crashes.}
 
 \item{alpha}{Numeric. Significance level for changepoint detection. Default
-is 0.05.}
+is \code{0.05}.}
 
-\item{spatial_autocorrelation}{Logical. If TRUE, includes neighbor variable in
-analysis to account for spatial autocorrelation. If FALSE, spatial
-autocorrelation is not considered. Default is TRUE.}
+\item{spatial_autocorrelation}{Logical. If \code{TRUE} (default), includes a
+neighbor variable in the changepoint analysis to account for spatial
+autocorrelation.}
 
-\item{show_progress}{Logical. If TRUE, displays progress bar during
-processing. If FALSE, runs silently. Default is TRUE.}
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing.}
 
-\item{estimate_time}{Logical. If TRUE, estimates runtime from sampled pixels
-before processing. If FALSE, proceeds directly to processing. Default is
-TRUE.}
+\item{estimate_time}{Logical. If \code{TRUE} (default), estimates runtime from
+a sample of pixels before full processing begins. If \code{FALSE}, proceeds
+directly to processing without a time estimate.}
 
-\item{overwrite}{Logical. If TRUE, overwrites existing output files. If
-FALSE, skips files that already exist. Default is FALSE.}
+\item{overwrite}{Logical. If \code{TRUE}, overwrites existing output files.
+If \code{FALSE} (default), existing files are skipped.}
 }
 \value{
-A list containing:
+Invisibly returns a list containing:
 \itemize{
-  \item pattern: RasterLayer classifying pixels as 1-7, corrosponding to the values:
-  "Never Suitable", "Always Suitable", "No Pattern", "Increasing Suitability",
-  "Decreasing Suitability", or "Fluctuating"
-  \item time_decrease: RasterLayer showing time period of first significant
-    decrease (for all decreasing pixels)
-  \item time_increase: RasterLayer showing time period of first significant
-    increase (for all increasing pixels)
+  \item \code{pattern}: \code{SpatRaster} classifying pixels as integer
+    values 1-6, corresponding to "Never Suitable", "Always Suitable",
+    "No Pattern", "Increasing Suitability", "Decreasing Suitability",
+    or "Fluctuating".
+  \item \code{time_decrease}: \code{SpatRaster} showing the time step of
+    first significant decrease for pixels classified as decreasing.
+  \item \code{time_increase}: \code{SpatRaster} showing the time step of
+    first significant increase for pixels classified as increasing.
 }
 }
 \description{
@@ -80,28 +84,47 @@ decreasing in quality, and identifies time periods of significant change.
 }
 \details{
 Applies changepoint detection using fastcpd to identify significant temporal
-shifts in habitat suitability. Accounts for spatial and temporal
-autocorrelation when spatial_autocorrelation is TRUE. The fastcpd_params list
-allows customization of the changepoint detection algorithm.
+shifts in spatial suitability. Accounts for spatial and temporal
+autocorrelation when \code{spatial_autocorrelation = TRUE}. The
+\code{fastcpd_params} list allows customization of the changepoint detection
+algorithm.
 
 Pattern classifications enable identification of expanding, contracting, or
-stable habitat distributions over time or site level assessments of directional
-change in habitat quality.
+stable g-space distributions over time or site level assessments of directional
+change in suitability.
 
-Classification code assumes consecutive and annual rasters. Time periods
+Classification assumes consecutive rasters. Time periods
 shorter than ~15 time steps may be too short to classify increases or decreases.
 }
 \examples{
-\dontrun{
-pattern_results <- analyze_temporal_patterns(
-  binary_stack = consensus_stack,
-  summary_raster = summary_raster,
-  time_steps = 2000:2020,
-  fastcpd_params = list(),
-  output_dir = "temporal_patterns/"
-)
-}
+\donttest{
+  con_file <- system.file("extdata/binary/consensus_stack.tif",
+                          package = "TemporalModelR")
 
+  frq_file <- system.file("extdata/binary/frequency_raster.tif",
+                          package = "TemporalModelR")
+
+  binary_stack   <- terra::rast(con_file)
+
+  summary_raster <- terra::rast(frq_file)
+
+  time_steps <- expand.grid(
+    year             = 1:15,
+    season           = "Spring",
+    stringsAsFactors = FALSE
+  )
+
+  analyze_temporal_patterns(
+    binary_stack            = binary_stack,
+    summary_raster          = summary_raster,
+    time_steps              = time_steps,
+    output_dir              = tempdir(),
+    spatial_autocorrelation = FALSE,
+    overwrite               = TRUE,
+    estimate_time           = FALSE,
+    verbose                 = FALSE
+  )
+}
 }
 \seealso{
 Postprocessing: \code{\link{summarize_raster_outputs}}

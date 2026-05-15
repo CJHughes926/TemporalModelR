@@ -9,134 +9,123 @@ analyze_trends_by_spatial_unit(
   name_field,
   binary_stack = NULL,
   pattern_raster = NULL,
-  year_decrease_raster = NULL,
-  year_increase_raster = NULL,
+  time_decrease_raster = NULL,
+  time_increase_raster = NULL,
   time_steps = NULL,
-  output_dir = "output/spatial_analysis",
+  output_dir = NULL,
   overwrite = FALSE,
-  pie_scale = 1
+  create_plot = TRUE,
+  pie_scale = 0.15,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{shapefile_path}{Character, sf object, or sfc object. Can be: (1) path
-to a shapefile, (2) path to a directory containing a single .shp file,
-(3) an sf object, or (4) an sfc geometry object. Spatial units are used
-for aggregation (e.g., administrative boundaries, watersheds).}
+\item{shapefile_path}{Character, sf object, or sfc object. Path to a
+shapefile or directory containing one, an sf object, or an sfc geometry.
+Shapefiles spatial units will be used as the units for the data summary.}
 
-\item{name_field}{Character. Name of the attribute field in the shapefile to
-use as spatial unit identifiers.}
+\item{name_field}{Character. Attribute field to use as spatial unit labels.}
 
-\item{binary_stack}{SpatRaster or character (optional). Stack of binary
-prediction rasters across time, or path to raster file. Required for
-yearly habitat summaries and time series plots.}
+\item{binary_stack}{\code{SpatRaster} or character. Optional stack of binary
+prediction rasters across time. Required for per-unit habitat summaries
+and time series plots.}
 
-\item{pattern_raster}{SpatRaster or character (optional). Pattern
-classification raster from \code{\link{analyze_temporal_patterns}}, or
-path to raster file. Required for pattern composition summaries and
-scatterpie maps.}
+\item{pattern_raster}{\code{SpatRaster} or character. Optional pattern
+classification raster from \code{\link[TemporalModelR]{analyze_temporal_patterns}}.
+Required for pattern composition summaries and scatterpie map.}
 
-\item{year_decrease_raster}{SpatRaster or character (optional). Raster
-showing time period of first decrease from
-\code{\link{analyze_temporal_patterns}}, or path to raster file. Required
-(along with year_increase_raster) for change event summaries.}
+\item{time_decrease_raster}{\code{SpatRaster} or character. Optional raster
+of first decrease time step from \code{\link[TemporalModelR]{analyze_temporal_patterns}}.}
 
-\item{year_increase_raster}{SpatRaster or character (optional). Raster
-showing time period of first increase from
-\code{\link{analyze_temporal_patterns}}, or path to raster file. Required
-(along with year_decrease_raster) for change event summaries.}
+\item{time_increase_raster}{\code{SpatRaster} or character. Optional raster
+of first increase time step from \code{\link[TemporalModelR]{analyze_temporal_patterns}}.}
 
-\item{time_steps}{Vector. Time period labels corresponding to layers in
-binary_stack. Required if binary_stack or change rasters are provided.}
+\item{time_steps}{Vector. Time labels for layers in \code{binary_stack}.
+Required when \code{binary_stack} or change rasters are provided.}
 
-\item{output_dir}{Character. Output directory for summary tables and plots.
-Default is "output/spatial_analysis".}
+\item{output_dir}{Character or \code{NULL}. Directory for CSV outputs and
+plots. If \code{NULL}, results are returned in memory only and no files
+are written. Default is \code{NULL}.}
 
-\item{overwrite}{Logical. If TRUE, overwrites existing output files. If
-FALSE, loads existing files when available. Default is FALSE.}
+\item{overwrite}{Logical. If \code{TRUE}, recomputes and overwrites existing
+CSVs. Default is \code{FALSE}.}
 
-\item{pie_scale}{Numeric. Scaling factor for pie chart sizes in the map.
-Values > 1 make pies larger, values < 1 make them smaller. Default is 1.}
+\item{create_plot}{Logical. If \code{TRUE} (default), generates and saves
+plots.}
+
+\item{pie_scale}{Numeric in (0, 1]. Largest pie's radius as a fraction of
+the smaller map dimension. Default is \code{0.15}, meaning the biggest
+pie spans roughly 30\% of the smaller map dimension (radius = 15\%, so
+diameter = 30\%). Smaller pies scale so their area is proportional to
+the unit's pixel count. The fraction is converted internally to
+coordinate units, so this argument works identically across CRSes
+(degrees, metres, etc.) without manual rescaling.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing. Includes details on raster extraction and
+per-spatial-unit summaries.}
 }
 \value{
-A list containing (elements present depend on inputs provided):
+Invisibly returns a list containing:
 \itemize{
-  \item overall_summary: Data frame with pattern composition statistics for
-    each spatial unit, including raw counts, percentages of total pixels,
-    and proportional metrics. Proportional metrics use adjusted denominators:
-    Prop_Increasing and Prop_Stable_Suitable exclude always-absent pixels;
-    Prop_Decreasing and Prop_Stable_Unsuitable exclude always-present pixels.
-    (requires pattern_raster)
-  \item yearly_summary: Data frame with habitat pixel counts by spatial unit
-    and time period (requires binary_stack)
-  \item change_by_year: Data frame with gain/loss pixel counts by spatial
-    unit and time period (requires year_decrease_raster and
-    year_increase_raster)
-  \item plots: List of ggplot objects (contents depend on inputs provided)
+  \item \code{overall_summary}: Pattern composition per spatial unit
+    (present when \code{pattern_raster} is supplied).
+  \item \code{timestep_summary}: Suitable pixel counts per unit per time step
+    (present when \code{binary_stack} is supplied).
+  \item \code{change_by_timestep}: Gain and loss pixel counts per unit per time
+    step (present when both change rasters are supplied).
+  \item \code{plots}: Named list of recorded plot objects (present when
+    \code{create_plot = TRUE}).
 }
 }
 \description{
-Postprocessing function that aggregates temporal pattern classifications and
-habitat change metrics across user-defined spatial units (e.g., states,
-countries, watersheds). Generates summary tables and visualizations showing
-how habitat suitability patterns and trends vary spatially.
+Aggregates temporal pattern classifications and change metrics
+across user-defined spatial units (e.g., states, counties, watersheds).
+Returns summary tables and optionally generates simple visualizations.
 }
 \details{
-At least one raster input (binary_stack, pattern_raster, or both change
-rasters) must be provided. The function will generate outputs only for the
-inputs that are supplied:
-\itemize{
-  \item pattern_raster: Generates pattern composition summary and scatterpie
-    map
-  \item binary_stack: Generates yearly habitat summary and time series plot
-  \item year_decrease_raster + year_increase_raster: Generates change event
-    summaries and all change-related plots
-}
-
-For each spatial unit, the function extracts and summarizes (based on
-available inputs):
-\itemize{
-  \item Pattern composition: Counts and percentages of pixels classified as
-    Never Suitable, Always Suitable, No Pattern, Increasing, Decreasing, or
-    Fluctuating
-  \item Temporal habitat availability: Number of suitable pixels in each time
-    period
-  \item Change events: Number of pixels experiencing first increase or
-    decrease in each time period
-}
+Summarizes results from modeling and postprocessing at the scale of specific
+spatial blocks to allow for a nuanced look at spatiotemporal patterns.
 }
 \examples{
-\dontrun{
-# Full analysis with all inputs
-spatial_results <- analyze_trends_by_spatial_unit(
-  shapefile_path = "admin_boundaries.shp",
-  name_field = "STATE_NAME",
-  binary_stack = "consensus_predictions/Binary_Rasters",
-  pattern_raster = "temporal_patterns/Pattern_Classification.tif",
-  year_decrease_raster = "temporal_patterns/Year_First_Decrease.tif",
-  year_increase_raster = "temporal_patterns/Year_First_Increase.tif",
-  time_steps = 2000:2020,
-  output_dir = "spatial_analysis/"
-)
+\donttest{
+  con_file <- system.file("extdata/binary/consensus_stack.tif",
+                          package = "TemporalModelR")
 
-# Only binary stack for yearly summaries
-spatial_results <- analyze_trends_by_spatial_unit(
-  shapefile_path = "admin_boundaries.shp",
-  name_field = "STATE_NAME",
-  binary_stack = binary_rasters,
-  time_steps = 2000:2020
-)
+  binary_stack <- terra::rast(con_file)
 
-# Only pattern raster for composition analysis
-spatial_results <- analyze_trends_by_spatial_unit(
-  shapefile_path = spatial_units_sf,
-  name_field = "STATE_NAME",
-  pattern_raster = pattern_rast,
-  pie_scale = .75
-)
+  study_crs <- sf::st_crs(binary_stack)
+
+  zones_sf <- rbind(
+    sf::st_sf(ZONE = "West",
+              geometry = sf::st_sfc(sf::st_polygon(list(
+                matrix(c(0, 0, 1500, 1500, 0,
+                         0, 1500, 1500, 0, 0), ncol = 2)
+              )), crs = study_crs)),
+    sf::st_sf(ZONE = "East",
+              geometry = sf::st_sfc(sf::st_polygon(list(
+                matrix(c(1500, 1500, 3000, 3000, 1500,
+                         0,    1500, 1500, 0,    0),    ncol = 2)
+              )), crs = study_crs))
+  )
+
+  time_steps <- expand.grid(
+    year             = 1:15,
+    season           = "Spring",
+    stringsAsFactors = FALSE
+  )
+
+  analyze_trends_by_spatial_unit(
+    shapefile_path = zones_sf,
+    name_field     = "ZONE",
+    binary_stack   = binary_stack,
+    time_steps     = time_steps,
+    create_plot    = FALSE,
+    verbose        = FALSE
+  )
 }
-
 }
 \seealso{
 Postprocessing: \code{\link{summarize_raster_outputs}},
-\code{\link{analyze_temporal_patterns}}
+  \code{\link[TemporalModelR]{analyze_temporal_patterns}}
 }

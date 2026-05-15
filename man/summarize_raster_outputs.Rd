@@ -7,61 +7,87 @@
 summarize_raster_outputs(
   predictions_dir,
   output_dir = NULL,
+  consensus = 1,
   file_pattern = "Prediction_.*\\\\.tif$",
-  overwrite = F
+  overwrite = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{predictions_dir}{Character. Directory containing prediction raster
-files. Typically output from \code{\link{generate_spatiotemporal_predictions}}.}
+files, typically the \code{output_dir} used in
+\code{\link{generate_spatiotemporal_predictions}}.}
 
-\item{output_dir}{Character. Output directory for consensus rasters. Defaults
-to predictions_dir if not specified.}
+\item{output_dir}{Character. Directory for output files. Defaults to
+\code{predictions_dir} if \code{NULL}.}
 
-\item{file_pattern}{Character. Regular expression to match prediction files.
-Default is "\\.tif$".}
+\item{consensus}{Integer. Minimum number of folds that must agree on
+suitability for a pixel to be classified as suitable in the binary output.
+For example, \code{consensus = 1} marks any pixel suitable if at least one
+fold predicts it suitable; \code{consensus = 4} requires at least four folds to
+agree. Must be between 1 and the maximum vote count in the rasters (number of
+folds). Default is \code{1}.}
 
-\item{overwrite}{Logical. If TRUE, overwrites existing output files. If
-FALSE, skips files that already exist. Default is FALSE.}
+\item{file_pattern}{Character. Regular expression to match prediction raster
+files. Default is \code{"Prediction_.*\\.tif$"}.}
+
+\item{overwrite}{Logical. If \code{TRUE}, overwrites existing output files.
+If \code{FALSE} (default), existing files are skipped.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing.}
 }
 \value{
-A list containing:
+Invisibly returns a list containing:
 \itemize{
-  \item binary_stack: RasterStack of binary predictions across time periods
-  \item summary_raster: RasterLayer showing proportion of time periods with
-    suitable predictions
+  \item \code{consensus_stack}: \code{SpatRaster} stack of per-time-step
+    binary consensus rasters (one layer per input file).
+  \item \code{frequency_raster}: \code{SpatRaster} showing the proportion of
+    time steps during which each pixel met the consensus threshold. Values
+    range from 0 (never suitable) to 1 (always suitable).
+  \item \code{consensus}: the consensus threshold used.
+  \item \code{n_timesteps}: number of time steps processed.
+  \item \code{consensus_dir}: path to the directory containing per-time-step
+    binary consensus rasters.
+  \item \code{frequency_file}: path to the written frequency raster file.
 }
 }
 \description{
-Postprocessing function that synthesizes multiple prediction rasters into
-binary consensus predictions and temporal summary statistics. Generates
-consensus classifications based on agreement among models and calculates
-for each pixel the percentage of years with consensus suitable habitat.
+Postprocessing function that synthesizes per-time-step fold-vote rasters
+(output from \code{\link{generate_spatiotemporal_predictions}}) into binary
+consensus predictions and a temporal frequency summary. Each input raster
+contains integer vote counts per pixel the number of cross-validation
+folds that classified that pixel as suitable. The \code{consensus} threshold
+controls how many folds must agree for a pixel to be classified as suitable
+in the output binary rasters.
 }
 \details{
-For each pixel across all predictions, calculates:
-\itemize{
-  \item Binary consensus: pixel classified as suitable if majority of models
-    agree
-  \item Temporal stability: proportion of time periods during study where
-    consensus predicts suitability
-}
+Input rasters are fold-vote-count rasters produced by
+\code{\link{generate_spatiotemporal_predictions}}, where each pixel value is
+the number of cross-validation fold models that predicted suitability at that
+location for that time step. The \code{consensus} threshold is applied as:
+\code{binary = as.integer(vote_count >= consensus)}.
 
-Consensus rasters serve as input for \code{\link{analyze_temporal_patterns}}
-to identify temporal trends in habitat suitability.
+The frequency raster (proportion of time steps suitable under the chosen
+consensus) serves as input to \code{\link[TemporalModelR]{analyze_temporal_patterns}} for
+identifying long-term trends in suitability.
 }
 \examples{
-\dontrun{
-summary_results <- summarize_raster_outputs(
-  predictions_dir = "predictions/",
-  output_dir = "consensus_predictions/",
-  overwrite = TRUE
-)
-}
+\donttest{
+  pred_dir <- system.file("extdata/predictions",
+                          package = "TemporalModelR")
 
+  summarize_raster_outputs(
+    predictions_dir = pred_dir,
+    output_dir      = tempdir(),
+    consensus       = 3,
+    overwrite       = TRUE,
+    verbose         = FALSE
+  )
+}
 }
 \seealso{
-Modeling: \code{\link{generate_spatiotemporal_predictions}}
+Upstream: \code{\link{generate_spatiotemporal_predictions}}
 
-Postprocessing: \code{\link{analyze_temporal_patterns}}
+Downstream: \code{\link[TemporalModelR]{analyze_temporal_patterns}}
 }
