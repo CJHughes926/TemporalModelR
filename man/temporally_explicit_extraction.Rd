@@ -16,85 +16,125 @@ temporally_explicit_extraction(
   output_prefix = "temp_explicit_df",
   save_raw = TRUE,
   save_scaled = TRUE,
-  save_scaling_params = TRUE
+  save_scaling_params = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{points_sp}{sf object, SpatialPointsDataFrame, file path to
 .csv/.shp/.geojson/.gpkg, or data frame with coordinate columns.}
 
-\item{raster_dir}{Character. Directory containing source raster files (.tif).}
+\item{raster_dir}{Character. Directory containing environmental raster
+files (\code{.tif}), typically the output of \code{\link{raster_align}}.
+File names must follow the patterns supplied in \code{variable_patterns}, with any
+time placeholder substituted for the corresponding value from
+\code{time_cols}.}
 
-\item{variable_patterns}{Named character vector mapping variable names to
-filename patterns. Time placeholders (e.g., YEAR, MONTH) must match
-time_cols. Static variables have no placeholders.}
+\item{variable_patterns}{Named character vector mapping clean variable names
+to raster filename patterns. For time-varying variables include the time
+placeholder in the pattern (e.g. \code{"forest_cover" = "forest_cover_YEAR"});
+for static variables omit it (e.g. \code{"elevation" = "elevation"}). Time
+placeholders must match entries in \code{time_cols}.}
 
 \item{time_cols}{Character vector of time column names present in the point
 data (e.g., c("YEAR"), c("YEAR", "MONTH")).}
 
-\item{xcol}{Character. Coordinate column name when reading CSV or data frame
-inputs. Optional.}
+\item{xcol}{Character. Name of the x-coordinate column. Required when
+\code{points_sp} is a CSV file or data frame.}
 
-\item{ycol}{Character. Coordinate column name when reading CSV or data frame
-inputs. Optional.}
+\item{ycol}{Character. Name of the y-coordinate column. Required when
+\code{points_sp} is a CSV file or data frame.}
 
-\item{points_crs}{Character or CRS object. CRS when reading CSV or data frame
-inputs. Optional.}
+\item{points_crs}{Character or CRS object. CRS of the input points.
+Required when \code{points_sp} is a CSV file or data frame.}
 
 \item{output_dir}{Character. Directory to write output files.}
 
 \item{output_prefix}{Character. Prefix for output filenames. Default is
 "temp_explicit_df".}
 
-\item{save_raw}{Logical. If TRUE, writes raw extracted values CSV. If FALSE,
-skips raw values output. Default is TRUE.}
+\item{save_raw}{Logical. If \code{TRUE} (default), writes raw extracted values
+CSV. If \code{FALSE}, skips raw values output.}
 
-\item{save_scaled}{Logical. If TRUE, writes z-scaled values CSV. If FALSE,
-skips scaled values output. Default is TRUE.}
+\item{save_scaled}{Logical. If \code{TRUE} (default), writes z-scaled values
+CSV. If \code{FALSE}, skips scaled values output.}
 
-\item{save_scaling_params}{Logical. If TRUE, writes CSV of per-variable means
-and standard deviations. If FALSE, skips scaling parameters output. Default
-is TRUE.}
+\item{save_scaling_params}{Logical. If \code{TRUE} (default), writes CSV of
+per-variable means and standard deviations. If \code{FALSE}, skips scaling
+parameters output.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), prints progress
+messages during processing. Includes file loading, extraction
+progress, and file-save confirmation.}
+}
+\value{
+Invisibly returns a list containing:
+\itemize{
+  \item \code{raw_values}: Data frame of raw extracted values at each
+    occurrence record (when \code{save_raw = TRUE}; \code{NULL} otherwise).
+  \item \code{scaled_values}: Data frame of z-scaled extracted values
+    (when \code{save_scaled = TRUE}; \code{NULL} otherwise).
+  \item \code{scaling_params}: Data frame of per-variable means and standard
+    deviations used for scaling (when \code{save_scaling_params = TRUE};
+    \code{NULL} otherwise). Pass this to \code{\link{scale_rasters}}.
+  \item \code{files_created}: Named list of file paths written, with elements
+    \code{raw}, \code{scaled}, and \code{scaling_params} (each \code{NULL}
+    when the corresponding save flag is \code{FALSE}).
+}
 }
 \description{
 Preprocessing function that extracts raster values to species occurrence
 records based on temporal components. Matches environmental layers to
-occurrence timestamps and computes scaling parameters for standardization.
+occurrence timestamps and optionally computes scaling parameters for standardization.
 }
 \details{
-Dynamic variables are detected when patterns contain placeholders matching
-time_cols. Static variables are extracted once. Raster files are matched by
-substituting time values into pattern placeholders.
+Extracts raster values to species occurrence records based on matched temporal components.
+Matches environmental layers to occurrence timestamps and optionally computes scaling
+parameters for standardization.
 
 Output CSV files are written to output_dir containing raw values, scaled
 values, and scaling parameters.
 
-Scaling parameters (mean and standard deviation) are computed across all
-occurrence records for each variable. These parameters should be used with
+Scaling parameters (mean and standard deviation) are optionally computed across
+all occurrence records for each variable. These parameters should be used with
 \code{\link{scale_rasters}} to standardize prediction layers.
 }
 \examples{
-\dontrun{
-variable_patterns <- c(
-  "bio1" = "bio1_YEAR",
-  "temp" = "temp_YEAR_MONTH",
-  "elevation" = "elevation"
-)
+\donttest{
+  pts_file <- system.file(
+    "extdata/points/synthetic_occurrence_points.csv",
+    package = "TemporalModelR"
+  )
 
-temporally_explicit_extraction(
-  points_sp = "occurrences.csv",
-  raster_dir = "environmental_layers/",
-  variable_patterns = variable_patterns,
-  time_cols = c("YEAR", "MONTH"),
-  xcol = "longitude",
-  ycol = "latitude",
-  points_crs = "EPSG:4326",
-  output_dir = "extracted_values/"
-)
+  aln_dir  <- system.file("extdata/rasters_aligned",
+                          package = "TemporalModelR")
+
+  ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+                          package = "TemporalModelR")
+
+  out_dir  <- file.path(tempdir(), "extracted")
+
+  temporally_explicit_extraction(
+    points_sp           = pts_file,
+    raster_dir          = aln_dir,
+    variable_patterns   = c(
+      "elevation"    = "elevation",
+      "forest_cover" = "forest_cover_YEAR",
+      "prseas"       = "prseas_YEAR_SEASON"
+    ),
+    time_cols           = c("year", "season"),
+    xcol                = "x",
+    ycol                = "y",
+    points_crs          = terra::crs(terra::rast(ref_file)),
+    output_dir          = out_dir,
+    save_raw            = TRUE,
+    save_scaled         = FALSE,
+    save_scaling_params = TRUE,
+    verbose             = FALSE
+  )
 }
-
 }
 \seealso{
-Preprocessing: \code{\link{spatiotemporal_rarefication}},
-\code{\link{scale_rasters}}, \code{\link{spatiotemporal_partition}}
+Preprocessing: \code{\link{spatiotemporal_rarefaction}},
+  \code{\link{scale_rasters}}, \code{\link{spatiotemporal_partition}}
 }

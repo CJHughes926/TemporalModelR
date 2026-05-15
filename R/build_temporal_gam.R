@@ -102,26 +102,12 @@
 #' }
 #'
 #' @details
-#' Presence data are drawn from \code{partition_result$points_sf} with a
-#' \code{presence} column value of \code{1} (or, if absent, all rows are
-#' treated as presences and the column is added automatically). Pseudoabsence
-#' data are drawn from \code{pseudoabsence_result$pseudoabsences} where
-#' \code{presence == 0}. The two are combined per fold: training rows are all
-#' points whose \code{fold} value is not the held-out fold, and test rows are
-#' those whose \code{fold} value equals the held-out fold. Points with \code{NA}
-#' fold assignments are excluded.
 #'
 #' GAMs are fit using \code{\link[mgcv]{gam}} from the \pkg{mgcv} package with
 #' \code{family = binomial(link = link)}. Smooth terms default to thin plate
 #' regression splines (\code{bs = "tp"}) with the basis dimension \code{k}
 #' chosen automatically by \pkg{mgcv} unless specified in the formula. Smoothing
-#' parameters are estimated by REML by default, which is recommended for
-#' presence/absence data.
-#'
-#' Response curves plot the predicted probability across the observed range of
-#' each predictor while holding all others at their training-data means. A
-#' combined ROC curve panel shows all fold curves together with the operating
-#' threshold marked as a point on each curve.
+#' parameters are estimated by REML by default.
 #'
 #' The returned object is recognised by
 #' \code{\link{generate_spatiotemporal_predictions}}, which uses the
@@ -176,8 +162,6 @@ build_temporal_gam <- function(partition_result,
                                overwrite         = FALSE,
                                time_cols         = NULL,
                                verbose           = TRUE) {
-
-  ### Check mgcv is available
 
   if (!requireNamespace("mgcv", quietly = TRUE)) {
     stop(paste0("ERROR: The 'mgcv' package is required for build_temporal_gam(). ",

@@ -110,11 +110,6 @@ probability of falling in suitable area, so
 \code{dbinom(TP, N_Test_Pts, Pct_Suitable)} gives the probability of
 observing exactly \code{TP} correct by chance. Small values indicate
 predictions are better than random.
-
-Overall model accuracy (TSS, kappa, AUC, specificity) is evaluated at
-model building time using the full held-out fold including pseudoabsences,
-printed in the console output of the relevant \code{build_temporal_*()}
-function, and stored in \code{model_result$fold_test_metrics}.
 }
 \examples{
 \donttest{
