@@ -448,7 +448,6 @@
 
 #' @keywords internal
 #' @noRd
-### Only consumed by spatiotemporal_partition.
 .assign_balanced_folds <- function(pts_work, n_folds, n_spatial, spatial_centers,
                                    distance_matrix, adjacency_matrix, max_imbalance, total_folds) {
 
@@ -818,7 +817,6 @@
 
 #' @keywords internal
 #' @noRd
-### Only consumed by spatiotemporal_partition.
 .plot_partitions_base <- function(pts_sf, reference_shapefile, final_fold_counts,
                                   mean_per_fold, total_folds, partition_mode,
                                   time_cols, temporal_partitioning, n_temporal,
