@@ -1,138 +1,206 @@
 #' Summarize Prediction Rasters into Consensus Outputs
 #'
-#' Postprocessing function that synthesizes multiple prediction rasters into
-#' binary consensus predictions and temporal summary statistics. Generates
-#' consensus classifications based on agreement among models and calculates
-#' for each pixel the percentage of years with consensus suitable habitat.
+#' Postprocessing function that synthesizes per-time-step fold-vote rasters
+#' (output from \code{\link{generate_spatiotemporal_predictions}}) into binary
+#' consensus predictions and a temporal frequency summary. Each input raster
+#' contains integer vote counts per pixel the number of cross-validation
+#' folds that classified that pixel as suitable. The \code{consensus} threshold
+#' controls how many folds must agree for a pixel to be classified as suitable
+#' in the output binary rasters.
 #'
 #' @param predictions_dir Character. Directory containing prediction raster
-#'   files. Typically output from \code{\link{generate_spatiotemporal_predictions}}.
-#' @param output_dir Character. Output directory for consensus rasters. Defaults
-#'   to predictions_dir if not specified.
-#' @param file_pattern Character. Regular expression to match prediction files.
-#'   Default is "\\.tif$".
-#' @param overwrite Logical. If TRUE, overwrites existing output files. If
-#'   FALSE, skips files that already exist. Default is FALSE.
+#'   files, typically the \code{output_dir} used in
+#'   \code{\link{generate_spatiotemporal_predictions}}.
+#' @param output_dir Character. Directory for output files. Defaults to
+#'   \code{predictions_dir} if \code{NULL}.
+#' @param consensus Integer. Minimum number of folds that must agree on
+#'   suitability for a pixel to be classified as suitable in the binary output.
+#'   For example, \code{consensus = 1} marks any pixel suitable if at least one
+#'   fold predicts it suitable; \code{consensus = 4} requires at least four folds to
+#'   agree. Must be between 1 and the maximum vote count in the rasters (number of
+#'   folds). Default is \code{1}.
+#' @param file_pattern Character. Regular expression to match prediction raster
+#'   files. Default is \code{"Prediction_.*\\.tif$"}.
+#' @param overwrite Logical. If \code{TRUE}, overwrites existing output files.
+#'   If \code{FALSE} (default), existing files are skipped.
+#' @param verbose Logical. If \code{TRUE} (default), prints progress
+#'   messages during processing.
 #'
-#' @return A list containing:
+#' @return Invisibly returns a list containing:
 #' \itemize{
-#'   \item binary_stack: RasterStack of binary predictions across time periods
-#'   \item summary_raster: RasterLayer showing proportion of time periods with
-#'     suitable predictions
+#'   \item \code{consensus_stack}: \code{SpatRaster} stack of per-time-step
+#'     binary consensus rasters (one layer per input file).
+#'   \item \code{frequency_raster}: \code{SpatRaster} showing the proportion of
+#'     time steps during which each pixel met the consensus threshold. Values
+#'     range from 0 (never suitable) to 1 (always suitable).
+#'   \item \code{consensus}: the consensus threshold used.
+#'   \item \code{n_timesteps}: number of time steps processed.
+#'   \item \code{consensus_dir}: path to the directory containing per-time-step
+#'     binary consensus rasters.
+#'   \item \code{frequency_file}: path to the written frequency raster file.
 #' }
 #'
 #' @details
-#' For each pixel across all predictions, calculates:
-#' \itemize{
-#'   \item Binary consensus: pixel classified as suitable if majority of models
-#'     agree
-#'   \item Temporal stability: proportion of time periods during study where
-#'     consensus predicts suitability
-#' }
+#' Input rasters are fold-vote-count rasters produced by
+#' \code{\link{generate_spatiotemporal_predictions}}, where each pixel value is
+#' the number of cross-validation fold models that predicted suitability at that
+#' location for that time step. The \code{consensus} threshold is applied as:
+#' \code{binary = as.integer(vote_count >= consensus)}.
 #'
-#' Consensus rasters serve as input for \code{\link{analyze_temporal_patterns}}
-#' to identify temporal trends in habitat suitability.
+#' The frequency raster (proportion of time steps suitable under the chosen
+#' consensus) serves as input to \code{\link[TemporalModelR]{analyze_temporal_patterns}} for
+#' identifying long-term trends in suitability.
 #'
 #' @seealso
-#' Modeling: \code{\link{generate_spatiotemporal_predictions}}
+#' Upstream: \code{\link{generate_spatiotemporal_predictions}}
 #'
-#' Postprocessing: \code{\link{analyze_temporal_patterns}}
+#' Downstream: \code{\link[TemporalModelR]{analyze_temporal_patterns}}
 #'
 #' @examples
-#' \dontrun{
-#' summary_results <- summarize_raster_outputs(
-#'   predictions_dir = "predictions/",
-#'   output_dir = "consensus_predictions/",
-#'   overwrite = TRUE
-#' )
-#' }
+#' \donttest{
+#'   pred_dir <- system.file("extdata/predictions",
+#'                           package = "TemporalModelR")
 #'
+#'   summarize_raster_outputs(
+#'     predictions_dir = pred_dir,
+#'     output_dir      = tempdir(),
+#'     consensus       = 3,
+#'     overwrite       = TRUE,
+#'     verbose         = FALSE
+#'   )
+#' }
+
 #' @export
-#' @importFrom terra rast nlyr app writeRaster
+#' @importFrom terra rast nlyr app writeRaster values global
 summarize_raster_outputs <- function(predictions_dir,
-                                     output_dir = NULL,
+                                     output_dir   = NULL,
+                                     consensus    = 1,
                                      file_pattern = "Prediction_.*\\.tif$",
-                                     overwrite = F) {
+                                     overwrite    = FALSE,
+                                     verbose      = TRUE) {
 
-  require(terra)
-
-  ### Validate required parameters
   if (missing(predictions_dir) || is.null(predictions_dir) || predictions_dir == "") {
     stop("ERROR: 'predictions_dir' is required and cannot be NULL or empty.")
   }
   if (!dir.exists(predictions_dir)) {
-    stop(paste0("ERROR: The specified predictions_dir does not exist: ", predictions_dir))
+    stop(paste0("ERROR: predictions_dir does not exist: ", predictions_dir))
   }
+  if (!is.numeric(consensus) || length(consensus) != 1 || consensus < 1) {
+    stop("ERROR: 'consensus' must be a single positive integer >= 1.")
+  }
+  consensus <- as.integer(consensus)
 
-  ### Find prediction raster files
   prediction_files <- list.files(
-    path = predictions_dir,
-    pattern = file_pattern,
+    path       = predictions_dir,
+    pattern    = file_pattern,
     full.names = TRUE
   )
 
   if (length(prediction_files) == 0) {
-    stop(paste0("ERROR: No prediction files found matching pattern '", file_pattern, "' in directory ", predictions_dir))
+    stop(paste0("ERROR: No files matching '", file_pattern,
+                "' found in: ", predictions_dir))
   }
 
-  print(paste("Found", length(prediction_files), "prediction rasters"))
+  prediction_files <- .natural_sort(prediction_files)
+  if (verbose) message(paste("Found", length(prediction_files), "prediction rasters."))
 
-  ### Set output directory
   if (is.null(output_dir)) output_dir <- predictions_dir
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE,
+                                          showWarnings = FALSE)
 
-  binary_dir <- file.path(output_dir, "Binary_Rasters")
-  summary_file <- file.path(output_dir, "Summary_Binary_Mean.tif")
+  consensus_dir  <- file.path(output_dir,
+                              paste0("Consensus_", consensus, "_Rasters"))
+  frequency_file <- file.path(output_dir,
+                              paste0("Frequency_Consensus_", consensus, ".tif"))
 
-  ### Skip existing outputs
-  if (dir.exists(binary_dir) && file.exists(summary_file) && !overwrite) {
-    print("Binary rasters and summary already exist. Reloading from disk...")
-    binary_files <- list.files(binary_dir, pattern = "\\.tif$", full.names = TRUE)
-    binary_stack <- rast(binary_files)
-    summary_raster <- rast(summary_file)
-    return(list(binary_stack = binary_stack, summary_raster = summary_raster))
+  if (dir.exists(consensus_dir) && file.exists(frequency_file) && !overwrite) {
+    if (verbose) message("Outputs already exist and overwrite = FALSE. Reloading from disk.")
+    con_files <- .natural_sort(list.files(consensus_dir, pattern = "\\.tif$",
+                                          full.names = TRUE))
+    con_stack      <- terra::rast(con_files)
+    frequency_rast <- terra::rast(frequency_file)
+    return(invisible(list(
+      consensus_stack  = con_stack,
+      frequency_raster = frequency_rast,
+      consensus        = consensus,
+      n_timesteps      = terra::nlyr(con_stack),
+      consensus_dir    = consensus_dir,
+      frequency_file   = frequency_file
+    )))
   }
 
-  ### Load and stack rasters
-  print("Stacking rasters...")
-  prediction_stack <- rast(prediction_files)
+  if (verbose) message("Loading prediction rasters...")
+  vote_stack  <- terra::rast(prediction_files)
   clean_names <- gsub("\\.tif$", "", basename(prediction_files))
-  names(prediction_stack) <- clean_names
+  names(vote_stack) <- clean_names
 
-  ### Create binary raster directory
-  if (!dir.exists(binary_dir)) dir.create(binary_dir, recursive = TRUE)
+  max_votes <- max(vapply(seq_len(terra::nlyr(vote_stack)), function(i) {
+    v <- terra::global(vote_stack[[i]], "max", na.rm = TRUE)[1, 1]
+    if (is.na(v)) 0 else as.integer(v)
+  }, integer(1)), na.rm = TRUE)
 
-  ### Binary reclassification and save
-  print("Performing binary reclassification (max value = 1, else = 0)...")
-  binary_files <- c()
+  if (verbose) message(paste0("Maximum fold vote count detected: ", max_votes,
+                              " | Consensus threshold: ", consensus))
 
-  for (i in 1:nlyr(prediction_stack)) {
-    layer <- prediction_stack[[i]]
-    max_val <- global(layer, "max", na.rm = TRUE)[1,1]
-    binary_raster <- app(layer, function(x) ifelse(x == max_val, 1, 0))
-
-    binary_file <- file.path(binary_dir, paste0(clean_names[i], "_binary.tif"))
-    writeRaster(binary_raster, binary_file, overwrite = TRUE)
-    binary_files <- c(binary_files, binary_file)
+  if (consensus > max_votes) {
+    stop(paste0(
+      "ERROR: consensus = ", consensus, " exceeds the maximum vote count (",
+      max_votes, ") in the prediction rasters. ",
+      "Reduce consensus to <= ", max_votes, "."
+    ))
   }
 
-  ### Build stack from saved binary rasters
-  binary_stack <- rast(binary_files)
-  names(binary_stack) <- clean_names
+  if (!dir.exists(consensus_dir)) dir.create(consensus_dir, recursive = TRUE,
+                                             showWarnings = FALSE)
 
-  ### Calculate mean summary
-  print("Calculating mean across all time steps...")
-  summary_raster <- app(binary_stack, mean, na.rm = TRUE)
+  if (verbose) message(paste0("Applying consensus threshold (>= ", consensus,
+                              " folds) to ", terra::nlyr(vote_stack), " time steps..."))
 
-  ### Save mean summary raster
-  print(paste("Saving mean summary raster to:", summary_file))
-  writeRaster(summary_raster, summary_file, overwrite = TRUE)
+  consensus_files <- character(terra::nlyr(vote_stack))
 
-  print(paste("Complete! Created", nlyr(binary_stack), "layer binary stack in:"))
-  print(binary_dir)
+  for (i in seq_len(terra::nlyr(vote_stack))) {
+    layer <- vote_stack[[i]]
+    con_layer <- terra::app(layer, function(x) {
+      ifelse(is.na(x), NA_integer_, as.integer(x >= consensus))
+    })
 
-  return(list(
-    binary_stack = binary_stack,
-    summary_raster = summary_raster
+    con_file  <- file.path(consensus_dir,
+                           paste0(clean_names[i], "_consensus", consensus, ".tif"))
+    terra::writeRaster(con_layer, con_file, overwrite = TRUE,
+                       datatype = "INT1U", NAflag = 255)
+    consensus_files[i] <- con_file
+    if (verbose) message(paste0("  [", i, "/", terra::nlyr(vote_stack), "] ",
+                                clean_names[i], " done."))
+  }
+
+  con_stack <- terra::rast(consensus_files)
+  names(con_stack) <- clean_names
+
+  if (verbose) message("Calculating frequency raster (proportion of time steps suitable)...")
+  frequency_rast <- terra::app(con_stack, mean, na.rm = TRUE)
+
+  terra::writeRaster(frequency_rast, frequency_file, overwrite = TRUE)
+  if (verbose) message(paste("Saved frequency raster:", basename(frequency_file)))
+
+  n_suitable_always <- sum(terra::values(frequency_rast) == 1, na.rm = TRUE)
+  n_suitable_ever   <- sum(terra::values(frequency_rast) >  0, na.rm = TRUE)
+  n_total           <- sum(!is.na(terra::values(frequency_rast)))
+
+  if (verbose) message("--- Summarize Raster Outputs Complete ---")
+  if (verbose) message(paste0("  Consensus threshold : ", consensus, " of ", max_votes, " folds"))
+  if (verbose) message(paste0("  Time steps processed: ", terra::nlyr(vote_stack)))
+  if (verbose) message(paste0("  Ever suitable       : ", n_suitable_ever, " / ", n_total,
+                              " pixels (", round(n_suitable_ever / n_total * 100, 1), "%)"))
+  if (verbose) message(paste0("  Always suitable     : ", n_suitable_always, " / ", n_total,
+                              " pixels (", round(n_suitable_always / n_total * 100, 1), "%)"))
+  if (verbose) message(paste0("  Output dir          : ", output_dir))
+
+  invisible(list(
+    consensus_stack    = con_stack,
+    frequency_raster   = frequency_rast,
+    consensus          = consensus,
+    n_timesteps        = terra::nlyr(vote_stack),
+    consensus_dir      = consensus_dir,
+    frequency_file     = frequency_file
   ))
 }
