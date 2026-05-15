@@ -1,49 +1,54 @@
 Package: TemporalModelR
 Type: Package
-Title: Temporal Modleing in R
-Version: 0.1.0
+Title: Temporally Explicit Species Distribution Modelling in R
+Version: 0.2.0
 Authors@R: c(
     person(
       "Connor", "Hughes",
       email = "connorhughes926@gmail.com",
-      role = c("aut", "cre")
-    ), person(
+      role  = c("aut", "cre")
+    ),
+    person(
       "Mariana", "Castaneda-Guzman",
       email = "mcguzman1997@gmail.com",
-      role = c("aut")
+      role  = c("aut")
     )
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
+Description: TemporalModelR is an R package built with the goal of increasing
+    the ease of implementing a temporally-explicit modeling methodology when
+    building ecological niche and species distribution models. It provides
+    functions to assist with three major steps of temporally-explicit
+    models: (i) preprocessing species and environmental data and generating
+    suitable background or pseudoabsence data, (ii) building a niche model
+    and generating temporally-explicit predictions from that model, and
+    (iii) model postprocessing to explore spatiotemporal trends in model
+    predictions.
+URL: https://github.com/CJHughes926/TemporalModelR
+BugReports: https://github.com/CJHughes926/TemporalModelR/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
-Imports: 
-    xfun,
-    dplyr,
+Depends:
+    R (>= 4.1)
+Imports:
     deldir,
     exactextractr,
-    ggplot2,
-    ggtext,
     graphics,
     grDevices,
-    grid,
-    gridExtra,
-    hypervolume,
-    methods,
-    raster,
-    RColorBrewer,
-    readr,
-    scales,
-    scatterpie,
     sf,
-    sp,
     stats,
     terra,
-    tidyr,
     tools,
-    utils,
-    viridis, 
+    utils
+Suggests:
     fastcpd,
-    alphahull
+    ggplot2,
+    hypervolume,
+    knitr,
+    mgcv,
+    randomForest,
+    RColorBrewer,
+    rmarkdown,
+    scatterpie
+VignetteBuilder: knitr
