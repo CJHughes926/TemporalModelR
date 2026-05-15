@@ -2,1214 +2,631 @@
 #'
 #' Preprocesses species occurrence data by partitioning it into spatially and
 #' temporally structured folds for cross-validation. Supports creation of
-#' balanced folds, spatial-only folds, and temporal-only folds.
-#' Generates spatial blocks using k-means clustering and assigns points to
-#' folds according to user-defined strategies.
-#' Works better with smaller numbers of folds and may have difficulties creating
-#' balanced folds for large numbers of groups. or where sample sizes are very
-#' small.
+#' spatial-only folds, temporal-only folds, and random folds.
 #'
-#' @param reference_shapefile_path Character or sf object. Path to the study area
-#'   polygon or an \code{sf} polygon object defining the study region.
-#' @param points_file_path Character, sf object, sfc object, Spatial object, or
-#'   data frame. Path to occurrence data (.csv, .shp, .geojson, .gpkg) or spatial object.
-#' @param time_col Character. Column name for temporal blocking. Required if using
-#'   temporal or balanced folds.
-#' @param xcol Character. Name of the x-coordinate column
-#'   when reading CSV or data frame. Required only if input is .csv, not sf or Spatial object.
-#' @param ycol Character. Name of the y-coordinate column
-#'   when reading CSV or data frame. Required only if input is .csv, not sf or Spatial object.
-#' @param points_crs Character or CRS object. CRS of input points if not embedded.
-#'   Required only if input is .csv, not sf or Spatial object.
-#' @param n_spatial_folds Integer. Number of spatially explicit folds (ignored if using balanced folds).
-#' @param n_temporal_folds Integer. Number of temporally explicit folds (ignored if using balanced folds).
-#' @param n_balanced_folds Integer. Number of balanced folds to create, which simultaneously
-#'   balance spatial and temporal representation. Overrides n_spatial_folds and n_temporal_folds.
-#' @param max_imbalance Numeric. Maximum allowed fold size imbalance as a proportion (0–1). Default is 0.05.
-#' @param generate_plots Logical. If TRUE, generates diagnostic plots showing fold distributions. Default is TRUE.
-#' @param output_file Character. Optional path to save results as an \code{.rds} file.
+#' Works better with smaller numbers of folds and may have difficulties
+#' creating even folds for large numbers of groups or where sample sizes
+#' are very small.
 #'
-#' @return A list containing:
+#' @param reference_shapefile_path Character or sf object. Path to a polygon
+#'   file or an \code{sf} polygon object defining the study area.
+#' @param points_file_path Character, sf object, sfc object, Spatial object,
+#'   or data frame. Path to occurrence data (\code{.csv}, \code{.shp},
+#'   \code{.geojson}, \code{.gpkg}) or a spatial object.
+#' @param time_cols Character. Name of a single column containing temporal
+#'   values (e.g. year). Used to define temporal blocks. Required when using
+#'   temporal folds. Must be a single column name; does not support more than one
+#'   time column unlike other functions in this package. Compound time representations
+#'   (e.g. year + season) should be encoded into a single ordered numeric column
+#'   before partitioning, or only one (e.g. year) should be used.
+#' @param xcol Character. Name of the x-coordinate column. Required when
+#'   \code{points_file_path} is a CSV file or data frame.
+#' @param ycol Character. Name of the y-coordinate column. Required when
+#'   \code{points_file_path} is a CSV file or data frame.
+#' @param points_crs Character or CRS object. CRS of the input points.
+#'   Required when \code{points_file_path} is a CSV file or data frame.
+#' @param n_spatial_folds Integer. Number of spatially explicit folds. Ignored
+#'   when using random folds. Default is \code{0}.
+#' @param n_temporal_folds Integer. Number of temporally explicit folds.
+#'   When used alone (with \code{n_spatial_folds = 0}), creates temporal-only
+#'   folds where each fold spans the full study area but covers a distinct
+#'   slice of the time series. When combined with \code{n_spatial_folds},
+#'   creates a spatiotemporal design. Ignored when using random folds.
+#'   Default is \code{0}.
+#' @param n_balanced_folds Integer. Reserved for future use. Default is
+#'   \code{0} (disabled).
+#' @param n_random_folds Integer. Number of random folds with no spatial or
+#'   temporal structure. Overrides all other fold parameters. Default is
+#'   \code{0}.
+#' @param single_fold Logical. If \code{TRUE}, bypasses all partitioning and
+#'   assigns all points to a single fold (fold 1). In this mode all points are
+#'   used for both training and testing, producing a single model trained on
+#'   the full dataset. All downstream functions accept the result identically
+#'   to a standard multi-fold partition. Overrides all fold count parameters.
+#'   Default is \code{FALSE}.
+#' @param max_imbalance Numeric. Maximum allowed fold size imbalance as a
+#'   proportion between 0 and 1. Default is \code{0.05}.
+#' @param max_attempts Integer. Maximum number of partitioning attempts for
+#'   spatiotemporal and balanced modes. Each attempt re-runs the spatial block
+#'   construction; the attempt with the lowest imbalance is returned. Ignored
+#'   for random and spatial-only modes. Default is \code{10}.
+#' @param create_plot Logical. If \code{TRUE} (default), generates
+#'   diagnostic plots showing fold distributions.
+#' @param plot_palette Character. Name of an HCL or RColorBrewer palette used
+#'   to color folds in diagnostic plots. Accepts any HCL palette name (see
+#'   \code{\link[grDevices]{hcl.pals}}) or, if \pkg{RColorBrewer} is installed,
+#'   any Brewer palette name. Default is \code{"Dark 2"}.
+#' @param output_file Character. Optional path to save the result as an
+#'   \code{.rds} file. The parent directory will be created if it does not
+#'   exist. Default is \code{NULL}.
+#' @param verbose Logical. If \code{TRUE} (default), prints progress
+#'   messages during processing. Includes the partition mode, fold
+#'   structure, per-fold point counts, and file-save confirmation.
+#'
+#' @return Invisibly returns a list containing:
 #' \itemize{
-#'   \item \code{pts_sf}: sf object of occurrence points with assigned folds and block types.
-#'   \item \code{voronoi_sf}: sf object of Voronoi polygons for spatial blocks.
-#'   \item \code{final_fold_counts}: Table of point counts per fold.
-#'   \item \code{mean_per_fold}: Mean number of points per fold.
-#'   \item \code{imbalance}: Maximum fold imbalance as a proportion.
-#'   \item \code{n_spatially_exclusive_folds}: Number of spatially exclusive folds created.
-#'   \item \code{n_temporally_exclusive_folds}: Number of temporally exclusive folds created.
-#'   \item \code{n_spatial_exclusive_blocks}: Number of spatially exclusive blocks.
-#'   \item \code{n_shared_blocks}: Number of shared blocks across folds.
-#'   \item \code{plots}: List of ggplot objects (if \code{generate_plots = TRUE}).
+#'   \item \code{folds}: Data frame of fold assignments with a \code{fold}
+#'     column identifying each point's cross-validation fold.
+#'   \item \code{points_sf}: sf object of occurrence points with assigned
+#'     folds.
+#'   \item \code{voronoi_folds}: sf object of Voronoi polygons representing
+#'     the spatial fold boundaries. \code{NULL} for random folds, temporal-only
+#'     folds, and single-fold mode.
+#'   \item \code{summary}: Data frame of partitioning summary statistics.
+#'   \item \code{plots}: Named list of recorded plot objects when
+#'     \code{create_plot = TRUE}. Empty list in single-fold mode.
 #' }
 #'
 #' @details
-#' The function partitions data into folds using either a balanced approach
-#' (simultaneously optimizing spatial and temporal representation) or separate
-#' spatial/temporal explicit folds.
+#' The function partitions data into folds using one of five modes:
+#' \itemize{
+#'   \item \strong{Single fold}: All points are assigned to fold 1 and used
+#'     for both training and testing. This produces a single model trained on
+#'     the full dataset with no held-out validation. Useful when sample sizes
+#'     are too small for cross-validation, or as a final production model step
+#'     after cross-validation has already established model quality. Set
+#'     \code{single_fold = TRUE}. All downstream functions accept the result
+#'     identically to standard multi-fold output.
 #'
-#' Spatial blocks are generated with k-means
-#' clustering and visualized using Voronoi tessellation. Temporal blocks are created based on
-#' the \code{time_col}.
+#'   \item \strong{Random}: Points are assigned to folds by random shuffling
+#'     with no spatial or temporal structure. Each fold is a simple random
+#'     sample of the full dataset, intended as a naive baseline that makes no
+#'     attempt to reduce spatial or temporal autocorrelation between training
+#'     and test sets. Use \code{n_random_folds}.
 #'
-#' Spatial folds partition off spatial areas that do not overlap with other spatial folds for
-#' comparison, temporal folds partition off time periods that dont overlap with other temporal
-#' folds. Balanced folds attempt to distribute points evenly across folds while enforcing spatial
-#' and temporal structure.
+#'   \item \strong{Spatial-only}: The study area is divided into \eqn{k}
+#'     contiguous spatial regions using a recursive k-d tree bisection
+#'     algorithm. At each step the point set is split along its longest
+#'     spatial axis, recursively halving until the target number of folds
+#'     is reached. A centroid reassignment pass then refines boundaries
+#'     to improve balance. Each region becomes one fold, so training
+#'     always occurs on data from geographically distinct areas relative
+#'     to the test fold. No temporal separation is imposed, meaning that
+#'     points from any time period may appear in any fold. Use
+#'     \code{n_spatial_folds} alone.
 #'
-#' Partitioned datasets are suitable for cross-validation in modeling workflows,
-#' ensuring spatial and temporal independence between folds.
+#'   \item \strong{Temporal-only}: Each fold covers the full spatial extent
+#'     of the study area but is restricted to a distinct, non-overlapping
+#'     slice of the time series. The global time series is divided into
+#'     \code{n_temporal_folds} equal intervals using quantile-based breaks,
+#'     and all points within each interval form one fold. This design tests
+#'     model transferability across time while retaining full spatial coverage
+#'     in every fold. Use \code{n_temporal_folds} alone (with
+#'     \code{n_spatial_folds = 0}). Requires \code{time_cols}.
 #'
-#' @seealso
-#' Preprocessing: \code{\link{spatiotemporal_rarefication}},
-#' \code{\link{temporally_explicit_extraction}}
-#'
-#' Modeling: \code{\link{build_hypervolume_models}}
-#'
-#' @examples
-#' \dontrun{
-#' partition_results <- spatiotemporal_partition(
-#'   reference_shapefile_path = "study_area.shp",
-#'   points_file_path = "occurrences.csv",
-#'   time_col = "Year",
-#'   xcol = "longitude",
-#'   ycol = "latitude",
-#'   points_crs = "EPSG:4326",
-#'   n_balanced_folds = 4,
-#'   max_imbalance = 0.05,
-#'   generate_plots = TRUE
-#' )
+#'   \item \strong{Spatiotemporal}: Folds are assigned using the same
+#'     recursive k-d tree bisection as spatial-only mode, operating on
+#'     the full point set to produce spatially contiguous groups. The
+#'     resulting groups are then split into a spatial pool
+#'     (\code{n_spatial_folds} folds drawn from geographically distinct
+#'     regions) and a temporal pool (\code{n_temporal_folds} folds each
+#'     restricted to a distinct slice of the time series but spanning
+#'     the full study area). Together the two pools assess both geographic
+#'     and temporal transferability in a single cross-validation design.
+#'     Use \code{n_spatial_folds} and \code{n_temporal_folds} together.
+#'     Requires \code{time_cols}.
 #' }
 #'
+#' Fold assignment uses a recursive k-d tree bisection algorithm that splits
+#' points along their longest spatial axis at each step, followed by a
+#' centroid reassignment pass to improve boundary regularity and point-count
+#' balance. Voronoi tessellation on fold centroids is used only for
+#' visualisation of the resulting spatial boundaries. For temporal
+#' mode, temporal blocks are defined by dividing the global time series
+#' into equal intervals using quantile-based breaks. For spatiotemporal mode,
+#' the typical spatial assignment is done, but with one larger spatial block
+#' made with enough points to represent all of the temporal folds, then the
+#' temporal blocking is applied to those points.
+#'
+#' Partitioned datasets are suitable for cross-validation in modeling
+#' workflows, ensuring spatial and/or temporal independence between folds.
+#'
+#' @seealso
+#' Preprocessing: \code{\link{spatiotemporal_rarefaction}},
+#'   \code{\link{temporally_explicit_extraction}},
+#'   \code{\link{generate_absences}}
+#'
+#' Modeling: \code{\link{build_temporal_hv}},
+#'   \code{\link{build_temporal_glm}}, \code{\link{build_temporal_gam}},
+#'   \code{\link{build_temporal_rf}}
+#'
+#' @examples
+#' \donttest{
+#'   pts_file <- system.file(
+#'     "extdata/points/extracted_seasonal_Scaled_Values.csv",
+#'     package = "TemporalModelR"
+#'   )
+#'
+#'   ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+#'                           package = "TemporalModelR")
+#'
+#'   study_crs <- sf::st_crs(terra::rast(ref_file))
+#'
+#'   study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
+#'     sf::st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500),
+#'                 crs = study_crs)
+#'   ))
+#'
+#'   spatiotemporal_partition(
+#'     reference_shapefile_path = study_area_sf,
+#'     points_file_path         = pts_file,
+#'     xcol                     = "x",
+#'     ycol                     = "y",
+#'     points_crs               = study_crs,
+#'     time_cols                = "year",
+#'     n_spatial_folds          = 2,
+#'     n_temporal_folds         = 2,
+#'     create_plot              = FALSE,
+#'     verbose                  = FALSE
+#'   )
+#' }
+
 #' @export
-#' @importFrom sf st_read st_as_sf st_transform st_coordinates st_crs st_bbox st_union st_intersection st_drop_geometry st_sfc
-#' @importFrom dplyr select all_of
-#' @importFrom ggplot2 ggplot geom_sf aes coord_sf theme_minimal theme element_text labs geom_histogram geom_col geom_hline scale_fill_viridis_d
+#' @importFrom sf st_read st_as_sf st_transform st_coordinates st_crs st_bbox
+#' @importFrom sf st_drop_geometry st_intersection st_polygon st_sf st_sfc st_union
 #' @importFrom deldir deldir tile.list
-#' @importFrom stats kmeans quantile
+#' @importFrom stats complete.cases median quantile
 #' @importFrom tools file_ext
-spatiotemporal_partition <- function(
-    reference_shapefile_path,
-    points_file_path,
-    time_col = NULL,
-    xcol = NULL,
-    ycol = NULL,
-    points_crs = NULL,
-    n_spatial_folds = 0,
-    n_temporal_folds = 0,
-    n_balanced_folds = 0,
-    max_imbalance = 0.05,
-    generate_plots = TRUE,
-    output_file = NULL
-) {
-  require(sf)
-  require(dplyr)
-  require(ggplot2)
-  require(viridis)
-  require(gridExtra)
-  require(deldir)
-  require(RColorBrewer)
+#' @importFrom utils capture.output
+spatiotemporal_partition <- function(reference_shapefile_path,
+                                     points_file_path,
+                                     time_cols         = NULL,
+                                     xcol             = NULL,
+                                     ycol             = NULL,
+                                     points_crs       = NULL,
+                                     n_spatial_folds  = 0,
+                                     n_temporal_folds = 0,
+                                     n_balanced_folds = 0,
+                                     n_random_folds   = 0,
+                                     single_fold      = FALSE,
+                                     max_imbalance    = 0.05,
+                                     max_attempts     = 10,
+                                     create_plot   = TRUE,
+                                     plot_palette     = "Dark 2",
+                                     output_file      = NULL,
+                                     verbose          = TRUE) {
 
-  ### INPUT VALIDATION
-  if (is.null(reference_shapefile_path)) {
-    stop("ERROR: 'reference_shapefile_path' is required.")
+  if (missing(reference_shapefile_path) || is.null(reference_shapefile_path)) {
+    stop(paste0("ERROR: 'reference_shapefile_path' is required but was not provided. ",
+                "Please provide a file path or sf object defining the study area."))
   }
-  if (is.null(points_file_path)) {
-    stop("ERROR: 'points_file_path' is required.")
+  if (missing(points_file_path) || is.null(points_file_path)) {
+    stop(paste0("ERROR: 'points_file_path' is required but was not provided. ",
+                "Please provide a file path, sf object, or data frame of occurrence points."))
   }
 
-  if ((n_spatial_folds > 0 || n_temporal_folds > 0) && n_balanced_folds > 0) {
-    stop("ERROR: Partitioning must be done either with balanced folds OR using spatially explicit and temporally explicit folds. Cannot mix both approaches.")
-  }
-
-  if (n_spatial_folds == 0 && n_temporal_folds == 0 && n_balanced_folds == 0) {
-    stop("ERROR: Must specify either n_spatial_folds/n_temporal_folds OR n_balanced_folds.")
-  }
-
-  if (n_spatial_folds == 1) {
-    stop("ERROR: Currently this function cannot balance groups with n_spatial_folds = 1. Try with 0 or >= 2.")
-  }
-
-  if (n_temporal_folds == 1) {
-    stop("ERROR: Currently this function cannot balance groups with n_temporal_folds = 1. Try with 0 or >= 2.")
-  }
-
-  use_balanced <- n_balanced_folds > 0
-
-  if (use_balanced) {
-    if (is.null(time_col)) {
-      stop("ERROR: 'time_col' is required for balanced folds.")
+  if (!is.null(output_file)) {
+    if (tolower(tools::file_ext(output_file)) != "rds") {
+      stop("ERROR: 'output_file' must have a '.rds' extension.")
     }
-    total_folds <- n_balanced_folds
-    n_spatial <- n_balanced_folds * ifelse(n_balanced_folds %% 2 == 0, 4, 5)
-    n_temporal <- 2
-    temporal_partitioning <- TRUE
-    partition_mode <- "balanced"
+    out_dir <- dirname(output_file)
+    if (!dir.exists(out_dir)) {
+      dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+  }
 
-    warning("Balanced folds are more difficult to perfectly create. You may need to use a more flexible max_imbalance threshold.")
+  if (isTRUE(single_fold)) {
+    use_random            <- FALSE
+    use_balanced          <- FALSE
+    temporal_partitioning <- FALSE
+    total_folds           <- 1
+    n_spatial             <- 1
+    n_temporal            <- 1
+    partition_mode        <- "single_fold"
   } else {
-    total_folds <- n_spatial_folds + n_temporal_folds
 
-    if (n_spatial_folds == 0 && n_temporal_folds > 0) {
-      warning("Only temporal folds specified. Clustering will only be done temporally; spatial structure will not be considered.")
-      n_spatial <- 1
-      n_temporal <- n_temporal_folds
-      temporal_partitioning <- TRUE
-      partition_mode <- "temporal_only"
-    } else if (n_temporal_folds == 0 && n_spatial_folds > 0) {
-      warning("Only spatial folds specified. Clustering will only be done spatially; temporal structure will not be considered.")
-      n_spatial <- n_spatial_folds * 2
-      n_temporal <- 1
+    use_random   <- n_random_folds > 0
+    use_balanced <- n_balanced_folds > 0
+
+    modes_active <- sum(c(
+      use_random,
+      use_balanced,
+      (n_spatial_folds > 0 || n_temporal_folds > 0)
+    ))
+    if (modes_active == 0) {
+      stop(paste0("ERROR: Must specify one of n_random_folds, n_balanced_folds, ",
+                  "n_spatial_folds/n_temporal_folds, or set single_fold = TRUE."))
+    }
+    if (modes_active > 1) {
+      stop(paste0("ERROR: Only one partitioning mode is allowed at a time. ",
+                  "Use n_random_folds, n_balanced_folds, or n_spatial_folds/n_temporal_folds."))
+    }
+    if (!use_random) {
+      if (n_spatial_folds == 1) {
+        stop("ERROR: n_spatial_folds must be 0 or >= 2.")
+      }
+      if (n_temporal_folds == 1) {
+        stop("ERROR: n_temporal_folds must be 0 or >= 2.")
+      }
+    }
+
+    if (use_random) {
+      total_folds           <- n_random_folds
+      n_spatial             <- 1
+      n_temporal            <- 1
       temporal_partitioning <- FALSE
-      partition_mode <- "spatial_only"
-    } else {
-      n_spatial <- n_spatial_folds * 2 * n_temporal_folds
-      n_temporal <- n_temporal_folds
+      partition_mode        <- "random"
+
+    } else if (use_balanced) {
+      if (is.null(time_cols)) {
+        stop("ERROR: 'time_cols' is required for balanced folds. Please specify the column name containing time or year values.")
+      }
+      total_folds           <- n_balanced_folds
+      n_spatial             <- n_balanced_folds * ifelse(n_balanced_folds %% 2 == 0, 4, 5)
+      n_temporal            <- 2
       temporal_partitioning <- TRUE
-      partition_mode <- "spatiotemporal"
-    }
-  }
+      partition_mode        <- "balanced"
+      warning("Balanced folds are more difficult to perfectly create. You may need a more flexible max_imbalance threshold.")
 
-  if (is.null(time_col) && temporal_partitioning) {
-    stop("ERROR: 'time_col' is required when temporal partitioning is enabled.")
-  }
-
-  ### LOAD REFERENCE SHAPEFILE
-  if (inherits(reference_shapefile_path, "sf")) {
-    print("Using provided sf object for reference shapefile...")
-    reference_shapefile <- reference_shapefile_path
-  } else if (inherits(reference_shapefile_path, "sfc")) {
-    print("Converting sfc object to sf for reference shapefile...")
-    reference_shapefile <- st_sf(geometry = reference_shapefile_path)
-  } else if (inherits(reference_shapefile_path, "Spatial")) {
-    print("Converting Spatial object to sf for reference shapefile...")
-    reference_shapefile <- st_as_sf(reference_shapefile_path)
-  } else if (is.character(reference_shapefile_path)) {
-    if (!file.exists(reference_shapefile_path)) {
-      stop(paste0("ERROR: Reference shapefile not found at: ", reference_shapefile_path))
-    }
-    print(paste("Reading reference shapefile:", basename(reference_shapefile_path)))
-    reference_shapefile <- st_read(reference_shapefile_path, quiet = TRUE)
-  } else {
-    stop("ERROR: reference_shapefile_path must be an sf object, sfc object, Spatial object, or file path")
-  }
-
-  ### LOAD AND CONVERT POINTS DATA
-  if (is.character(points_file_path)) {
-    if (!file.exists(points_file_path)) {
-      stop(paste("ERROR: File does not exist:", points_file_path))
-    }
-
-    file_ext <- tolower(tools::file_ext(points_file_path))
-
-    if (file_ext == "csv") {
-      if (is.null(xcol)) {
-        stop("ERROR: 'xcol' is required when reading CSV files.")
-      }
-      if (is.null(ycol)) {
-        stop("ERROR: 'ycol' is required when reading CSV files.")
-      }
-      if (is.null(points_crs)) {
-        stop("ERROR: 'points_crs' is required when reading CSV files.")
-      }
-
-      print(paste("Reading CSV file:", basename(points_file_path)))
-      pts <- read.csv(points_file_path, stringsAsFactors = FALSE)
-
-      if (!xcol %in% names(pts)) {
-        stop(paste0("ERROR: Column '", xcol, "' not found in CSV. Available columns: ", paste(names(pts), collapse = ", ")))
-      }
-      if (!ycol %in% names(pts)) {
-        stop(paste0("ERROR: Column '", ycol, "' not found in CSV. Available columns: ", paste(names(pts), collapse = ", ")))
-      }
-    } else if (file_ext %in% c("shp", "geojson", "gpkg")) {
-      print(paste("Reading spatial file:", basename(points_file_path)))
-      pts_sf_raw <- st_read(points_file_path, quiet = TRUE)
-      pts <- st_drop_geometry(pts_sf_raw)
-
-      coords <- st_coordinates(pts_sf_raw)
-      if (is.null(xcol)) xcol <- "X"
-      if (is.null(ycol)) ycol <- "Y"
-      pts[[xcol]] <- coords[, 1]
-      pts[[ycol]] <- coords[, 2]
-
-      if (is.null(points_crs)) {
-        points_crs <- st_crs(pts_sf_raw)
-      }
     } else {
-      stop(paste("ERROR: Unsupported file format:", file_ext, "Supported formats: .csv, .shp, .geojson, .gpkg"))
-    }
-  } else if (inherits(points_file_path, "sf")) {
-    print("Using provided sf object...")
-    pts <- st_drop_geometry(points_file_path)
-
-    coords <- st_coordinates(points_file_path)
-    if (is.null(xcol)) xcol <- "X"
-    if (is.null(ycol)) ycol <- "Y"
-    pts[[xcol]] <- coords[, 1]
-    pts[[ycol]] <- coords[, 2]
-
-    if (is.null(points_crs)) {
-      points_crs <- st_crs(points_file_path)
-    }
-  } else if (inherits(points_file_path, "sfc")) {
-    print("Converting sfc object to sf...")
-    points_sf_temp <- st_sf(geometry = points_file_path)
-    pts <- data.frame(row.names = 1:length(points_file_path))
-
-    coords <- st_coordinates(points_sf_temp)
-    if (is.null(xcol)) xcol <- "X"
-    if (is.null(ycol)) ycol <- "Y"
-    pts[[xcol]] <- coords[, 1]
-    pts[[ycol]] <- coords[, 2]
-
-    if (is.null(points_crs)) {
-      points_crs <- st_crs(points_sf_temp)
-    }
-  } else if (inherits(points_file_path, "Spatial")) {
-    print("Converting Spatial object to sf...")
-    points_sf_temp <- st_as_sf(points_file_path)
-    pts <- st_drop_geometry(points_sf_temp)
-
-    coords <- st_coordinates(points_sf_temp)
-    if (is.null(xcol)) xcol <- "X"
-    if (is.null(ycol)) ycol <- "Y"
-    pts[[xcol]] <- coords[, 1]
-    pts[[ycol]] <- coords[, 2]
-
-    if (is.null(points_crs)) {
-      points_crs <- st_crs(points_sf_temp)
-    }
-  } else if (is.data.frame(points_file_path)) {
-    if (is.null(xcol)) {
-      stop("ERROR: 'xcol' is required when providing a data frame.")
-    }
-    if (is.null(ycol)) {
-      stop("ERROR: 'ycol' is required when providing a data frame.")
-    }
-    if (is.null(points_crs)) {
-      stop("ERROR: 'points_crs' is required when providing a data frame.")
+      total_folds <- n_spatial_folds + n_temporal_folds
+      if (n_spatial_folds == 0 && n_temporal_folds > 0) {
+        if (is.null(time_cols)) {
+          stop("ERROR: 'time_cols' is required for temporal folds. Please specify the column name containing time or year values.")
+        }
+        warning("Only temporal folds specified. Spatial structure will not be considered.")
+        n_spatial             <- 1
+        n_temporal            <- n_temporal_folds
+        temporal_partitioning <- TRUE
+        partition_mode        <- "temporal_only"
+      } else if (n_temporal_folds == 0 && n_spatial_folds > 0) {
+        warning("Only spatial folds specified. Temporal structure will not be considered.")
+        n_spatial             <- NULL
+        n_temporal            <- 1
+        temporal_partitioning <- FALSE
+        partition_mode        <- "spatial_only"
+      } else {
+        if (is.null(time_cols)) {
+          stop("ERROR: 'time_cols' is required when temporal partitioning is enabled. Please specify the column name containing time or year values.")
+        }
+        n_spatial             <- n_spatial_folds * 2 * n_temporal_folds
+        n_temporal            <- n_temporal_folds
+        temporal_partitioning <- TRUE
+        partition_mode        <- "spatiotemporal"
+      }
     }
 
-    print("Using provided data frame...")
-    pts <- points_file_path
-
-    if (!xcol %in% names(pts)) {
-      stop(paste0("ERROR: Column '", xcol, "' not found in data frame. Available columns: ", paste(names(pts), collapse = ", ")))
-    }
-    if (!ycol %in% names(pts)) {
-      stop(paste0("ERROR: Column '", ycol, "' not found in data frame. Available columns: ", paste(names(pts), collapse = ", ")))
-    }
-  } else {
-    stop("ERROR: points_file_path must be an sf object, sfc object, Spatial object, data frame with x/y columns, or file path")
   }
 
-  ### DATA CLEANING
+  if (is.character(reference_shapefile_path) && verbose) {
+    message(paste("Reading shapefile:", basename(reference_shapefile_path)))
+  }
+  reference_shapefile <- .load_shapefile_input(reference_shapefile_path, "reference_shapefile_path")
+
+  pts        <- .load_points_data(points_file_path, xcol, ycol, points_crs,
+                                  verbose = verbose)
+  xcol       <- attr(pts, "xcol")
+  ycol       <- attr(pts, "ycol")
+  points_crs <- attr(pts, "crs")
+
   n_original <- nrow(pts)
-  pts_complete <- pts[complete.cases(pts), ]
-  n_removed <- n_original - nrow(pts_complete)
-
+  pts        <- pts[stats::complete.cases(pts), ]
+  n_removed  <- n_original - nrow(pts)
   if (n_removed > 0) {
-    pct_removed <- round(n_removed/n_original * 100, 2)
-    warning(paste0("Removed ", n_removed, " incomplete rows (", pct_removed, "%)"))
+    warning(paste0("Removed ", n_removed, " incomplete rows (",
+                   round(n_removed / n_original * 100, 2), "%)"))
+  }
+  if (nrow(pts) == 0) {
+    stop("ERROR: No complete rows remaining after removing incomplete data. Please check your input data.")
+  }
+  if (!xcol %in% names(pts)) {
+    stop(paste0("ERROR: Column '", xcol, "' not found in the input data."))
+  }
+  if (!ycol %in% names(pts)) {
+    stop(paste0("ERROR: Column '", ycol, "' not found in the input data."))
+  }
+  if (temporal_partitioning && !time_cols %in% names(pts)) {
+    stop(paste0("ERROR: Column '", time_cols, "' not found in the input data."))
   }
 
-  if (nrow(pts_complete) == 0) {
-    stop("ERROR: No complete rows remaining.")
-  }
-
-  ### VALIDATE REQUIRED COLUMNS
-  if (!xcol %in% names(pts_complete)) {
-    stop(paste0("ERROR: Column '", xcol, "' not found. Available: ", paste(names(pts_complete), collapse = ", ")))
-  }
-  if (!ycol %in% names(pts_complete)) {
-    stop(paste0("ERROR: Column '", ycol, "' not found. Available: ", paste(names(pts_complete), collapse = ", ")))
-  }
-  if (temporal_partitioning && !time_col %in% names(pts_complete)) {
-    stop(paste0("ERROR: Column '", time_col, "' not found. Available: ", paste(names(pts_complete), collapse = ", ")))
-  }
-
-  ### CREATE SF OBJECT
-  pts_sf <- st_as_sf(pts_complete, coords = c(xcol, ycol), crs = points_crs)
-  pts_sf <- st_transform(pts_sf, crs = st_crs(reference_shapefile))
-
+  pts_sf       <- sf::st_as_sf(pts, coords = c(xcol, ycol), crs = points_crs)
+  pts_sf       <- sf::st_transform(pts_sf, crs = sf::st_crs(reference_shapefile))
   total_points <- nrow(pts_sf)
 
+  if (isTRUE(single_fold)) {
+    if (verbose) message("\nPartition mode: SINGLE FOLD (all points used for training and testing)")
+
+    pts_sf$fold <- 1
+
+    summary_stats <- data.frame(
+      parameter = c("total_folds", "n_spatial_folds", "n_temporal_folds",
+                    "n_balanced_folds", "n_random_folds", "partition_mode",
+                    "total_points", "points_removed", "pct_rows_removed",
+                    "final_imbalance_pct"),
+      value = c(1, 0, 0, 0, 0, "single_fold",
+                total_points, n_removed,
+                ifelse(n_removed > 0, round(n_removed / n_original * 100, 2), 0),
+                0),
+      stringsAsFactors = FALSE
+    )
+    if (verbose) message(paste0("  1 fold | ", total_points, " points (100%)"))
+
+    result <- list(
+      folds        = sf::st_drop_geometry(pts_sf)[, "fold", drop = FALSE],
+      points_sf    = pts_sf,
+      voronoi_folds = NULL,
+      summary      = summary_stats,
+      plots        = list()
+    )
+
+    if (!is.null(output_file)) {
+      out_dir <- dirname(output_file)
+      if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+      saveRDS(result, output_file)
+      if (verbose) message(paste0("Results saved to: ", output_file))
+    }
+
+    return(invisible(result))
+  }
+
   if (total_points < total_folds) {
-    stop(paste0("ERROR: Not enough points (", total_points, ") for ", total_folds, " folds. Try producing fewer partitions."))
+    stop(paste0("ERROR: Not enough points (", total_points, ") for ", total_folds,
+                " folds. Please reduce the number of folds or provide more occurrence data."))
+  }
+
+  if (partition_mode == "spatial_only") {
+    n_unique_coords <- nrow(unique(sf::st_coordinates(pts_sf)))
+    n_spatial <- min(
+      floor(total_points / n_spatial_folds),
+      n_unique_coords - 1
+    )
+    n_spatial <- max(n_spatial, n_spatial_folds * 2)
+  }
+
+
+  if (use_random) {
+    if (verbose) message(paste0("\nPartition mode: RANDOM (", n_random_folds, " folds)"))
+
+    shuffled   <- sample(total_points)
+    fold_sizes <- diff(round(seq(0, total_points, length.out = n_random_folds + 1)))
+    pts_sf$fold          <- NA_integer_
+    pts_sf$fold[shuffled] <- rep(seq_len(n_random_folds), times = fold_sizes)
+    pts_sf$spatial_block  <- NA_integer_
+    pts_sf$temporal_block <- NA_integer_
+    pts_sf$block_type     <- "random"
+
+    final_fold_counts <- table(factor(pts_sf$fold, levels = seq_len(n_random_folds)))
+    mean_per_fold     <- mean(final_fold_counts)
+    imbalance         <- max(abs(final_fold_counts - mean_per_fold)) / mean_per_fold
+
+    plot_list <- if (create_plot) {
+      .plot_partitions_base(pts_sf, reference_shapefile, final_fold_counts, mean_per_fold,
+                            n_random_folds, "random", time_cols, !is.null(time_cols), 1, NULL,
+                            plot_palette)
+    } else {
+      list()
+    }
+
+    result <- .build_partition_result(pts_sf, NULL, final_fold_counts, mean_per_fold, imbalance,
+                                      n_spatial, n_temporal, total_folds, partition_mode,
+                                      temporal_partitioning, FALSE, TRUE,
+                                      0, 0, 0, n_random_folds,
+                                      n_removed, n_original, plot_list, output_file,
+                                      verbose = verbose)
+    if (verbose) message(paste(utils::capture.output(
+      print(result$summary, row.names = FALSE)), collapse = "\n"))
+    return(invisible(result))
   }
 
   if (n_spatial >= total_points) {
-    stop(paste0("ERROR: Number of spatial blocks (", n_spatial, ") is >= number of points (", total_points, "). Try producing fewer partitions."))
+    stop(paste0("ERROR: Spatial blocks (", n_spatial, ") >= points (", total_points,
+                "). Please reduce the number of folds or provide more occurrence data."))
   }
 
-  ### INTERNAL RETRY LOOP
-  max_internal_retries <- 10
-  best_imbalance <- Inf
-  best_results <- NULL
+  if (partition_mode == "spatial_only") {
+    if (verbose) message(paste0("\nPartition mode: SPATIAL_ONLY (", n_spatial_folds, " spatial folds)"))
 
-  for (attempt in 1:max_internal_retries) {
+    pts_work               <- pts_sf
+    pts_work$spatial_block <- NA_integer_
+    pts_work$temporal_block <- 1
+    pts_work$fold          <- NA_integer_
+    pts_work$block_type    <- NA_character_
 
-    pts_sf_attempt <- pts_sf
-    pts_sf_attempt$spatial_block <- NULL
-    pts_sf_attempt$temporal_block <- NULL
-    pts_sf_attempt$fold <- NULL
-    pts_sf_attempt$block_type <- NULL
+    spatial_info           <- .build_spatial_blocks(pts_work, reference_shapefile, n_spatial)
+    pts_work$spatial_block <- spatial_info$clusters
 
-    if (use_balanced) {
+    pts_work <- .assign_spatiotemporal_folds(pts_work, n_spatial_folds, n_temporal_folds,
+                                             total_folds, n_spatial, n_temporal,
+                                             spatial_info$centers, spatial_info$dist_matrix,
+                                             spatial_info$adjacency, temporal_partitioning,
+                                             max_imbalance, use_balanced)
 
-      ### BALANCED FOLD LOGIC
-      if (attempt == 1) {
-        print("PARTITION MODE: BALANCED")
-        print(paste0(" ", n_balanced_folds, " balanced folds"))
-        print(paste0(" ", n_spatial, " spatial blocks (", n_balanced_folds, " * 4)"))
-        print(paste0(" ", n_temporal, " temporal blocks"))
-      }
+    pts_work$spatial_block <- pts_work$fold
 
-      ### SPATIAL PARTITIONING
-      coords <- st_coordinates(pts_sf_attempt)
-      kmeans_result <- kmeans(coords, centers = n_spatial, nstart = 50, iter.max = 100)
-      pts_sf_attempt$spatial_block <- kmeans_result$cluster
+    fold_coords <- sf::st_coordinates(pts_work)
+    fold_cx <- vapply(seq_len(total_folds), function(f) {
+      mean(fold_coords[pts_work$fold == f, 1])
+    }, numeric(1))
+    fold_cy <- vapply(seq_len(total_folds), function(f) {
+      mean(fold_coords[pts_work$fold == f, 2])
+    }, numeric(1))
+    bbox  <- sf::st_bbox(reference_shapefile)
+    vor   <- deldir::deldir(fold_cx, fold_cy,
+                            rw = c(bbox["xmin"], bbox["xmax"], bbox["ymin"], bbox["ymax"]))
+    tiles <- deldir::tile.list(vor)
+    polys <- lapply(seq_along(tiles), function(i) {
+      tile <- tiles[[i]]
+      sf::st_polygon(list(cbind(c(tile$x, tile$x[1]), c(tile$y, tile$y[1]))))
+    })
+    voronoi_sf <- sf::st_sf(fold_group = seq_len(total_folds),
+                            geometry = sf::st_sfc(polys, crs = sf::st_crs(pts_work)))
+    voronoi_sf <- suppressWarnings(sf::st_intersection(voronoi_sf, sf::st_union(reference_shapefile)))
 
-      spatial_centers <- data.frame(
-        spatial_block = 1:n_spatial,
-        center_x = kmeans_result$centers[, 1],
-        center_y = kmeans_result$centers[, 2]
-      )
+    fc  <- table(factor(pts_work$fold, levels = seq_len(total_folds)))
+    mpf <- mean(fc)
+    imb <- max(abs(fc - mpf)) / mpf
 
-      study_bbox <- st_bbox(reference_shapefile)
-      voronoi_deldir <- deldir(
-        spatial_centers$center_x,
-        spatial_centers$center_y,
-        rw = c(study_bbox["xmin"], study_bbox["xmax"], study_bbox["ymin"], study_bbox["ymax"])
-      )
+    if (imb > max_imbalance) {
+      warning(paste0("Spatial-only folds are imbalanced (", round(imb * 100, 2),
+                     "%) due to uneven point density. This is expected for spatial CV."))
+    }
 
-      voronoi_tiles <- tile.list(voronoi_deldir)
-      voronoi_polygons <- lapply(seq_along(voronoi_tiles), function(i) {
-        tile <- voronoi_tiles[[i]]
-        coords_poly <- cbind(c(tile$x, tile$x[1]), c(tile$y, tile$y[1]))
-        st_polygon(list(coords_poly))
-      })
+    plot_list <- if (create_plot) {
+      .plot_partitions_base(pts_work, reference_shapefile, fc, mpf,
+                            total_folds, partition_mode, time_cols, temporal_partitioning,
+                            n_temporal, voronoi_sf, plot_palette)
+    } else {
+      list()
+    }
 
-      voronoi_sf <- st_sf(
-        spatial_block = 1:n_spatial,
-        geometry = st_sfc(voronoi_polygons, crs = st_crs(pts_sf_attempt))
-      )
-      voronoi_sf <- suppressWarnings(st_intersection(voronoi_sf, st_union(reference_shapefile)))
+    result <- .build_partition_result(pts_work, voronoi_sf, fc, mpf, imb,
+                                      n_spatial, n_temporal, total_folds, partition_mode,
+                                      temporal_partitioning, use_balanced, FALSE,
+                                      n_spatial_folds, n_temporal_folds, n_balanced_folds, 0,
+                                      n_removed, n_original, plot_list, output_file,
+                                      verbose = verbose)
+    if (verbose) message(paste(utils::capture.output(
+      print(result$summary, row.names = FALSE)), collapse = "\n"))
+    return(invisible(result))
+  }
 
-      n_blocks <- nrow(voronoi_sf)
-      adjacency_matrix <- matrix(FALSE, n_blocks, n_blocks)
+  best_imbalance       <- Inf
+  best_results         <- NULL
+  best_voronoi         <- NULL
 
-      for (i in 1:(n_blocks - 1)) {
-        for (j in (i + 1):n_blocks) {
-          intersection <- suppressWarnings(st_intersection(voronoi_sf$geometry[i], voronoi_sf$geometry[j]))
-          if (length(intersection) > 0 && !st_is_empty(intersection)) {
-            geom_type <- st_geometry_type(intersection)
-            if (geom_type %in% c("LINESTRING", "MULTILINESTRING", "GEOMETRYCOLLECTION")) {
-              adjacency_matrix[i, j] <- TRUE
-              adjacency_matrix[j, i] <- TRUE
-            }
-          }
-        }
-      }
+  for (attempt in seq_len(max_attempts)) {
+    pts_work               <- pts_sf
+    pts_work$spatial_block  <- NA_integer_
+    pts_work$temporal_block <- NA_integer_
+    pts_work$fold           <- NA_integer_
+    pts_work$block_type     <- NA_character_
 
-      ### TEMPORAL PARTITIONING
-      temporal_values <- pts_sf_attempt[[time_col]]
-      temporal_threshold <- median(temporal_values, na.rm = TRUE)
-      pts_sf_attempt$temporal_block <- ifelse(temporal_values <= temporal_threshold, 1, 2)
-
-      ### BALANCED FOLD ASSIGNMENT
-      pts_sf_attempt$fold <- NA
-      pts_sf_attempt$block_type <- NA
-
-      center_coords <- cbind(spatial_centers$center_x, spatial_centers$center_y)
-      distance_matrix <- as.matrix(dist(center_coords))
-
-      fold_block_pairs <- list()
-      fold_first_blocks <- numeric(n_balanced_folds)
-      assigned_blocks <- c()
-
-      all_blocks <- 1:n_spatial
-
-      if (n_balanced_folds == 1) {
-        fold_first_blocks[1] <- 1
-        assigned_blocks <- c(1)
+    if (attempt == 1) {
+      if (partition_mode == "spatiotemporal") {
+        if (verbose) message(paste0("\nPartition mode: SPATIOTEMPORAL (",
+                                    n_spatial_folds, " spatial folds, ",
+                                    n_temporal_folds, " temporal folds, ",
+                                    total_folds, " total folds)"))
       } else {
-        temp_selected <- numeric(n_balanced_folds)
+        if (verbose) message(paste0("\nPartition mode: ", toupper(partition_mode), " (",
+                                    n_spatial, " spatial blocks, ",
+                                    n_temporal, " temporal blocks, ",
+                                    total_folds, " folds)"))
+      }
+    }
 
-        best_min_dist <- -Inf
-        best_first_block <- NULL
+    spatial_info            <- .build_spatial_blocks(pts_work, reference_shapefile, n_spatial)
+    pts_work$spatial_block  <- spatial_info$clusters
+    voronoi_sf              <- spatial_info$voronoi_sf
 
-        for (candidate_first in all_blocks) {
-          temp_selected[1] <- candidate_first
+    if (temporal_partitioning) {
+      tv <- pts_work[[time_cols]]
 
-          for (i in 2:n_balanced_folds) {
-            remaining <- setdiff(all_blocks, temp_selected[1:(i-1)])
-            min_distances <- apply(distance_matrix[remaining, temp_selected[1:(i-1)], drop = FALSE], 1, min)
-            farthest <- remaining[which.max(min_distances)]
-            temp_selected[i] <- farthest
-          }
-
-          min_pairwise_dist <- min(distance_matrix[temp_selected, temp_selected][upper.tri(distance_matrix[temp_selected, temp_selected])])
-
-          if (min_pairwise_dist > best_min_dist) {
-            best_min_dist <- min_pairwise_dist
-            best_first_block <- temp_selected
-          }
+      if (n_temporal == 1) {
+        pts_work$temporal_block <- 1
+      } else if (n_temporal == 2) {
+        global_mid <- stats::median(tv, na.rm = TRUE)
+        pts_work$temporal_block <- ifelse(tv <= global_mid, 1, 2)
+      } else {
+        breaks <- stats::quantile(tv, probs = seq(0, 1, length.out = n_temporal + 1),
+                                  na.rm = TRUE)
+        if (any(duplicated(breaks))) {
+          breaks <- unique(breaks)
+          warning("Duplicate temporal breaks detected.")
         }
-
-        fold_first_blocks <- best_first_block
-        assigned_blocks <- fold_first_blocks
+        pts_work$temporal_block <- as.integer(cut(tv, breaks = breaks,
+                                                  labels = FALSE, include.lowest = TRUE))
       }
 
-      for (fold_id in 1:n_balanced_folds) {
-        first_block <- fold_first_blocks[fold_id]
-
-        adjacent_to_first <- which(adjacency_matrix[first_block, ])
-        available_adjacent <- setdiff(adjacent_to_first, assigned_blocks)
-
-        if (length(available_adjacent) > 0) {
-          second_block <- available_adjacent[1]
-        } else {
-          available_any <- setdiff(all_blocks, assigned_blocks)
-          if (length(available_any) > 0) {
-            block_distances <- distance_matrix[first_block, available_any]
-            second_block <- available_any[which.min(block_distances)]
-          } else {
-            second_block <- first_block
+      if (n_temporal == 2 && attempt > 1) {
+        tb_counts <- table(factor(pts_work$temporal_block, levels = 1:2))
+        tb_imb    <- max(tb_counts) / sum(tb_counts)
+        if (tb_imb > 0.65) {
+          pool_idx <- which(!is.na(pts_work$spatial_block))
+          tv_pool  <- tv[pool_idx]
+          alt_mid  <- stats::median(tv_pool, na.rm = TRUE)
+          if (!is.na(alt_mid) && alt_mid != global_mid) {
+            pts_work$temporal_block[pool_idx] <- ifelse(tv_pool <= alt_mid, 1, 2)
           }
-        }
-
-        fold_block_pairs[[fold_id]] <- c(first_block, second_block)
-        assigned_blocks <- c(assigned_blocks, second_block)
-
-        for (block_id in fold_block_pairs[[fold_id]]) {
-          for (temp_id in 1:2) {
-            block_points <- which(pts_sf_attempt$spatial_block == block_id &
-                                    pts_sf_attempt$temporal_block == temp_id)
-            pts_sf_attempt$fold[block_points] <- fold_id
-            pts_sf_attempt$block_type[block_points] <- "balanced_core"
-          }
-        }
-      }
-
-      unassigned_blocks <- setdiff(1:n_spatial, assigned_blocks)
-
-      if (length(unassigned_blocks) > 0) {
-        for (block_id in unassigned_blocks) {
-          fold_options <- 1:n_balanced_folds
-          block_center <- c(spatial_centers$center_x[block_id], spatial_centers$center_y[block_id])
-
-          fold_distances <- sapply(fold_options, function(f) {
-            fold_blocks <- fold_block_pairs[[f]]
-            fold_center <- c(mean(spatial_centers$center_x[fold_blocks]),
-                             mean(spatial_centers$center_y[fold_blocks]))
-            sqrt(sum((block_center - fold_center)^2))
-          })
-
-          sorted_folds <- order(fold_distances)
-
-          fold_for_temp1 <- sorted_folds[1]
-
-          remaining_folds <- setdiff(sorted_folds, fold_for_temp1)
-          fold_for_temp2 <- remaining_folds[1]
-
-          block_points_temp1 <- which(pts_sf_attempt$spatial_block == block_id &
-                                        pts_sf_attempt$temporal_block == 1)
-          if (length(block_points_temp1) > 0) {
-            pts_sf_attempt$fold[block_points_temp1] <- fold_for_temp1
-            pts_sf_attempt$block_type[block_points_temp1] <- "balanced_shared"
-          }
-
-          block_points_temp2 <- which(pts_sf_attempt$spatial_block == block_id &
-                                        pts_sf_attempt$temporal_block == 2)
-          if (length(block_points_temp2) > 0) {
-            pts_sf_attempt$fold[block_points_temp2] <- fold_for_temp2
-            pts_sf_attempt$block_type[block_points_temp2] <- "balanced_shared"
-          }
-        }
-      }
-
-      max_balanced_iterations <- 25
-      balanced_iteration <- 0
-
-      while (balanced_iteration < max_balanced_iterations) {
-        balanced_iteration <- balanced_iteration + 1
-
-        current_fold_counts <- table(factor(pts_sf_attempt$fold, levels = 1:total_folds))
-        mean_per_fold <- mean(current_fold_counts)
-        max_deviation <- max(abs(current_fold_counts - mean_per_fold))
-        current_imbalance <- max_deviation / mean_per_fold
-
-        if (current_imbalance <= max_imbalance) {
-          break
-        }
-
-        largest_fold <- as.numeric(names(which.max(current_fold_counts)))
-        smallest_fold <- as.numeric(names(which.min(current_fold_counts)))
-
-        if (current_fold_counts[largest_fold] <= current_fold_counts[smallest_fold]) {
-          break
-        }
-
-        candidate_points <- which(pts_sf_attempt$fold == largest_fold &
-                                    pts_sf_attempt$block_type == "balanced_shared")
-
-        if (length(candidate_points) == 0) {
-          break
-        }
-
-        point_coords <- st_coordinates(pts_sf_attempt)
-        smallest_fold_points <- which(pts_sf_attempt$fold == smallest_fold)
-
-        if (length(smallest_fold_points) > 0) {
-          smallest_fold_centroid <- c(mean(point_coords[smallest_fold_points, 1]),
-                                      mean(point_coords[smallest_fold_points, 2]))
-
-          candidate_coords <- point_coords[candidate_points, , drop = FALSE]
-          distances <- sqrt((candidate_coords[,1] - smallest_fold_centroid[1])^2 +
-                              (candidate_coords[,2] - smallest_fold_centroid[2])^2)
-
-          sorted_candidates <- candidate_points[order(distances)]
-
-          moved <- FALSE
-          for (point_to_move in sorted_candidates) {
-            moved_spatial_block <- pts_sf_attempt$spatial_block[point_to_move]
-            moved_temporal_block <- pts_sf_attempt$temporal_block[point_to_move]
-
-            other_temporal_block <- ifelse(moved_temporal_block == 1, 2, 1)
-            other_point_same_block <- which(pts_sf_attempt$spatial_block == moved_spatial_block &
-                                              pts_sf_attempt$temporal_block == other_temporal_block)
-
-            if (length(other_point_same_block) > 0 &&
-                pts_sf_attempt$fold[other_point_same_block[1]] == smallest_fold) {
-              next
-            }
-
-            pts_sf_attempt$fold[point_to_move] <- smallest_fold
-            moved <- TRUE
-            break
-          }
-
-          if (!moved) {
-            break
-          }
-        } else {
-          break
         }
       }
 
     } else {
-
-      ### SPATIAL/TEMPORAL EXPLICIT FOLD LOGIC
-      n_spatially_exclusive_folds <- n_spatial_folds
-      n_temporally_exclusive_folds <- n_temporal_folds
-
-      if (attempt == 1) {
-        print(paste0("PARTITION MODE: ", toupper(partition_mode)))
-        print(paste0(" ", n_spatially_exclusive_folds, " spatially explicit folds"))
-        print(paste0(" ", n_temporally_exclusive_folds, " temporally explicit folds"))
-        print(paste0(" ", n_spatial, " spatial blocks"))
-        print(paste0(" ", n_temporal, " temporal blocks"))
-      }
-
-      ### SPATIAL PARTITIONING
-      if (n_spatial == 1) {
-        pts_sf_attempt$spatial_block <- 1
-        voronoi_sf <- st_sf(
-          spatial_block = 1,
-          geometry = st_geometry(st_union(reference_shapefile))
-        )
-        adjacency_matrix <- matrix(TRUE, 1, 1)
-        spatial_centers <- data.frame(spatial_block = 1, center_x = mean(st_coordinates(pts_sf_attempt)[,1]),
-                                      center_y = mean(st_coordinates(pts_sf_attempt)[,2]))
-      } else {
-        coords <- st_coordinates(pts_sf_attempt)
-        kmeans_result <- kmeans(coords, centers = n_spatial, nstart = 50, iter.max = 100)
-        pts_sf_attempt$spatial_block <- kmeans_result$cluster
-
-        spatial_centers <- data.frame(
-          spatial_block = 1:n_spatial,
-          center_x = kmeans_result$centers[, 1],
-          center_y = kmeans_result$centers[, 2]
-        )
-
-        study_bbox <- st_bbox(reference_shapefile)
-        voronoi_deldir <- deldir(
-          spatial_centers$center_x,
-          spatial_centers$center_y,
-          rw = c(study_bbox["xmin"], study_bbox["xmax"], study_bbox["ymin"], study_bbox["ymax"])
-        )
-
-        voronoi_tiles <- tile.list(voronoi_deldir)
-        voronoi_polygons <- lapply(seq_along(voronoi_tiles), function(i) {
-          tile <- voronoi_tiles[[i]]
-          coords_poly <- cbind(c(tile$x, tile$x[1]), c(tile$y, tile$y[1]))
-          st_polygon(list(coords_poly))
-        })
-
-        voronoi_sf <- st_sf(
-          spatial_block = 1:n_spatial,
-          geometry = st_sfc(voronoi_polygons, crs = st_crs(pts_sf_attempt))
-        )
-        voronoi_sf <- suppressWarnings(st_intersection(voronoi_sf, st_union(reference_shapefile)))
-
-        n_blocks <- nrow(voronoi_sf)
-        adjacency_matrix <- matrix(FALSE, n_blocks, n_blocks)
-
-        for (i in 1:(n_blocks - 1)) {
-          for (j in (i + 1):n_blocks) {
-            intersection <- suppressWarnings(st_intersection(voronoi_sf$geometry[i], voronoi_sf$geometry[j]))
-            if (length(intersection) > 0 && !st_is_empty(intersection)) {
-              geom_type <- st_geometry_type(intersection)
-              if (geom_type %in% c("LINESTRING", "MULTILINESTRING", "GEOMETRYCOLLECTION")) {
-                adjacency_matrix[i, j] <- TRUE
-                adjacency_matrix[j, i] <- TRUE
-              }
-            }
-          }
-        }
-      }
-
-      ### TEMPORAL PARTITIONING
-      if (temporal_partitioning) {
-        temporal_values <- pts_sf_attempt[[time_col]]
-
-        if (n_temporal == 1) {
-          pts_sf_attempt$temporal_block <- 1
-        } else if (n_temporal == 2) {
-          temporal_threshold <- mean(temporal_values, na.rm = TRUE)
-          pts_sf_attempt$temporal_block <- ifelse(temporal_values <= temporal_threshold, 1, 2)
-        } else {
-          temporal_breaks <- quantile(temporal_values, probs = seq(0, 1, length.out = n_temporal + 1), na.rm = TRUE)
-          if (any(duplicated(temporal_breaks))) {
-            temporal_breaks <- unique(temporal_breaks)
-            warning("Duplicate temporal breaks detected")
-          }
-          pts_sf_attempt$temporal_block <- cut(temporal_values, breaks = temporal_breaks, labels = FALSE, include.lowest = TRUE)
-        }
-      } else {
-        pts_sf_attempt$temporal_block <- 1
-      }
-
-      ### FOLD ASSIGNMENT LOGIC
-      pts_sf_attempt$fold <- NA
-      pts_sf_attempt$block_type <- NA
-
-      center_coords <- cbind(spatial_centers$center_x, spatial_centers$center_y)
-      distance_matrix <- as.matrix(dist(center_coords))
-
-      spatial_exclusive_blocks <- numeric(0)
-      shared_blocks <- 1:n_spatial
-
-      if (n_spatially_exclusive_folds > 0) {
-        all_blocks <- 1:n_spatial
-        block_coords <- center_coords
-
-        selected_blocks <- numeric(n_spatially_exclusive_folds)
-
-        first_block_candidates <- all_blocks
-        best_min_dist <- -Inf
-        best_first_block <- NULL
-
-        for (candidate_first in first_block_candidates) {
-          temp_selected <- candidate_first
-
-          for (i in 2:n_spatially_exclusive_folds) {
-            remaining <- setdiff(all_blocks, temp_selected)
-            min_distances <- apply(distance_matrix[remaining, temp_selected, drop = FALSE], 1, min)
-            farthest <- remaining[which.max(min_distances)]
-            temp_selected <- c(temp_selected, farthest)
-          }
-
-          min_pairwise_dist <- min(distance_matrix[temp_selected, temp_selected][upper.tri(distance_matrix[temp_selected, temp_selected])])
-
-          if (min_pairwise_dist > best_min_dist) {
-            best_min_dist <- min_pairwise_dist
-            best_first_block <- temp_selected
-          }
-        }
-
-        selected_blocks <- best_first_block
-
-        spatial_exclusive_blocks <- selected_blocks
-        shared_blocks <- setdiff(1:n_spatial, spatial_exclusive_blocks)
-      }
-
-      spatial_fold_assignment <- data.frame(
-        fold = 1:n_spatially_exclusive_folds,
-        spatial_block = spatial_exclusive_blocks
-      )
-
-      fold_core_centroids <- list()
-      for (i in 1:nrow(spatial_fold_assignment)) {
-        block_id <- spatial_fold_assignment$spatial_block[i]
-        fold_id <- spatial_fold_assignment$fold[i]
-
-        block_points <- which(pts_sf_attempt$spatial_block == block_id)
-        pts_sf_attempt$fold[block_points] <- fold_id
-        pts_sf_attempt$block_type[block_points] <- "spatial_exclusive"
-
-        fold_core_centroids[[fold_id]] <- c(
-          spatial_centers$center_x[spatial_centers$spatial_block == block_id],
-          spatial_centers$center_y[spatial_centers$spatial_block == block_id]
-        )
-      }
-
-      block_ownership <- rep(NA, n_spatial)
-      block_ownership[spatial_exclusive_blocks] <- spatial_fold_assignment$fold
-
-      fold_priority_blocks <- list()
-      for (fold_id in 1:n_spatially_exclusive_folds) {
-        core_block <- spatial_fold_assignment$spatial_block[spatial_fold_assignment$fold == fold_id]
-        adjacent_to_core <- which(adjacency_matrix[core_block, ])
-        adjacent_shared <- intersect(adjacent_to_core, shared_blocks)
-        fold_priority_blocks[[fold_id]] <- adjacent_shared
-      }
-
-      if (temporal_partitioning && n_temporally_exclusive_folds > 0) {
-        temporal_folds <- (n_spatially_exclusive_folds + 1):total_folds
-
-        for (s in shared_blocks) {
-          for (t in 1:n_temporal) {
-            block_points_indices <- which(pts_sf_attempt$spatial_block == s &
-                                            pts_sf_attempt$temporal_block == t)
-
-            if (length(block_points_indices) > 0) {
-              temporal_fold_id <- temporal_folds[t]
-              pts_sf_attempt$fold[block_points_indices] <- temporal_fold_id
-              pts_sf_attempt$block_type[block_points_indices] <- "temporal_exclusive"
-            }
-          }
-        }
-      }
-
-      if (!use_balanced) {
-        initial_fold_counts <- table(factor(pts_sf_attempt$fold, levels = 1:total_folds))
-        mean_per_fold_target <- mean(initial_fold_counts)
-
-        spatial_fold_deficits <- sapply(1:n_spatially_exclusive_folds, function(f) {
-          max(0, mean_per_fold_target - initial_fold_counts[f])
-        })
-
-        total_deficit <- sum(spatial_fold_deficits)
-
-        if (total_deficit > 0 && n_temporally_exclusive_folds > 0) {
-          temporal_folds <- (n_spatially_exclusive_folds + 1):total_folds
-
-          temporal_fold_limits <- rep(0, length(temporal_folds))
-          for (i in seq_along(temporal_folds)) {
-            temporal_fold_id <- temporal_folds[i]
-            current_count <- initial_fold_counts[temporal_fold_id]
-            min_acceptable <- mean_per_fold_target * (1 - max_imbalance)
-            max_transferable <- floor(current_count - min_acceptable)
-            temporal_fold_limits[i] <- max(0, max_transferable)
-          }
-
-          point_coords <- st_coordinates(pts_sf_attempt)
-
-          fold_temporal_counts <- matrix(0, nrow = n_spatially_exclusive_folds, ncol = n_temporal)
-          fold_targets <- ceiling(spatial_fold_deficits)
-          temporal_remaining <- temporal_fold_limits
-
-          max_round_robin_iterations <- sum(fold_targets) * 2
-          round_robin_iteration <- 0
-
-          while (sum(fold_targets) > 0 && sum(temporal_remaining) > 0 && round_robin_iteration < max_round_robin_iterations) {
-            round_robin_iteration <- round_robin_iteration + 1
-
-            for (spatial_fold_id in 1:n_spatially_exclusive_folds) {
-              if (fold_targets[spatial_fold_id] <= 0) next
-
-              for (temporal_idx in seq_along(temporal_folds)) {
-                if (temporal_remaining[temporal_idx] <= 0) next
-
-                temporal_fold_id <- temporal_folds[temporal_idx]
-                temporal_block <- temporal_idx
-                fold_centroid <- fold_core_centroids[[spatial_fold_id]]
-
-                priority_blocks <- fold_priority_blocks[[spatial_fold_id]]
-
-                point_moved <- FALSE
-
-                for (priority_block in priority_blocks) {
-                  if (!is.na(block_ownership[priority_block]) && block_ownership[priority_block] != spatial_fold_id) {
-                    next
-                  }
-
-                  candidate_indices <- which(
-                    pts_sf_attempt$fold == temporal_fold_id &
-                      pts_sf_attempt$spatial_block == priority_block &
-                      pts_sf_attempt$temporal_block == temporal_block
-                  )
-
-                  if (length(candidate_indices) > 0) {
-                    candidate_coords <- point_coords[candidate_indices, , drop = FALSE]
-                    distances_to_centroid <- sqrt((candidate_coords[,1] - fold_centroid[1])^2 +
-                                                    (candidate_coords[,2] - fold_centroid[2])^2)
-
-                    point_to_move <- candidate_indices[which.min(distances_to_centroid)]
-
-                    pts_sf_attempt$fold[point_to_move] <- spatial_fold_id
-                    pts_sf_attempt$block_type[point_to_move] <- "rebalanced"
-
-                    if (is.na(block_ownership[priority_block])) {
-                      block_ownership[priority_block] <- spatial_fold_id
-                    }
-
-                    fold_temporal_counts[spatial_fold_id, temporal_block] <- fold_temporal_counts[spatial_fold_id, temporal_block] + 1
-                    fold_targets[spatial_fold_id] <- fold_targets[spatial_fold_id] - 1
-                    temporal_remaining[temporal_idx] <- temporal_remaining[temporal_idx] - 1
-
-                    point_moved <- TRUE
-                    break
-                  }
-                }
-
-                if (!point_moved) {
-                  available_shared <- shared_blocks[is.na(block_ownership[shared_blocks])]
-
-                  if (length(available_shared) > 0) {
-                    core_block <- spatial_fold_assignment$spatial_block[spatial_fold_assignment$fold == spatial_fold_id]
-                    block_distances <- distance_matrix[core_block, available_shared]
-                    closest_block <- available_shared[which.min(block_distances)]
-
-                    candidate_indices <- which(
-                      pts_sf_attempt$fold == temporal_fold_id &
-                        pts_sf_attempt$spatial_block == closest_block &
-                        pts_sf_attempt$temporal_block == temporal_block
-                    )
-
-                    if (length(candidate_indices) > 0) {
-                      candidate_coords <- point_coords[candidate_indices, , drop = FALSE]
-                      distances_to_centroid <- sqrt((candidate_coords[,1] - fold_centroid[1])^2 +
-                                                      (candidate_coords[,2] - fold_centroid[2])^2)
-
-                      point_to_move <- candidate_indices[which.min(distances_to_centroid)]
-
-                      pts_sf_attempt$fold[point_to_move] <- spatial_fold_id
-                      pts_sf_attempt$block_type[point_to_move] <- "rebalanced"
-                      block_ownership[closest_block] <- spatial_fold_id
-                      fold_priority_blocks[[spatial_fold_id]] <- c(fold_priority_blocks[[spatial_fold_id]], closest_block)
-
-                      fold_temporal_counts[spatial_fold_id, temporal_block] <- fold_temporal_counts[spatial_fold_id, temporal_block] + 1
-                      fold_targets[spatial_fold_id] <- fold_targets[spatial_fold_id] - 1
-                      temporal_remaining[temporal_idx] <- temporal_remaining[temporal_idx] - 1
-
-                      point_moved <- TRUE
-                    }
-                  }
-                }
-
-                if (fold_targets[spatial_fold_id] <= 0) break
-              }
-            }
-          }
-        }
-
-        max_balance_iterations <- 100000
-        balance_iteration <- 0
-
-        point_coords <- st_coordinates(pts_sf_attempt)
-
-        while (balance_iteration < max_balance_iterations) {
-          balance_iteration <- balance_iteration + 1
-
-          current_fold_counts <- table(factor(pts_sf_attempt$fold, levels = 1:total_folds))
-          mean_per_fold <- mean(current_fold_counts)
-          max_deviation <- max(abs(current_fold_counts - mean_per_fold))
-          current_imbalance <- max_deviation / mean_per_fold
-
-          if (current_imbalance <= max_imbalance) {
-            break
-          }
-
-          if (balance_iteration %% 5000 == 0) {
-            print(paste0("  Balance iteration ", balance_iteration, ": ", round(current_imbalance * 100, 2), "%"))
-          }
-
-          largest_fold <- as.numeric(names(which.max(current_fold_counts)))
-          smallest_fold <- as.numeric(names(which.min(current_fold_counts)))
-
-          if (current_fold_counts[largest_fold] <= current_fold_counts[smallest_fold]) {
-            break
-          }
-
-          largest_is_temporal <- largest_fold > n_spatially_exclusive_folds
-          smallest_is_spatial <- smallest_fold <= n_spatially_exclusive_folds
-
-          if (!largest_is_temporal || !smallest_is_spatial) {
-            break
-          }
-
-          priority_blocks <- fold_priority_blocks[[smallest_fold]]
-          fold_centroid <- fold_core_centroids[[smallest_fold]]
-
-          moved <- FALSE
-          for (priority_block in priority_blocks) {
-            if (!is.na(block_ownership[priority_block]) && block_ownership[priority_block] != smallest_fold) {
-              next
-            }
-
-            candidate_indices <- which(
-              pts_sf_attempt$fold == largest_fold &
-                pts_sf_attempt$spatial_block == priority_block
-            )
-
-            if (length(candidate_indices) > 0) {
-              candidate_coords <- point_coords[candidate_indices, , drop = FALSE]
-              distances_to_centroid <- sqrt((candidate_coords[,1] - fold_centroid[1])^2 +
-                                              (candidate_coords[,2] - fold_centroid[2])^2)
-
-              point_to_move <- candidate_indices[which.min(distances_to_centroid)]
-
-              pts_sf_attempt$fold[point_to_move] <- smallest_fold
-              pts_sf_attempt$block_type[point_to_move] <- "rebalanced"
-
-              if (is.na(block_ownership[priority_block])) {
-                block_ownership[priority_block] <- smallest_fold
-              }
-
-              moved <- TRUE
-              break
-            }
-          }
-
-          if (!moved) {
-            available_shared <- shared_blocks[is.na(block_ownership[shared_blocks])]
-
-            if (length(available_shared) > 0) {
-              core_block <- spatial_fold_assignment$spatial_block[spatial_fold_assignment$fold == smallest_fold]
-              block_distances <- distance_matrix[core_block, available_shared]
-              closest_block <- available_shared[which.min(block_distances)]
-
-              candidate_indices <- which(
-                pts_sf_attempt$fold == largest_fold &
-                  pts_sf_attempt$spatial_block == closest_block
-              )
-
-              if (length(candidate_indices) > 0) {
-                candidate_coords <- point_coords[candidate_indices, , drop = FALSE]
-                distances_to_centroid <- sqrt((candidate_coords[,1] - fold_centroid[1])^2 +
-                                                (candidate_coords[,2] - fold_centroid[2])^2)
-
-                point_to_move <- candidate_indices[which.min(distances_to_centroid)]
-
-                pts_sf_attempt$fold[point_to_move] <- smallest_fold
-                pts_sf_attempt$block_type[point_to_move] <- "rebalanced"
-                block_ownership[closest_block] <- smallest_fold
-                fold_priority_blocks[[smallest_fold]] <- c(fold_priority_blocks[[smallest_fold]], closest_block)
-                moved <- TRUE
-              }
-            }
-          }
-
-          if (!moved) {
-            break
-          }
-        }
-      }
+      pts_work$temporal_block <- 1
     }
 
-    unassigned_idx <- which(is.na(pts_sf_attempt$fold))
-    if (length(unassigned_idx) > 0) {
-      for (idx in unassigned_idx) {
-        current_counts <- table(factor(pts_sf_attempt$fold[!is.na(pts_sf_attempt$fold)], levels = 1:total_folds))
-        chosen_fold <- which.min(current_counts)[1]
-        pts_sf_attempt$fold[idx] <- chosen_fold
-        pts_sf_attempt$block_type[idx] <- "remainder"
-      }
+    if (use_balanced) {
+      pts_work <- .assign_balanced_folds(pts_work, n_balanced_folds, n_spatial,
+                                         spatial_info$centers, spatial_info$dist_matrix,
+                                         spatial_info$adjacency, max_imbalance, total_folds)
+    } else {
+      pts_work <- .assign_spatiotemporal_folds(pts_work, n_spatial_folds, n_temporal_folds,
+                                               total_folds, n_spatial, n_temporal,
+                                               spatial_info$centers, spatial_info$dist_matrix,
+                                               spatial_info$adjacency, temporal_partitioning,
+                                               max_imbalance, use_balanced)
     }
 
-    final_fold_counts <- table(factor(pts_sf_attempt$fold, levels = 1:total_folds))
-    mean_per_fold <- mean(final_fold_counts)
-    max_deviation <- max(abs(final_fold_counts - mean_per_fold))
-    imbalance <- max_deviation / mean_per_fold
-
-    if (imbalance < best_imbalance) {
-      best_imbalance <- imbalance
-      best_results <- list(
-        pts_sf = pts_sf_attempt,
-        voronoi_sf = voronoi_sf,
-        final_fold_counts = final_fold_counts,
-        mean_per_fold = mean_per_fold,
-        imbalance = imbalance,
-        n_spatially_exclusive_folds = if (use_balanced) n_balanced_folds else n_spatial_folds,
-        n_temporally_exclusive_folds = if (use_balanced) 0 else n_temporal_folds,
-        n_spatial_exclusive_blocks = if (use_balanced) n_balanced_folds * 2 else n_spatial_folds,
-        n_shared_blocks = if (use_balanced) n_spatial - (n_balanced_folds * 2) else length(shared_blocks),
-        best_attempt = attempt
-      )
+    unassigned <- which(is.na(pts_work$fold))
+    for (idx in unassigned) {
+      counts <- table(factor(pts_work$fold[!is.na(pts_work$fold)],
+                             levels = seq_len(total_folds)))
+      pts_work$fold[idx]       <- as.integer(names(which.min(counts))[1])
+      pts_work$block_type[idx] <- "remainder"
     }
 
-    if (imbalance <= max_imbalance) {
-      break
+    fc  <- table(factor(pts_work$fold, levels = seq_len(total_folds)))
+    mpf <- mean(fc)
+    imb <- max(abs(fc - mpf)) / mpf
+
+    if (imb < best_imbalance) {
+      best_imbalance <- imb
+      best_results   <- pts_work
+      best_voronoi   <- voronoi_sf
+      best_counts    <- fc
+      best_mean      <- mpf
     }
+    if (imb <= max_imbalance) break
   }
 
   if (best_imbalance > max_imbalance) {
-    stop(paste0("Failed to achieve balance within ", max_internal_retries, " attempts. ",
-                "Final imbalance: ", round(best_imbalance * 100, 2), "%. ",
-                "Try increasing max_imbalance threshold or adjusting fold configuration."))
+    warning(paste0("Could not achieve target balance within ",
+                   max_attempts, " attempts. ",
+                   "Final imbalance: ", round(best_imbalance * 100, 2), "%. ",
+                   "Returning best result achieved. Try increasing max_imbalance or adjusting the fold configuration."))
   }
 
-  pts_sf <- best_results$pts_sf
-  voronoi_sf <- best_results$voronoi_sf
-  final_fold_counts <- best_results$final_fold_counts
-  mean_per_fold <- best_results$mean_per_fold
-  imbalance <- best_results$imbalance
-  n_spatially_exclusive_folds <- best_results$n_spatially_exclusive_folds
-  n_temporally_exclusive_folds <- best_results$n_temporally_exclusive_folds
-  n_spatial_exclusive_blocks <- best_results$n_spatial_exclusive_blocks
-  n_shared_blocks <- best_results$n_shared_blocks
+  pts_sf            <- best_results
+  voronoi_sf        <- best_voronoi
+  final_fold_counts <- best_counts
+  mean_per_fold     <- best_mean
+  imbalance         <- best_imbalance
 
-  voronoi_fold_sf <- voronoi_sf
-
-
-  ### REPORTING
-  print("=== FOLD STRUCTURE ===")
-  print(paste0(total_folds, " folds | ", n_spatial, " spatial blocks"))
-  if (temporal_partitioning) {
-    print(paste0(" | ", n_temporal, " temporal blocks"))
+  plot_list <- if (create_plot) {
+    .plot_partitions_base(pts_sf, reference_shapefile, final_fold_counts, mean_per_fold,
+                          total_folds, partition_mode, time_cols, temporal_partitioning,
+                          n_temporal, voronoi_sf, plot_palette)
   } else {
-    print(" | No temporal blocks")
-  }
-  if (use_balanced) {
-    print("Mode: BALANCED")
-  } else {
-    print(paste0("Mode: ", toupper(partition_mode)))
-  }
-  print("=== FOLD SIZES ===")
-  for (f in 1:total_folds) {
-    points <- as.numeric(final_fold_counts[f])
-    percent <- round(points / total_points * 100, 2)
-    print(paste0("Fold ", f, ": ", points, " (", percent, "%)"))
-  }
-  print("")
-
-  plot_list <- list()
-
-  if (generate_plots) {
-    if (!exists("study_bbox")) {
-      study_bbox <- st_bbox(reference_shapefile)
-    }
-    bbox <- study_bbox
-
-    if (temporal_partitioning) {
-      subtitle_text <- paste0(n_spatial, " spatial | ", n_temporal, " temporal | ",
-                              if (use_balanced) "BALANCED" else toupper(partition_mode))
-    } else {
-      subtitle_text <- paste0(n_spatial, " spatial | ",
-                              if (use_balanced) "BALANCED" else toupper(partition_mode))
-    }
-
-    if (temporal_partitioning && n_temporal > 1) {
-      fold_colors <- viridis::viridis(n = total_folds, option = "turbo")
-      plot_list$temporal <- ggplot(pts_sf, aes(x = get(time_col), fill = factor(fold))) +
-        geom_histogram(bins = 30, color = "white", linewidth = 0.2) +
-        scale_fill_manual(values = fold_colors, name = "Fold") +
-        theme_minimal(base_size = 10) +
-        theme(plot.title = element_text(face = "bold"), legend.position = "right") +
-        labs(title = "Temporal Distribution by Fold", x = time_col, y = "Count")
-    }
-
-    fold_balance_df <- data.frame(
-      fold = factor(names(final_fold_counts), levels = sort(as.numeric(names(final_fold_counts)))),
-      count = as.numeric(final_fold_counts)
-    )
-
-    fold_colors <- viridis::viridis(n = total_folds, option = "turbo")
-    plot_list$balance <- ggplot(fold_balance_df, aes(x = fold, y = count, fill = fold)) +
-      geom_col(alpha = 0.8) +
-      geom_hline(yintercept = mean_per_fold, linetype = "dashed", color = "red", linewidth = 0.8) +
-      scale_fill_manual(values = fold_colors, name = "Fold") +
-      theme_minimal(base_size = 10) +
-      theme(plot.title = element_text(face = "bold")) +
-      labs(title = "Fold Balance", x = "Fold", y = "Points")
-
-    if (n_spatial > 1 && temporal_partitioning && n_temporal > 1) {
-      fold_colors <- viridis::viridis(n = total_folds, option = "turbo")
-
-      if (use_balanced) {
-        plot_list$combined <- ggplot() +
-          geom_sf(data = reference_shapefile, fill = "gray98", color = "gray40", linewidth = 0.5) +
-          geom_sf(data = voronoi_fold_sf, fill = NA, color = "black", linewidth = 1) +
-          geom_sf(data = pts_sf, aes(color = factor(fold), shape = factor(temporal_block)), size = 2, alpha = 0.8) +
-          scale_color_manual(values = fold_colors, name = "Fold") +
-          scale_shape_manual(values = c(16, 17, 15, 18)[1:n_temporal], name = "Temporal Block") +
-          coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]), ylim = c(bbox["ymin"], bbox["ymax"])) +
-          theme_minimal(base_size = 12) +
-          theme(
-            plot.title = element_text(face = "bold", size = 14),
-            legend.position = "right",
-            panel.grid = element_line(color = "gray90", linewidth = 0.3),
-            panel.background = element_rect(fill = "aliceblue", color = NA)
-          ) +
-          labs(title = "Balanced Partitioning Structure")
-      } else {
-        plot_list$combined <- ggplot() +
-          geom_sf(data = reference_shapefile, fill = "gray98", color = "gray40", linewidth = 0.5) +
-          geom_sf(data = voronoi_fold_sf, fill = NA, color = "black", linewidth = 1) +
-          geom_sf(data = pts_sf, aes(color = factor(fold), shape = factor(temporal_block)), size = 2, alpha = 0.8) +
-          scale_color_manual(values = fold_colors, name = "Fold") +
-          scale_shape_manual(values = c(16, 17, 15, 18)[1:n_temporal], name = "Temporal Block") +
-          coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]), ylim = c(bbox["ymin"], bbox["ymax"])) +
-          theme_minimal(base_size = 12) +
-          theme(
-            plot.title = element_text(face = "bold", size = 14),
-            legend.position = "right",
-            panel.grid = element_line(color = "gray90", linewidth = 0.3),
-            panel.background = element_rect(fill = "aliceblue", color = NA)
-          ) +
-          labs(title = "Spatiotemporal Partitioning Structure")
-      }
-    } else {
-      plot_list$combined <- plot_list$balance
-    }
-
-    print(plot_list$combined)
+    list()
   }
 
-  summary_stats <- data.frame(
-    parameter = c("spatial_blocks", "temporal_blocks", "total_folds",
-                  "n_spatial_folds", "n_temporal_folds", "n_balanced_folds",
-                  "partition_mode",
-                  "total_points", "points_removed", "pct_rows_removed",
-                  "final_imbalance_pct",
-                  "temporal_partitioning_enabled"),
-    value = c(n_spatial, n_temporal, total_folds,
-              if (use_balanced) 0 else n_spatial_folds,
-              if (use_balanced) 0 else n_temporal_folds,
-              if (use_balanced) n_balanced_folds else 0,
-              partition_mode,
-              nrow(pts_sf), n_removed,
-              ifelse(n_removed > 0, round(n_removed/n_original * 100, 2), 0),
-              round(imbalance * 100, 2),
-              as.character(temporal_partitioning))
-  )
-
-  folds_cols <- c("fold", "spatial_block", "temporal_block", "block_type")
-  if (temporal_partitioning) {
-    folds_cols <- c(folds_cols, time_col)
-  }
-
-  results <- list(
-    folds = pts_sf %>% st_drop_geometry() %>% dplyr::select(all_of(folds_cols)),
-    points_sf = pts_sf,
-    voronoi_blocks = voronoi_sf,
-    voronoi_folds = voronoi_fold_sf,
-    summary = summary_stats,
-    plots = plot_list
-  )
-
-  if (!is.null(output_file)) {
-    output_dir <- dirname(output_file)
-    if (!dir.exists(output_dir)) {
-      dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-    }
-    saveRDS(results, output_file)
-    print(paste0("Results saved to: ", output_file))
-  }
-
-  return(results)
+  result <- .build_partition_result(pts_sf, voronoi_sf, final_fold_counts, mean_per_fold,
+                                    imbalance, n_spatial, n_temporal, total_folds, partition_mode,
+                                    temporal_partitioning, use_balanced, FALSE,
+                                    n_spatial_folds, n_temporal_folds, n_balanced_folds, 0,
+                                    n_removed, n_original, plot_list, output_file,
+                                    verbose = verbose)
+  if (verbose) message(paste(utils::capture.output(
+    print(result$summary, row.names = FALSE)), collapse = "\n"))
+  invisible(result)
 }

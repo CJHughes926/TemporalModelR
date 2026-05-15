@@ -2,74 +2,112 @@
 #'
 #' Preprocessing function that extracts raster values to species occurrence
 #' records based on temporal components. Matches environmental layers to
-#' occurrence timestamps and computes scaling parameters for standardization.
+#' occurrence timestamps and optionally computes scaling parameters for standardization.
 #'
 #' @param points_sp sf object, SpatialPointsDataFrame, file path to
 #'   .csv/.shp/.geojson/.gpkg, or data frame with coordinate columns.
-#' @param raster_dir Character. Directory containing source raster files (.tif).
-#' @param variable_patterns Named character vector mapping variable names to
-#'   filename patterns. Time placeholders (e.g., YEAR, MONTH) must match
-#'   time_cols. Static variables have no placeholders.
+#' @param raster_dir Character. Directory containing environmental raster
+#'   files (\code{.tif}), typically the output of \code{\link{raster_align}}.
+#'   File names must follow the patterns supplied in \code{variable_patterns}, with any
+#'   time placeholder substituted for the corresponding value from
+#'   \code{time_cols}.
+#' @param variable_patterns Named character vector mapping clean variable names
+#'   to raster filename patterns. For time-varying variables include the time
+#'   placeholder in the pattern (e.g. \code{"forest_cover" = "forest_cover_YEAR"});
+#'   for static variables omit it (e.g. \code{"elevation" = "elevation"}). Time
+#'   placeholders must match entries in \code{time_cols}.
 #' @param time_cols Character vector of time column names present in the point
 #'   data (e.g., c("YEAR"), c("YEAR", "MONTH")).
-#' @param xcol Character. Coordinate column name when reading CSV or data frame
-#'   inputs. Optional.
-#' @param ycol Character. Coordinate column name when reading CSV or data frame
-#'   inputs. Optional.
-#' @param points_crs Character or CRS object. CRS when reading CSV or data frame
-#'   inputs. Optional.
+#' @param xcol Character. Name of the x-coordinate column. Required when
+#'   \code{points_sp} is a CSV file or data frame.
+#' @param ycol Character. Name of the y-coordinate column. Required when
+#'   \code{points_sp} is a CSV file or data frame.
+#' @param points_crs Character or CRS object. CRS of the input points.
+#'   Required when \code{points_sp} is a CSV file or data frame.
 #' @param output_dir Character. Directory to write output files.
 #' @param output_prefix Character. Prefix for output filenames. Default is
 #'   "temp_explicit_df".
-#' @param save_raw Logical. If TRUE, writes raw extracted values CSV. If FALSE,
-#'   skips raw values output. Default is TRUE.
-#' @param save_scaled Logical. If TRUE, writes z-scaled values CSV. If FALSE,
-#'   skips scaled values output. Default is TRUE.
-#' @param save_scaling_params Logical. If TRUE, writes CSV of per-variable means
-#'   and standard deviations. If FALSE, skips scaling parameters output. Default
-#'   is TRUE.
+#' @param save_raw Logical. If \code{TRUE} (default), writes raw extracted values
+#'   CSV. If \code{FALSE}, skips raw values output.
+#' @param save_scaled Logical. If \code{TRUE} (default), writes z-scaled values
+#'   CSV. If \code{FALSE}, skips scaled values output.
+#' @param save_scaling_params Logical. If \code{TRUE} (default), writes CSV of
+#'   per-variable means and standard deviations. If \code{FALSE}, skips scaling
+#'   parameters output.
+#' @param verbose Logical. If \code{TRUE} (default), prints progress
+#'   messages during processing. Includes file loading, extraction
+#'   progress, and file-save confirmation.
+#'
+#' @return Invisibly returns a list containing:
+#' \itemize{
+#'   \item \code{raw_values}: Data frame of raw extracted values at each
+#'     occurrence record (when \code{save_raw = TRUE}; \code{NULL} otherwise).
+#'   \item \code{scaled_values}: Data frame of z-scaled extracted values
+#'     (when \code{save_scaled = TRUE}; \code{NULL} otherwise).
+#'   \item \code{scaling_params}: Data frame of per-variable means and standard
+#'     deviations used for scaling (when \code{save_scaling_params = TRUE};
+#'     \code{NULL} otherwise). Pass this to \code{\link{scale_rasters}}.
+#'   \item \code{files_created}: Named list of file paths written, with elements
+#'     \code{raw}, \code{scaled}, and \code{scaling_params} (each \code{NULL}
+#'     when the corresponding save flag is \code{FALSE}).
+#' }
 #'
 #' @details
-#' Dynamic variables are detected when patterns contain placeholders matching
-#' time_cols. Static variables are extracted once. Raster files are matched by
-#' substituting time values into pattern placeholders.
+#' Extracts raster values to species occurrence records based on matched temporal components.
+#' Matches environmental layers to occurrence timestamps and optionally computes scaling
+#' parameters for standardization.
 #'
 #' Output CSV files are written to output_dir containing raw values, scaled
 #' values, and scaling parameters.
 #'
-#' Scaling parameters (mean and standard deviation) are computed across all
-#' occurrence records for each variable. These parameters should be used with
+#' Scaling parameters (mean and standard deviation) are optionally computed across
+#' all occurrence records for each variable. These parameters should be used with
 #' \code{\link{scale_rasters}} to standardize prediction layers.
 #'
 #' @seealso
-#' Preprocessing: \code{\link{spatiotemporal_rarefication}},
-#' \code{\link{scale_rasters}}, \code{\link{spatiotemporal_partition}}
+#' Preprocessing: \code{\link{spatiotemporal_rarefaction}},
+#'   \code{\link{scale_rasters}}, \code{\link{spatiotemporal_partition}}
 #'
 #' @examples
-#' \dontrun{
-#' variable_patterns <- c(
-#'   "bio1" = "bio1_YEAR",
-#'   "temp" = "temp_YEAR_MONTH",
-#'   "elevation" = "elevation"
-#' )
+#' \donttest{
+#'   pts_file <- system.file(
+#'     "extdata/points/synthetic_occurrence_points.csv",
+#'     package = "TemporalModelR"
+#'   )
 #'
-#' temporally_explicit_extraction(
-#'   points_sp = "occurrences.csv",
-#'   raster_dir = "environmental_layers/",
-#'   variable_patterns = variable_patterns,
-#'   time_cols = c("YEAR", "MONTH"),
-#'   xcol = "longitude",
-#'   ycol = "latitude",
-#'   points_crs = "EPSG:4326",
-#'   output_dir = "extracted_values/"
-#' )
+#'   aln_dir  <- system.file("extdata/rasters_aligned",
+#'                           package = "TemporalModelR")
+#'
+#'   ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+#'                           package = "TemporalModelR")
+#'
+#'   out_dir  <- file.path(tempdir(), "extracted")
+#'
+#'   temporally_explicit_extraction(
+#'     points_sp           = pts_file,
+#'     raster_dir          = aln_dir,
+#'     variable_patterns   = c(
+#'       "elevation"    = "elevation",
+#'       "forest_cover" = "forest_cover_YEAR",
+#'       "prseas"       = "prseas_YEAR_SEASON"
+#'     ),
+#'     time_cols           = c("year", "season"),
+#'     xcol                = "x",
+#'     ycol                = "y",
+#'     points_crs          = terra::crs(terra::rast(ref_file)),
+#'     output_dir          = out_dir,
+#'     save_raw            = TRUE,
+#'     save_scaled         = FALSE,
+#'     save_scaling_params = TRUE,
+#'     verbose             = FALSE
+#'   )
 #' }
-#'
+
 #' @export
-#' @importFrom terra rast extract crs vect
-#' @importFrom sf st_as_sf st_transform st_read st_drop_geometry st_coordinates
-#' @importFrom dplyr select distinct arrange across all_of
-#' @importFrom utils read.csv write.csv
+#' @importFrom terra rast extract vect
+#' @importFrom sf st_as_sf st_drop_geometry st_coordinates
+#' @importFrom stats sd setNames
+#' @importFrom utils write.csv
 temporally_explicit_extraction <- function(points_sp,
                                            raster_dir,
                                            variable_patterns,
@@ -78,188 +116,166 @@ temporally_explicit_extraction <- function(points_sp,
                                            ycol = NULL,
                                            points_crs = NULL,
                                            output_dir,
-                                           output_prefix = "temp_explicit_df",
-                                           save_raw = TRUE,
-                                           save_scaled = TRUE,
-                                           save_scaling_params = TRUE) {
+                                           output_prefix       = "temp_explicit_df",
+                                           save_raw            = TRUE,
+                                           save_scaled         = TRUE,
+                                           save_scaling_params = TRUE,
+                                           verbose             = TRUE) {
 
-  require(terra)
-  require(sf)
-  require(dplyr)
-  require(readr)
+  pts_df    <- .load_points_data(points_sp, xcol, ycol, points_crs, verbose = verbose)
+  xcol      <- attr(pts_df, "xcol")
+  ycol      <- attr(pts_df, "ycol")
+  pts_crs   <- attr(pts_df, "crs")
+  points_sp <- sf::st_as_sf(pts_df, coords = c(xcol, ycol), crs = pts_crs)
 
-  ### Input validation and conversion - points
-  if (is.character(points_sp)) {
-    if (!file.exists(points_sp)) stop(paste0("ERROR: File does not exist: ", points_sp))
-    file_ext <- tolower(tools::file_ext(points_sp))
+  .validate_variable_patterns(variable_patterns)
 
-    if (file_ext == "csv") {
-      if (is.null(xcol)) stop("ERROR: 'xcol' is required when reading CSV files.")
-      if (is.null(ycol)) stop("ERROR: 'ycol' is required when reading CSV files.")
-      if (is.null(points_crs)) stop("ERROR: 'points_crs' is required when reading CSV files.")
-
-      print(paste("Reading CSV file:", basename(points_sp)))
-      points_data <- read.csv(points_sp, stringsAsFactors = FALSE)
-      if (!xcol %in% names(points_data)) stop(paste0("ERROR: Column '", xcol, "' not found in CSV."))
-      if (!ycol %in% names(points_data)) stop(paste0("ERROR: Column '", ycol, "' not found in CSV."))
-
-      points_sp <- st_as_sf(points_data, coords = c(xcol, ycol), crs = points_crs)
-
-    } else if (file_ext %in% c("shp", "geojson", "gpkg")) {
-      print(paste("Reading spatial file:", basename(points_sp)))
-      points_sp <- st_read(points_sp, quiet = TRUE)
-    } else {
-      stop(paste0("ERROR: Unsupported file format: ", file_ext))
-    }
-
-  } else if (is.data.frame(points_sp)) {
-    if (is.null(xcol) || is.null(ycol) || is.null(points_crs)) stop("ERROR: xcol, ycol, points_crs required for data frame")
-    points_sp <- st_as_sf(points_sp, coords = c(xcol, ycol), crs = points_crs)
-  } else if (inherits(points_sp, "SpatialPointsDataFrame")) {
-    warning("Converting SpatialPointsDataFrame to sf object")
-    points_sp <- st_as_sf(points_sp)
-  } else if (!inherits(points_sp, "sf")) {
-    stop("ERROR: points_sp must be an sf object, data.frame, SpatialPointsDataFrame, or file path")
+  if (missing(time_cols) || !is.character(time_cols) || length(time_cols) == 0) {
+    stop("ERROR: 'time_cols' must be a character vector with at least one column name.")
   }
-
-  ### Validate variable_patterns
-  if (!is.vector(variable_patterns) || is.null(names(variable_patterns))) stop("ERROR: variable_patterns must be a named vector")
-  if (any(names(variable_patterns) == "")) stop("ERROR: All elements in variable_patterns must be named")
-
-  ### Validate time_cols
-  if (missing(time_cols) || !is.character(time_cols) || length(time_cols) == 0) stop("ERROR: time_cols must be a character vector with at least one column")
   missing_cols <- setdiff(time_cols, names(points_sp))
-  if (length(missing_cols) > 0) stop(paste0("ERROR: time_cols missing from data: ", paste(missing_cols, collapse=", ")))
+  if (length(missing_cols) > 0) {
+    stop(paste0("ERROR: The following time_cols are missing from data: ",
+                paste(missing_cols, collapse = ", ")))
+  }
 
-  ### Validate raster directory
-  if (!dir.exists(raster_dir)) stop(paste0("ERROR: raster_dir does not exist: ", raster_dir))
-  all_files <- list.files(path = raster_dir, pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
-  if (length(all_files) == 0) stop(paste0("ERROR: No .tif files found in raster_dir: ", raster_dir))
-  print(paste("Found", length(all_files), "raster files"))
+  if (!dir.exists(raster_dir)) stop(paste0("ERROR: 'raster_dir' does not exist: ", raster_dir))
+  if (verbose) message(paste("Found",
+                             length(list.files(raster_dir, "\\.tif$", recursive = TRUE)),
+                             "raster files"))
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-  print(paste("Processing", nrow(points_sp), "points"))
+  if (verbose) message(paste("Processing", nrow(points_sp), "points"))
 
-  ### Determine static vs dynamic variables
-  static_vars <- c(); dynamic_vars <- c()
-  for (var_name in names(variable_patterns)) {
-    pattern <- variable_patterns[var_name]
-    has_time_component <- any(sapply(time_cols, function(tc) grepl(tc, pattern, ignore.case=TRUE)))
-    if (has_time_component) dynamic_vars <- c(dynamic_vars, var_name) else static_vars <- c(static_vars, var_name)
-  }
+  var_classes  <- .classify_variable_patterns(variable_patterns, time_cols)
+  dynamic_vars <- var_classes$dynamic
+  static_vars  <- var_classes$static
 
-  if (length(dynamic_vars) > 0) {
-    pattern_time_placeholders <- unique(unlist(lapply(dynamic_vars, function(var_name) {
-      parts <- strsplit(variable_patterns[var_name], "_")[[1]]
-      parts[toupper(parts) %in% toupper(time_cols)]
-    })))
-    missing_in_patterns <- toupper(time_cols)[!toupper(time_cols) %in% pattern_time_placeholders]
-    if (length(missing_in_patterns) > 0) warning("time_cols includes columns not found in variable_patterns: ", paste(missing_in_patterns, collapse=", "))
-  }
+  if (verbose) message(paste("Dynamic variables:",
+                             if (length(dynamic_vars) > 0) paste(dynamic_vars, collapse = ", ") else "none"))
+  if (verbose) message(paste("Static variables:",
+                             if (length(static_vars) > 0) paste(static_vars, collapse = ", ") else "none"))
 
-  ### Initialize variable columns
   for (var in names(variable_patterns)) points_sp[[var]] <- NA
 
-  ### Extract static variables
   if (length(static_vars) > 0) {
-    print("Extracting static variables...")
-    for (var_name in static_vars) {
-      pattern_parts <- strsplit(variable_patterns[var_name], "_")[[1]]
-      matching_files <- all_files[sapply(all_files, function(f) all(sapply(pattern_parts, function(p) grepl(p, basename(f), ignore.case=TRUE))))]
-
-      if (length(matching_files) > 1) {
-        stop(paste0("ERROR: Multiple raster files found for static variable '", var_name,
-                    "' matching pattern '", variable_patterns[var_name], "'.\nMatching files:\n",
-                    paste(matching_files, collapse = "\n")))
-      }
-
-      if (length(matching_files) == 1) {
-        raster_layer <- rast(matching_files[1])
-        points_sp[[var_name]] <- terra::extract(raster_layer, vect(points_sp))[,2]
-      } else {
-        warning("No file found for ", var_name, " matching pattern: ", variable_patterns[var_name])
+    if (verbose) message("Extracting static variables...")
+    static_paths <- .resolve_raster_paths(variable_patterns, character(0), static_vars,
+                                          time_cols,
+                                          as.data.frame(stats::setNames(
+                                            lapply(time_cols, function(tc) NA_character_),
+                                            time_cols), stringsAsFactors = FALSE),
+                                          raster_dir)
+    if (!is.null(static_paths)) {
+      r_static <- tryCatch(
+        terra::rast(static_paths),
+        error = function(e) { warning(paste("Could not load static rasters:", e$message)); NULL }
+      )
+      if (!is.null(r_static)) {
+        env_ex <- terra::extract(r_static, terra::vect(points_sp), ID = FALSE)
+        if (ncol(env_ex) == length(static_vars)) names(env_ex) <- static_vars
+        for (v in static_vars) {
+          if (v %in% names(env_ex)) points_sp[[v]] <- env_ex[[v]]
+        }
       }
     }
   }
 
-  ### Extract dynamic variables
   if (length(dynamic_vars) > 0) {
-    print("Extracting dynamic variables...")
-    time_combinations <- points_sp %>% st_drop_geometry() %>% dplyr::select(all_of(time_cols)) %>% distinct() %>% arrange(across(all_of(time_cols)))
-    print(paste("Extracting values for", nrow(time_combinations), "time periods"))
-    for (i in 1:nrow(time_combinations)) {
-      time_values <- time_combinations[i, , drop=FALSE]
-      time_filter <- Reduce(`&`, lapply(time_cols, function(tc) points_sp[[tc]] == time_values[[tc]]))
+    if (verbose) message("Extracting dynamic variables...")
+
+    pts_data <- sf::st_drop_geometry(points_sp)
+    time_combinations <- unique(pts_data[, time_cols, drop = FALSE])
+    time_combinations <- time_combinations[do.call(order, time_combinations), , drop = FALSE]
+
+    if (verbose) message(paste("Extracting values for", nrow(time_combinations), "time periods"))
+    for (i in seq_len(nrow(time_combinations))) {
+      time_values <- time_combinations[i, , drop = FALSE]
+      time_filter <- Reduce(`&`, lapply(time_cols,
+                                        function(tc) points_sp[[tc]] == time_values[[tc]]))
       points_subset <- points_sp[time_filter, ]
-      for (var_name in dynamic_vars) {
-        search_pattern <- variable_patterns[var_name]
-        for (tc in time_cols) {
-          time_val <- as.character(time_values[[tc]])
-          search_pattern <- gsub(tc, time_val, search_pattern, ignore.case=TRUE)
-        }
-        matching_files <- all_files[grepl(search_pattern, basename(all_files), ignore.case=TRUE)]
+      if (nrow(points_subset) == 0) next
 
-        if (length(matching_files) > 1) {
-          stop(paste0("ERROR: Multiple raster files found for dynamic variable '", var_name,
-                      "' matching pattern '", search_pattern, "'.\nMatching files:\n",
-                      paste(matching_files, collapse = "\n")))
-        }
+      raster_paths <- .resolve_raster_paths(variable_patterns, dynamic_vars, character(0),
+                                            time_cols, time_values, raster_dir)
+      if (is.null(raster_paths)) next
 
-        if (length(matching_files) == 1) {
-          raster_layer <- rast(matching_files[1])
-          points_sp[[var_name]][time_filter] <- terra::extract(raster_layer, vect(points_subset))[,2]
-        } else {
-          warning("No file found for ", var_name, " matching pattern: ", search_pattern)
-        }
+      r_ts <- tryCatch(
+        terra::rast(raster_paths),
+        error = function(e) { warning(paste("Could not load rasters:", e$message)); NULL }
+      )
+      if (is.null(r_ts)) next
+
+      env_ex <- terra::extract(r_ts, terra::vect(points_subset), ID = FALSE)
+      if (ncol(env_ex) == length(dynamic_vars)) names(env_ex) <- dynamic_vars
+      for (v in dynamic_vars) {
+        if (v %in% names(env_ex)) points_sp[[v]][time_filter] <- env_ex[[v]]
       }
     }
   }
 
-  ### Add coordinates back
-  coords_df <- st_coordinates(points_sp) %>% as.data.frame()
-  names(coords_df) <- c("x", "y")
-  points_with_coords <- cbind(st_drop_geometry(points_sp), coords_df)
+  coords_mat         <- sf::st_coordinates(points_sp)
+  coords_df          <- data.frame(x = coords_mat[, 1], y = coords_mat[, 2])
+  points_with_coords <- cbind(sf::st_drop_geometry(points_sp), coords_df)
 
-  ### Save raw values
+  raw_output_file    <- NULL
+  params_file        <- NULL
+  scaled_output_file <- NULL
+  scaled_data        <- NULL
+
   if (save_raw) {
     raw_output_file <- file.path(output_dir, paste0(output_prefix, "_Raw_Values.csv"))
-    write.csv(points_with_coords, raw_output_file, row.names=FALSE)
-    print(paste("Raw values saved to:", basename(raw_output_file)))
+    utils::write.csv(points_with_coords, raw_output_file, row.names = FALSE)
+    if (verbose) message(paste("Raw values saved to:", basename(raw_output_file)))
   }
 
-  ### Calculate scaling parameters
-  print("Calculating scaling parameters...")
-  scaling_params <- data.frame(variable=character(), mean=numeric(), sd=numeric(), stringsAsFactors=FALSE)
+  if (verbose) message("Calculating scaling parameters...")
+  scaling_params <- data.frame(variable = character(), mean = numeric(), sd = numeric(),
+                               stringsAsFactors = FALSE)
   for (var_name in names(variable_patterns)) {
     values <- points_sp[[var_name]]
     values <- values[!is.na(values)]
     if (length(values) > 0) {
-      scaling_params <- rbind(scaling_params, data.frame(variable=var_name, mean=mean(values), sd=sd(values), stringsAsFactors=FALSE))
-    } else warning("No valid values found for ", var_name)
+      scaling_params <- rbind(scaling_params,
+                              data.frame(variable = var_name, mean = mean(values),
+                                         sd = stats::sd(values), stringsAsFactors = FALSE))
+    } else {
+      warning("No valid values found for ", var_name)
+    }
   }
 
-  ### Save scaling parameters
   if (save_scaling_params) {
     params_file <- file.path(output_dir, paste0(output_prefix, "_Scaling_Parameters.csv"))
-    write.csv(scaling_params, params_file, row.names=FALSE)
-    print(paste("Scaling parameters saved to:", basename(params_file)))
+    utils::write.csv(scaling_params, params_file, row.names = FALSE)
+    if (verbose) message(paste("Scaling parameters saved to:", basename(params_file)))
   }
 
-  ### Apply scaling and save
   if (save_scaled) {
-    print("Applying scaling...")
-    scaled_data <- st_drop_geometry(points_sp)
+    if (verbose) message("Applying scaling...")
+    scaled_data <- sf::st_drop_geometry(points_sp)
     for (var_name in names(variable_patterns)) {
-      var_params <- scaling_params[scaling_params$variable==var_name, ]
-      if (nrow(var_params) > 0) scaled_data[[var_name]] <- (scaled_data[[var_name]] - var_params$mean) / var_params$sd
-      else warning("No scaling parameters found for ", var_name)
+      var_params <- scaling_params[scaling_params$variable == var_name, ]
+      if (nrow(var_params) > 0) {
+        scaled_data[[var_name]] <- (scaled_data[[var_name]] - var_params$mean) / var_params$sd
+      } else {
+        warning("No scaling parameters found for ", var_name)
+      }
     }
-    ### Add coordinates to scaled output
     scaled_data <- cbind(scaled_data, coords_df)
     scaled_output_file <- file.path(output_dir, paste0(output_prefix, "_Scaled_Values.csv"))
-    write.csv(scaled_data, scaled_output_file, row.names=FALSE)
-    print(paste("Scaled values saved to:", basename(scaled_output_file)))
+    utils::write.csv(scaled_data, scaled_output_file, row.names = FALSE)
+    if (verbose) message(paste("Scaled values saved to:", basename(scaled_output_file)))
   }
 
-  print("Processing complete!")
-  return(invisible(NULL))
+  if (verbose) message("Processing complete.")
+
+  invisible(list(
+    raw_values     = if (save_raw)            points_with_coords else NULL,
+    scaled_values  = if (save_scaled)         scaled_data        else NULL,
+    scaling_params = if (save_scaling_params) scaling_params     else NULL,
+    files_created  = list(
+      raw            = if (save_raw)            raw_output_file else NULL,
+      scaled         = if (save_scaled)         scaled_output_file else NULL,
+      scaling_params = if (save_scaling_params) params_file else NULL
+    )
+  ))
 }
