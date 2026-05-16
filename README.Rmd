@@ -1,643 +1,154 @@
 ---
-output:
-  github_document: default
-  html_document:
-    df_print: paged
+title: Temporally Explicit Species Distribution Modeling in R
+author: "Connor Hughes, Mariana Castaneda-Guzman"
+output: 
+  github_document:
+    toc: yes
+    toc_depth: 3
+always_allow_html: true
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%",
-  eval = FALSE,
-  warning = FALSE,
-  message = FALSE
-)
-```
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.path  = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
-# TemporalModelR
+## Background
 
-TemporalModelR is an R package for building temporally explicit species distribution models. The package provides a complete workflow including generalized data pre- and post-processing, temporally explicit model construction across multiple algorithms (GLM, GAM, random forest, hypervolume), and temporal pattern analysis.
+Ecological niche modeling (ENM) and species distribution modeling (SDM) are widely used to reconstruct and predict species environmental tolerances and geographic distributions, expanding ecological and biogeographic theory. Despite their widesptead use, one aspect that has received relatively little attention is the temporally dynamic environment.
 
-## Overview
+Environmental conditions shaping species distributions vary over time, including climate, resource availability, and habitat availability. As a result, the suitability of any given location may change as key environmental conditions become more or less favorable for a species. Most existing implementations of ENM assume a static relationship between species and environment: occurrences are pooled across years, predictors are time-averaged, and a single model is fit to the combined dataset. This works well when relationships are genuinely stable, but it carries three costs when they aren't:
 
-TemporalModelR supports researchers in:
+1.  **Temporal mismatch.** Pairing each occurrence with long-term average conditions can misrepresent the environment the species actually experienced at the moment it was recorded, leading to over-generalised niche estimates and higher rates of both extrapolation and omission.
+2.  **Lost training data.** Standard spatial rarefaction retains one point per pixel, discarding temporally independent observations from the same location. When environments at a location have changed over time, those repeat observations carry unique information about the species' niche.
+3.  **No temporal dynamics in the output.** Static models produce a single predictive surface and cannot directly answer questions about how suitable conditions for a species have changed over time, or what environmental drivers are responsible for those changes.
 
-- Preprocessing spatial and temporal occurrence data with spatiotemporal rarefaction
-- Extracting temporally aligned environmental variables for occurrence records
-- Generating spatially and temporally stratified cross-validation folds
-- Generating pseudoabsence points stratified by fold and time
-- Building niche or distribution models using GLM, GAM, random forest, or hypervolume methods
-- Generating spatiotemporal predictions with comprehensive model evaluation metrics across variable time scales
-- Analyzing temporal patterns in habitat suitability using changepoint detection
-- Summarizing trends by spatial units for regional conservation assessments
+Temporally-explicit ENM offer an alternative practice which preserve the time stamp on each observation. Each occurrence is paired with the environmental conditions it experienced *at the time step it was recorded*, rather than against a long-term average or other static variable. The resulting models are sensitive to year-to-year (or season-to-season) variation in the species-environment relationship, and predictions are projected as time series rather than as a single static surface.
 
-## Installation
+**TemporalModelR** is an R package for building temporally explicit SDMs end-to-end, from raw occurrence records to time-resolved trend analyses. It provides a consistent and replicable workflow for implementing temporally explicit ENM.
 
-You can install the most updated version of TemporalModelR from GitHub:
+<br>
 
-```r
+## Package description
+
+**TemporalModelR** operates across two complementary dimensions to support temporally explicit modeling:
+
+-   **E-space (Environmental Space)** represents a location in terms of its environmental conditions, independent of geography. A species' niche in E-space is its tolerance for a given set of environmental variables.
+-   **G-space (Geographic Space)** represents a location in terms of where it physically sits on the landscape. Every point in G-space has a corresponding location in E-space.
+
+Because environmental conditions change over time, the same point in G-space may move through E-space across years, decades, or seasons. Traditional, temporally-static workflows assume both G-space and E-space to be stable in time. TemporalModelR assumes only that the *niche* (i.e., the species' tolerance in E-space) is stable across the study period, while the E-space coordinates of any G-space location may change over time. Species observations are therefore matched to E-space data correct in both space and time, the niche is modeled in time-independent E-space. The resulting niche estimate is projected back onto G-space at explicit time periods to produce temporally dynamic predictions across time rather than a single static surface.
+
+The package structures the SDM workflow around three phases:
+
+-   **Preprocessing**: aligning environmental rasters to a common grid, rarefying occurrence data in space and time, extracting environmental values matched to observation time, scaling rasters to a standardised range, partitioning into spatially and/or temporally independent cross-validation folds, and generating fold-stratified pseudoabsences for presence/absence models.
+-   **Modeling**: fitting one of four supported algorithms (GLM, GAM, random forest, hypervolume) per cross-validation fold, with automatic threshold selection and per-fold evaluation metrics in both E-space (time-independent) and G-space (time-specific).
+-   **Postprocessing**: combining per-fold predictions into a consensus binary stack for more straightforward assessments, classifying each pixel's temporal trajectory via changepoint detection into never-suitable, always-suitable, no pattern, increasing, decreasing, or fluctuating in suitablity, and aggregating patterns across user-defined spatial units like administrative regions or watersheds.
+
+Every function in the package is built around the concept of **time placeholders** in raster filenames (`forest_cover_2005.tif`, `pr_seas_2003_Spring.tif`). Patterns map clean predictor names to filenames; `time_cols` defines which columns in your occurrence data correspond to those placeholders. For example, a column in species occurance data which labeled `year` with subsequent values `2001`, `2002`, `2005`, and a user defined variable name as `forest_cover_year`, would match to rasters `forest_cover_2001`, `forest_cover_2002`, and `forest_cover_2005`. Likewise, a databse with both columns `year` and `month` and a user defined variable name of `pr_m_year_month` would match to rasters like `pr_m_1997_09`.
+
+This makes the workflow flexible to whether your time scale is annual, monthly, daily, or anything in between, so long as you have rasters data at the same temporal level. It also allows different predictors to vary at different time scales within the same model, flexibly allowing temporally static variables (e.g. elevation) to be processed in the same suite and used in the same models as temporally dynamic variables, which may themselves be measured at different time steps (e.g. annual forest cover estimates, monthly precipitation).
+
+<br>
+
+## Installing the package
+
+Note: Internet connection is required to install the package.
+
+The development version of TemporalModelR can be installed using the code below.
+
+```{r, eval=FALSE}
 # install.packages("devtools")
 devtools::install_github("CJHughes926/TemporalModelR")
 ```
 
-## Workflow Overview
+<br>
 
-The TemporalModelR workflow consists of three main phases:
+## Workflow in TemporalModelR
 
-### Phase 1: Preprocessing
+A typical TemporalModelR workflow follows these steps:
 
-| Function | Description |
-|----------|-------------|
-| `raster_align()` | Aligns environmental rasters to a common projection, extent, and resolution |
-| `spatiotemporal_rarefaction()` | Rarefies occurrence data to reduce spatial and temporal bias |
-| `temporally_explicit_extraction()` | Extracts environmental values at occurrence locations matched to time of observation |
-| `scale_rasters()` | Standardizes environmental rasters using scaling parameters from occurrence data |
-| `spatiotemporal_partition()` | Partitions occurrences into spatially and temporally independent cross-validation folds |
-| `generate_absences()` | Generates fold-stratified pseudoabsence points for presence/absence models |
+1.  **Preprocess** — align rasters, rarefy occurrences, extract and optionally scale environmental values, partition into folds, and generate pseudoabsences (if needed)
+2.  **Model** — fit a GLM, GAM, random forest, or hypervolume model, assess time-independent model performance. Project the fitted model across space and time, assess temporally-explciit model performance
+3.  **Postprocess** — summarise predictions to consensus surfaces, identify temporal patterns, and aggregate by spatial unit
 
-### Phase 2: Modeling
+A brief description of each step is presented below. For full walkthroughs of each phase, see the vignettes hosted on the [TemporalModelR site](https://CJHughes926.github.io/TemporalModelR/) under the *Articles* menu, also linked inline throughout this README.
 
-| Function | Description |
-|----------|-------------|
-| `build_temporal_glm()` | Fits a generalized linear model per fold |
-| `build_temporal_gam()` | Fits a generalized additive model per fold |
-| `build_temporal_rf()` | Fits a random forest model per fold |
-| `build_temporal_hv()` | Constructs Gaussian or SVM hypervolume models per fold |
-| `generate_spatiotemporal_predictions()` | Projects fitted models across space and time |
-| `plot_model_assessment()` | Visualizes model performance metrics across time |
+<br>
 
-### Phase 3: Postprocessing
+### Preprocessing
 
-| Function | Description |
-|----------|-------------|
-| `summarize_raster_outputs()` | Creates consensus binary predictions and temporal frequency summaries |
-| `analyze_temporal_patterns()` | Classifies pixels into temporal trend categories using changepoint detection |
-| `analyze_trends_by_spatial_unit()` | Aggregates patterns and trends by administrative or ecological units |
+The preprocessing pipeline transforms raw occurrence records and environmental rasters into the structured inputs that downstream models expect. Six functions cover this phase. `raster_align()` standardises rasters to a common projection, extent, and resolution to prevent misalignment in future analyses. `spatiotemporal_rarefaction()` subsets data to one point per pixel per time step, reducing pseudoreplication from your data but preserving trully unique temporally independent observations from the same location. `temporally_explicit_extraction()` extracts environmental values from the raster that matches each point's observation time step, producing a table of observations with their relevant E-space conditions correct in both space and time, along with the means and standard deviations of each variable across the dataset. `scale_rasters()` optionally uses those scaling parameters to z-score every raster, ensuring variables share a comparable range and contribute evenly to subsequent modeling algorythums sensitive to that. `spatiotemporal_partition()` builds cross-validation folds via one of four methods: purely spatial, purely temporal, spatiotemporal (combining both), or random as a baseline. Finally, `generate_absences()` produces fold-stratified pseudoabsences relevant for presence/absence models.
 
+> For a detailed workflow showcasing each preprocessing function, see the [Preprocessing temporally explicit data](https://CJHughes926.github.io/TemporalModelR/articles/preprocessing.html) vignette.
 
-## General Usage Guide
+<br>
 
-### Preprocessing Functions
+### Modeling
 
-#### Aligning Rasters
+TemporalModelR supports four modeling algorithms, all of which share the same data requirments (`partition_result`, `pseudoabsence_result` for presnce/absence models, a `model_formula` or `model_vars`). One model is fit per cross-validation fold; each is evaluated on its held-out test set, and for any continuous models a threshold is selected and applied to produce only binary results.
 
-Before analysis, all environmental rasters must share the same projection, extent, and resolution. The `raster_align()` function handles this preprocessing step:
+-   **`build_temporal_glm()`** fits one generalised linear model per fold with a binomial link function. Supports any combination of linear, polynomial, and interactive terms via standard R formula syntax.
+-   **`build_temporal_gam()`** fits one generalised additive model per fold via `mgcv::gam()`. Allows for complex nonlinear relationships between environmental gradients and species presence.
+-   **`build_temporal_rf()`** fits one random forest classifier per fold via `randomForest::randomForest()`. Uses ensembles of decision trees to capture complex nonlinear relationships and interactions.
+-   **`build_temporal_hv()`** constructs n-dimensional hypervolumes per fold via Gaussian kernel density estimation or one-class support vector machine. The presence-only option; no pseudoabsences required.
 
-```{r align_example, eval=FALSE}
-raster_align(
-  input_dir        = "path/to/raw_rasters/",
-  output_dir       = "path/to/aligned_rasters/",
-  reference_raster = my_reference_raster,
-  overwrite        = FALSE
-)
-```
+Each model builder produces evaluation metrics across folds in E-space (time-independent), capturing overall niche estimation quality regardless of when the test points were observed. E-space evaluation gives a stable picture of model performance even in years where occurrence records are sparse.
 
-#### Spatiotemporal Rarefaction
+Once a model is fit, `generate_spatiotemporal_predictions()` projects it across user-defined time steps. The function accepts any of the four model types via the `model_result` argument and writes one prediction raster per fold per time step alongside per-time-step evaluation metrics. The same call handles single-timestep and multi-timestep workflows given the relevant raster data is available: for example `time_steps = data.frame(year = 1:15)` produces 15 annual maps; `expand.grid(year = 1:15, season = "Spring")` produces 15 spring snapshots; `expand.grid(year = 1:15, season = c("Spring", "Summer"))` produces 30 maps spanning two seasons.
 
-Traditional spatial rarefaction retains one point per pixel, discarding temporal replicates. Spatiotemporal rarefaction preserves valuable temporal information by retaining one point per pixel per time step:
+Once predictions are projected into G-space, time-specific assessment metrics become available, including cumulative binomial probability (CBP) tests assessing whether predictions in a given time step are better than random. G-space evaluation complements the E-space metrics from model fitting and both may be considered in model evaluation: G-space is robust and specific in years with substantial sample sizes but loses meaning when few records exist for a given time step, while E-space gives a more stable overall picture independent of time. Reporting both gives the most complete view of model performance.
 
-```{r rarefy_example, eval=FALSE}
-spatiotemporal_rarefaction(
-  points_sp        = "occurrences.csv",
-  xcol             = "longitude",
-  ycol             = "latitude",
-  points_crs       = 4326,
-  output_dir       = "output/",
-  reference_raster = my_reference_raster,
-  time_cols        = c("Year")
-)
-```
 
-#### Temporally Explicit Extraction
+> For a full walkthrough of each modeling algorithm, including formula syntax, parameter choices, G-space projection, and diagnostic interpretation, see the four modeling vignettes: [Modeling with a GLM](https://CJHughes926.github.io/TemporalModelR/articles/modeling_glm.html), [Modeling with a GAM](https://CJHughes926.github.io/TemporalModelR/articles/modeling_gam.html), [Modeling with a Random Forest](https://CJHughes926.github.io/TemporalModelR/articles/modeling_rf.html), and [Modeling with a Hypervolume](https://CJHughes926.github.io/TemporalModelR/articles/modeling_hv.html).
 
-This function extracts environmental values at each occurrence location using rasters that match the time of observation. Dynamic variables (like land cover) are matched to specific time steps (like year, month, or day), while static variables (like elevation) are extracted once. Where relevant, multiple time steps can be provided for a given variable (for example, Month and Year):
+<br>
 
-```{r extract_example, eval=FALSE}
-variable_patterns <- c(
-  "landcover" = "landcover_YEAR",    # Dynamic: matched to occurrence year
-  "temp"      = "temp_MONTH_YEAR",   # Dynamic: matched to occurrence month and year
-  "elevation" = "elevation"          # Static: extracted once
-)
+### Postprocessing
 
-temporally_explicit_extraction(
-  points_sp         = "rarefied_points.csv",
-  xcol              = "X",
-  ycol              = "Y",
-  points_crs        = 4326,
-  raster_dir        = "aligned_rasters/",
-  variable_patterns = variable_patterns,
-  time_cols         = c("Year", "Month"),
-  output_dir        = "output/",
-  output_prefix     = "extracted_data"
-)
-```
+The postprocessing phase converts the per-fold prediction rasters into interpretable summaries. `summarize_raster_outputs()` collapses fold-level predictions into a binary consensus stack (where a user-specified number of folds agree on suitability) and a frequency raster (proportion of time steps each pixel was suitable) which explored the stability of G-space suitablity projectiosn across time. `analyze_temporal_patterns()` uses the `fastcpd` package to detect structured changes in each pixel's suitability across the time series, classifying trajectories as never-suitable, always-suitable, no pattern, increasing, decreasing, or fluctuating. The changepoint analysis accounts for temporal autocorrelation by including each pixel's previous-time-step value as a predictor in the change point detection model; users can optionally enable spatial autocorrelation, which adds the proportion of a pixel's first-order (queen's case) neighbours predicted as suitable as an additional covariate. `analyze_trends_by_spatial_unit()` aggregates pixel-level patterns across user-defined polygons (administrative units, watersheds, ecoregions), producing useful tables summarizing losses and gains in suitbailty over time across a these regions, and is useful for identifying regional variation in suitability trends.
 
-#### Scale Environmental Rasters
+> For the full postprocessing workflow including consensus threshold selection, changepoint diagnostics, and zone aggregation, see the [Postprocessing predictions](https://CJHughes926.github.io/TemporalModelR/articles/postprocessing.html) vignette.
 
-Standardize all environmental rasters using the scaling parameters calculated from your occurrence data. This ensures that all raster values are on equivalent scales as they relate to your occurrence data, and prevents uneven contribution across variables to models:
-
-```{r scale, eval=FALSE}
-scale_rasters(
-  input_dir           = "aligned_rasters/",
-  output_dir          = "scaled_rasters/",
-  scaling_params_file = "./output/extracted_data_Scaling_Parameters.csv",
-  variable_patterns   = variable_patterns,
-  time_cols           = c("Year", "Month"),
-  overwrite           = TRUE
-)
-```
-
-#### Spatiotemporal Partitioning
-
-Creates cross-validation folds that are spatially and/or temporally independent. This ensures that model evaluation reflects true predictive performance rather than spatial or temporal autocorrelation. Note that `time_cols` for partitioning must be a single column; compound time representations (e.g., year + month) should be encoded into a single ordered numeric column before partitioning:
-
-```{r partition_example, eval=FALSE}
-partition_results <- spatiotemporal_partition(
-  reference_shapefile_path = study_area_sf,
-  points_file_path         = "./output/extracted_data_Scaled_Values.csv",
-  time_cols                = "Year",
-  xcol                     = "x",
-  ycol                     = "y",
-  points_crs               = 4326,
-  n_spatial_folds          = 2,
-  n_temporal_folds         = 2,
-  max_imbalance            = 0.05,
-  create_plot              = TRUE,
-  output_file              = "partition_results.rds"
-)
-```
-
-#### Generating Pseudoabsences
-
-For presence/absence models (GLM, GAM, random forest), pseudoabsences are required. The `generate_absences()` function creates fold-stratified pseudoabsence points using either buffer-based or environmental-distance methods:
-
-```{r absences_example, eval=FALSE}
-absence_results <- generate_absences(
-  partition_result         = partition_results,
-  reference_shapefile_path = study_area_sf,
-  raster_dir               = "scaled_rasters/",
-  variable_patterns        = variable_patterns,
-  method                   = "buffer",
-  buffer_distance          = 2000,
-  ratio                    = 2,
-  time_cols                = c("Year"),
-  create_plot              = TRUE
-)
-```
-
-### Modeling Functions
-
-#### Building Models
-
-TemporalModelR supports four modeling algorithms via consistent function interfaces. Presence-only modeling is performed with hypervolume; presence/absence modeling is performed with GLM, GAM, or random forest:
-
-```{r glm_example, eval=FALSE}
-glm_results <- build_temporal_glm(
-  partition_result     = partition_results,
-  pseudoabsence_result = absence_results,
-  model_formula        = ~ landcover + temp + elevation,
-  link                 = "logit",
-  threshold_method     = "tss",
-  output_dir           = "models/glm/",
-  time_cols            = c("Year", "Month"),
-  create_plot          = TRUE
-)
-```
-
-```{r gam_example, eval=FALSE}
-gam_results <- build_temporal_gam(
-  partition_result     = partition_results,
-  pseudoabsence_result = absence_results,
-  model_formula        = ~ s(landcover) + s(temp) + s(elevation),
-  threshold_method     = "tss",
-  output_dir           = "models/gam/",
-  time_cols            = c("Year", "Month"),
-  create_plot          = TRUE
-)
-```
-
-```{r rf_example, eval=FALSE}
-rf_results <- build_temporal_rf(
-  partition_result     = partition_results,
-  pseudoabsence_result = absence_results,
-  model_vars           = c("landcover", "temp", "elevation"),
-  rf_params            = list(ntree = 500),
-  threshold_method     = "tss",
-  output_dir           = "models/rf/",
-  time_cols            = c("Year", "Month"),
-  create_plot          = TRUE
-)
-```
-
-```{r hv_example, eval=FALSE}
-hv_results <- build_temporal_hv(
-  partition_result   = partition_results,
-  model_vars         = c("landcover", "temp", "elevation"),
-  method             = "gaussian",
-  hypervolume_params = list(
-    quantile.requested      = 0.95,
-    quantile.requested.type = "probability"
-  ),
-  output_dir         = "models/hypervolume/",
-  create_plot        = TRUE
-)
-```
-
-#### Generating Predictions
-
-Projects the fitted models onto geographic space for each time step, producing both continuous suitability surfaces and model assessment metrics. Supports generation across time step combinations (like Month and Year), but assumes variable patterns missing time placeholders are static across those time steps. For example, with these variable patterns:
-
-```r
-variable_patterns <- c(
-  "landcover" = "landcover_YEAR",
-  "temp"      = "temp_MONTH_YEAR",
-  "elevation" = "elevation"
-)
-```
-
-Elevation is assumed to be static across all time steps (months and years), land cover is assumed to vary only across years (static across all months within a given year), and temperature is assumed to vary dynamically across month/year combinations.
-
-```{r predict_example, eval=FALSE}
-time_steps <- expand.grid(Year = 1990:2020, Month = 1:12,
-                          stringsAsFactors = FALSE)
-
-predictions <- generate_spatiotemporal_predictions(
-  partition_result     = partition_results,
-  model_result         = glm_results,
-  pseudoabsence_result = absence_results,
-  time_cols            = c("Year", "Month"),
-  time_steps           = time_steps,
-  variable_patterns    = variable_patterns,
-  raster_dir           = "scaled_rasters/",
-  output_dir           = "predictions/",
-  overwrite            = FALSE
-)
-```
-
-### Postprocessing Functions
-
-#### Summarizing Predictions
-
-Creates consensus predictions (where a chosen number of folds agree) and calculates the proportion of time steps where each pixel is returned as suitable (pixel stability). The `consensus` parameter sets the minimum number of folds that must agree for a pixel to be classified as suitable:
-
-```{r summarize_example, eval=FALSE}
-summary_results <- summarize_raster_outputs(
-  predictions_dir = "predictions/",
-  output_dir      = "summaries/",
-  consensus       = 3,
-  overwrite       = TRUE
-)
-```
-
-The result contains `consensus_stack` (a per-time-step binary stack) and `frequency_raster` (the proportion of time steps each pixel was classified as suitable).
-
-#### Analyzing Temporal Patterns
-
-Uses changepoint detection to classify each pixel's temporal trajectory into categories: never suitable, always suitable, stable, increasing, decreasing, or fluctuating.
-
-Assumes values change consecutively (supports annual or decadal changes that are expected to have linear change, but should not be used with cyclical changes like monthly predictions, unless analyzing one month across years) AND will fail if the time series is not long enough to detect substantial changes over time (usually at least ~15 time steps).
-
-For large data sets this function may take a long time.
-
-```{r patterns_example, eval=FALSE}
-pattern_results <- analyze_temporal_patterns(
-  binary_stack            = summary_results$consensus_stack,
-  summary_raster          = summary_results$frequency_raster,
-  time_steps              = 1990:2020,
-  fastcpd_params          = list(method = "BIC"),
-  output_dir              = "temporal_patterns/",
-  spatial_autocorrelation = TRUE,
-  verbose                 = TRUE,
-  overwrite               = TRUE
-)
-```
-
-#### Summarizing by Spatial Units
-
-Aggregates temporal patterns and trends across administrative or ecological boundaries (states, watersheds, counties, etc.). The `pie_scale` argument is a fraction in (0, 1] giving the largest pie's radius as a proportion of the smaller map dimension; default `0.15`:
-
-```{r spatial_example, eval=FALSE}
-spatial_results <- analyze_trends_by_spatial_unit(
-  shapefile_path       = admin_boundaries,
-  name_field           = "NAME",
-  binary_stack         = summary_results$consensus_stack,
-  pattern_raster       = "temporal_patterns/pattern_raster.tif",
-  time_decrease_raster = "temporal_patterns/year_first_decrease.tif",
-  time_increase_raster = "temporal_patterns/year_first_increase.tif",
-  output_dir           = "spatial_analysis/",
-  time_steps           = 1990:2020,
-  pie_scale            = 0.15
-)
-```
-
-
-## Example: Synthetic Workflow
-
-This example demonstrates the complete TemporalModelR workflow using the synthetic dataset bundled with the package. The data ship in `inst/extdata/` and as pre-computed `data()` objects, so the modelling and postprocessing steps run end-to-end without external files. The study area is a 15 x 30 cell grid (3000 m x 1500 m at 100 m pixels) in a synthetic local CRS, with 150 presence points spanning 15 years and three seasons (Spring, Summer, Autumn). Three environmental predictors are included: elevation (static), forest cover (annual), and seasonal precipitation (`prseas`).
-
-### Setup
-
-```{r setup_synthetic, eval=TRUE}
-library(TemporalModelR)
-library(terra)
-library(sf)
-
-### Inputs already bundled with the package
-raw_dir  <- system.file("extdata/rasters_raw",        package = "TemporalModelR")
-ref      <- file.path(raw_dir, "elevation.tif")
-pts_file <- system.file("extdata/points/synthetic_occurrence_points.csv",
-                        package = "TemporalModelR")
-
-### Variable mapping reused across the workflow
-my_variable_patterns <- c(
-  "elevation"    = "elevation",
-  "forest_cover" = "forest_cover_YEAR",
-  "prseas"       = "prseas_YEAR_SEASON"
-)
-```
-
-### Phase 1: Preprocessing
-
-The preprocessing chunks below are shown as reference code. Because the package ships their outputs in `inst/extdata/` and as `data()` objects, the modelling phase further down can use those bundled objects directly without rerunning these steps.
-
-#### Step 1: Align Environmental Rasters
-
-```{r align_synthetic}
-raster_align(
-  input_dir        = raw_dir,
-  output_dir       = "./aligned/",
-  reference_raster = ref,
-  overwrite        = TRUE
-)
-```
-
-#### Step 2: Rarefy Occurrence Data
-
-```{r rarefy_synthetic}
-spatiotemporal_rarefaction(
-  points_sp        = pts_file,
-  output_dir       = "./rarefied/",
-  reference_raster = ref,
-  time_cols        = c("year", "season"),
-  xcol             = "x",
-  ycol             = "y",
-  points_crs       = crs(rast(ref))
-)
-```
-
-#### Step 3: Extract Environmental Values
-
-```{r extract_synthetic}
-temporally_explicit_extraction(
-  points_sp           = "./rarefied/Pts_Database_OnePerPixPerTimeStep.csv",
-  raster_dir          = "./aligned/",
-  variable_patterns   = my_variable_patterns,
-  time_cols           = c("year", "season"),
-  xcol                = "x",
-  ycol                = "y",
-  points_crs          = crs(rast(ref)),
-  output_dir          = "./extracted/",
-  output_prefix       = "extracted_seasonal",
-  save_scaling_params = TRUE
-)
-```
-
-#### Step 4: Scale Rasters
-
-```{r scale_synthetic}
-scale_rasters(
-  input_dir           = "./aligned/",
-  output_dir          = "./scaled/",
-  scaling_params_file = "./extracted/extracted_seasonal_Scaling_Parameters.csv",
-  variable_patterns   = my_variable_patterns,
-  time_cols           = c("year", "season"),
-  overwrite           = TRUE
-)
-```
-
-#### Step 5: Partition Data
-
-We create four folds: two spatial and two temporal. For partitioning, `time_cols` must be a single column, so we use `"year"`:
-
-```{r partition_synthetic}
-study_crs <- st_crs(rast(ref))
-
-study_area_sf <- st_as_sf(st_as_sfc(
-  st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500), crs = study_crs)
-))
-
-spatiotemporal_partition(
-  reference_shapefile_path = study_area_sf,
-  points_file_path         = "./extracted/extracted_seasonal_Scaled_Values.csv",
-  time_cols                = "year",
-  xcol                     = "x",
-  ycol                     = "y",
-  points_crs               = study_crs,
-  n_spatial_folds          = 2,
-  n_temporal_folds         = 2,
-  create_plot              = TRUE
-)
-```
-
-#### Step 6: Generate Pseudoabsences
-
-```{r absences_synthetic}
-generate_absences(
-  partition_result         = tmr_partition,
-  reference_shapefile_path = study_area_sf,
-  raster_dir               = "./scaled/",
-  variable_patterns        = my_variable_patterns,
-  method                   = "buffer",
-  buffer_distance          = 300,
-  ratio                    = 2,
-  time_cols                = c("year", "season"),
-  create_plot              = TRUE
-)
-```
-
-### Phase 2: Modelling
-
-From here on we use the pre-built workflow objects shipped with the package via `data()`. Each one is the output of one of the preprocessing or modelling functions above, so you can pick up the workflow at any point without rerunning earlier steps.
-
-#### Step 7: Build a GLM
-
-A GAM, random forest, or hypervolume model could be substituted by swapping in `build_temporal_gam()`, `build_temporal_rf()`, or `build_temporal_hv()` with the same `partition_result` and (for presence/absence methods) `pseudoabsence_result`.
-
-```{r build_glm_synthetic, eval=TRUE}
-data(tmr_partition, package = "TemporalModelR")
-data(tmr_absences,  package = "TemporalModelR")
-
-tmr_glm <- build_temporal_glm(
-  partition_result     = tmr_partition,
-  pseudoabsence_result = tmr_absences,
-  model_formula        = ~ forest_cover + prseas + elevation,
-  threshold_method     = "tss",
-  output_dir           = tempdir(),
-  time_cols            = c("year", "season"),
-  create_plot          = TRUE,
-  verbose              = FALSE
-)
-```
-
-#### Step 8: Generate Predictions
-
-We project predictions across all 15 years for the Spring season only. The bundled `tmr_predictions` object is the output of running this on the synthetic data:
-
-```{r predict_synthetic}
-scl_dir <- system.file("extdata/rasters_scaled", package = "TemporalModelR")
-
-time_steps <- expand.grid(
-  year             = 1:15,
-  season           = "Spring",
-  stringsAsFactors = FALSE
-)
-
-generate_spatiotemporal_predictions(
-  partition_result     = tmr_partition,
-  model_result         = tmr_glm,
-  pseudoabsence_result = tmr_absences,
-  raster_dir           = scl_dir,
-  variable_patterns    = my_variable_patterns,
-  time_cols            = c("year", "season"),
-  time_steps           = time_steps,
-  output_dir           = tempdir(),
-  overwrite            = TRUE
-)
-```
-
-Inspect a few of the bundled prediction surfaces:
-
-```{r predict_show_synthetic, eval=TRUE}
-pred_dir   <- system.file("extdata/predictions", package = "TemporalModelR")
-pred_files <- list.files(pred_dir, pattern = "\\.tif$", full.names = TRUE)
-pred_files <- pred_files[c(1, 8, 15)]
-
-plot(rast(pred_files),
-     main = c("Year 1 (Spring)", "Year 8 (Spring)", "Year 15 (Spring)"))
-```
-
-#### Step 9: Assess Model Performance
-
-```{r assess_synthetic, eval=TRUE}
-data(tmr_predictions, package = "TemporalModelR")
-
-plot_model_assessment(
-  predictions         = tmr_predictions,
-  time_column         = c("year", "season"),
-  secondary_time_mode = "combine",
-  verbose             = FALSE
-)
-```
-
-### Phase 3: Postprocessing
-
-#### Step 10: Create Consensus Predictions
-
-Summarise the per-fold predictions into a consensus stack (binary suitability where at least 3 of 4 folds agree) and a frequency raster (proportion of timesteps each pixel was suitable):
-
-```{r summarize_synthetic, eval=TRUE}
-pred_dir <- system.file("extdata/predictions", package = "TemporalModelR")
-
-binary_results <- summarize_raster_outputs(
-  predictions_dir = pred_dir,
-  output_dir      = tempdir(),
-  consensus       = 3,
-  overwrite       = TRUE,
-  verbose         = FALSE
-)
-
-plot(binary_results$consensus_stack,
-     main = paste("Year", 1:nlyr(binary_results$consensus_stack)))
-```
-
-```{r summarize_synthetic_freq, eval=TRUE}
-plot(binary_results$frequency_raster,
-     main = "Proportion of years suitable")
-```
-
-#### Step 11: Identify Temporal Patterns
-
-Classify each pixel's trajectory across time using changepoint detection. The synthetic dataset has 15 timesteps, which is the practical minimum for stable changepoint estimation:
-
-```{r patterns_synthetic, eval=TRUE}
-analyze_temporal_patterns(
-  binary_stack            = binary_results$consensus_stack,
-  summary_raster          = binary_results$frequency_raster,
-  time_steps              = 1:15,
-  fastcpd_params          = list(method = "BIC"),
-  output_dir              = tempdir(),
-  spatial_autocorrelation = TRUE,
-  verbose                 = FALSE,
-  overwrite               = TRUE
-)
-```
-
-#### Step 12: Summarise by Spatial Unit
-
-Split the study area into two zones (west and east at x = 1500 m) and summarise habitat trends by zone:
-
-```{r zones_synthetic, eval=TRUE}
-study_crs <- st_crs(binary_results$consensus_stack)
-
-zones_sf <- rbind(
-  st_sf(ZONE = "West",
-        geometry = st_sfc(st_polygon(list(
-          matrix(c(0, 0, 1500, 1500, 0,
-                   0, 1500, 1500, 0, 0), ncol = 2)
-        )), crs = study_crs)),
-  st_sf(ZONE = "East",
-        geometry = st_sfc(st_polygon(list(
-          matrix(c(1500, 1500, 3000, 3000, 1500,
-                   0,    1500, 1500, 0,    0),    ncol = 2)
-        )), crs = study_crs))
-)
-
-time_steps <- expand.grid(
-  year             = 1:15,
-  season           = "Spring",
-  stringsAsFactors = FALSE
-)
-
-analyze_trends_by_spatial_unit(
-  shapefile_path = zones_sf,
-  name_field     = "ZONE",
-  binary_stack   = binary_results$consensus_stack,
-  time_steps     = time_steps,
-  pie_scale      = 0.15,
-  create_plot    = TRUE,
-  verbose        = FALSE
-)
-```
-
+<br>
 
 ## Citation
 
 If you use TemporalModelR in your research, please cite:
 
-Hughes, C., Castaneda-Guzman, M., & Escobar, L.E. (2026). TemporalModelR: A tool for temporally explicit species distribution modeling. [Journal information to be added]
+Hughes, C., Castaneda-Guzman, M., & Escobar, L.E. (2026). *TemporalModelR: An R Package for temporally-explicit species distribution modeling.* [Journal information to be added]
 
-## Getting Help
+<br>
 
-- Report bugs or request features: [GitHub Issues](https://github.com/CJHughes926/TemporalModelR/issues)
-- Ask questions: [GitHub Discussions](https://github.com/CJHughes926/TemporalModelR/discussions)
+## Note on AI usage
 
-## License
+To maintain high standards of code quality and documentation, we have used AI LLM tools while constructing code for this package. We used these tools for grammatical polishing and exploring technical implementation strategies for specialised functions. We manually checked and tested all code and documentation refined with these tools.
 
-MIT + file LICENSE
+<br>
 
-## Acknowledgments
+## Contributing
 
-TemporalModelR builds on several excellent packages:
+We welcome contributions to improve `TemporalModelR`. To maintain the integrity and performance of the package, we follow a few core principles:
 
-- [hypervolume](https://cran.r-project.org/package=hypervolume) for niche modeling
-- [mgcv](https://cran.r-project.org/package=mgcv) for GAMs
-- [randomForest](https://cran.r-project.org/package=randomForest) for random forest models
-- [fastcpd](https://cran.r-project.org/package=fastcpd) for changepoint detection
-- [terra](https://cran.r-project.org/package=terra) and [sf](https://cran.r-project.org/package=sf) for spatial data handling
+-   **Quality over quantity**: we prioritise well-thought-out, stable improvements over frequent, minor changes. Please ensure your code is well-documented and follows the existing style of the package.
+-   **Minimal dependencies**: one of the goals of TemporalModelR is to remain efficient. We prefer solutions that use base R or existing dependencies. Proposals that introduce new package dependencies will be evaluated for their necessity.
+-   **AI-assisted code**: if you use AI tools to generate code alternatives or improvements, please manually verify the logic and accuracy of the output and demonstrate the benefit in your Pull Request.
+-   **Testing**: new features should include examples, and tests should be performed to ensure they work as intended and do not break existing workflows.
+
+If you have an idea for a major change, please open an Issue first to discuss it with the maintainers.
+
+<br>
+
+## Getting help
+
+-   Report bugs or request features: [GitHub Issues](https://github.com/CJHughes926/TemporalModelR/issues)
+-   Ask questions: [GitHub Discussions](https://github.com/CJHughes926/TemporalModelR/discussions)
