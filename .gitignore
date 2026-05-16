@@ -7,3 +7,6 @@
 *.Rcheck/
 data-raw/working/
 .DS_Store
+inst/doc
+/doc/
+/Meta/
