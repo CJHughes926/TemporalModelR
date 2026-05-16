@@ -23,7 +23,7 @@ Description: TemporalModelR is an R package built with the goal of increasing
     and generating temporally-explicit predictions from that model, and
     (iii) model postprocessing to explore spatiotemporal trends in model
     predictions.
-URL: https://github.com/CJHughes926/TemporalModelR
+URL: https://github.com/CJHughes926/TemporalModelR, https://cjhughes926.github.io/TemporalModelR/
 BugReports: https://github.com/CJHughes926/TemporalModelR/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
