@@ -1,0 +1,6 @@
+# temporalmodelr
+
+``` r
+
+library(TemporalModelR)
+```
