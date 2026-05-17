@@ -28,11 +28,9 @@ to visualize the utility of this package and the variety of the types of
 data that it may be useful for.
 
 This vignette describes the dataset in detail so that the workflow
-vignettes ([Preprocessing temporally explicit
-data](https://cjhughes926.github.io/TemporalModelR/articles/preprocessing.md),
-[Modeling](https://cjhughes926.github.io/TemporalModelR/articles/modeling_glm.md),
-[Postprocessing](https://cjhughes926.github.io/TemporalModelR/articles/postprocessing.md))
-can refer back to a single source for what’s in `inst/extdata/` and
+vignettes ([Preprocessing temporally explicit data](preprocessing.md),
+[Modeling](modeling_glm.md), [Postprocessing](postprocessing.md)) can
+refer back to a single source for what’s in `inst/extdata/` and
 [`data()`](https://rdrr.io/r/utils/data.html) rather than explaining the
 dataset through each other vignette. If you’re working through the
 package for the first time, read this first.
@@ -313,7 +311,7 @@ re-running upstream steps.
 ### Pre-computed `data()` objects
 
 - **`tmr_partition_annual`** — output of
-  [`spatiotemporal_partition()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md).
+  [`spatiotemporal_partition()`](../reference/spatiotemporal_partition.md).
   A list containing `$folds` (a data frame mapping each occurrence point
   to one of four cross-validation folds), `$points_sf` (the rarefied and
   extracted points as an `sf` object, with environmental values
@@ -322,33 +320,33 @@ re-running upstream steps.
   `$plots` (diagnostic ggplot objects). Built with 2 spatial folds × 2
   temporal folds.
 - **`tmr_absences_annual`** — output of
-  [`generate_absences()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-  applied to `tmr_partition_annual`. A list with `$pseudoabsences` (an
-  `sf` object containing 2:1 ratio buffer-sampled pseudoabsence points
-  with environmental values extracted at the matching year), `$plots`,
-  and `$summary`. Use it directly as the `pseudoabsence_result` argument
-  in any of the four presence/absence model builders.
+  [`generate_absences()`](../reference/generate_absences.md) applied to
+  `tmr_partition_annual`. A list with `$pseudoabsences` (an `sf` object
+  containing 2:1 ratio buffer-sampled pseudoabsence points with
+  environmental values extracted at the matching year), `$plots`, and
+  `$summary`. Use it directly as the `pseudoabsence_result` argument in
+  any of the four presence/absence model builders.
 - **`tmr_glm_annual`** — output of
-  [`build_temporal_glm()`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md)
-  applied to `tmr_partition_annual` and `tmr_absences_annual` with
-  formula `~ forest_cover + pr_ann + elevation`, logit link, and TSS
-  threshold selection. A list of class `"TemporalGLM"` containing
-  `$models` (four fitted `glm` objects, one per fold), `$thresholds`
-  (the TSS-optimal threshold per fold), `$model_formula`, `$link`,
-  `$model_vars`, `$fold_training_data`, `$fold_test_metrics` (per-fold
-  AUC, TSS, sensitivity, specificity), and `$plots`. Pass it to
-  [`generate_spatiotemporal_predictions()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+  [`build_temporal_glm()`](../reference/build_temporal_glm.md) applied
+  to `tmr_partition_annual` and `tmr_absences_annual` with formula
+  `~ forest_cover + pr_ann + elevation`, logit link, and TSS threshold
+  selection. A list of class `"TemporalGLM"` containing `$models` (four
+  fitted `glm` objects, one per fold), `$thresholds` (the TSS-optimal
+  threshold per fold), `$model_formula`, `$link`, `$model_vars`,
+  `$fold_training_data`, `$fold_test_metrics` (per-fold AUC, TSS,
+  sensitivity, specificity), and `$plots`. Pass it to
+  [`generate_spatiotemporal_predictions()`](../reference/generate_spatiotemporal_predictions.md)
   as the `model_result` argument.
 - **`tmr_predictions_annual`** — output of
-  [`generate_spatiotemporal_predictions()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+  [`generate_spatiotemporal_predictions()`](../reference/generate_spatiotemporal_predictions.md)
   applied to `tmr_glm_annual`, projected across all 15 years (one annual
   prediction stack per fold). A list with `$timestep_metrics` (per-year,
   per-fold E-space and G-space evaluation metrics including CBP),
   `$overall_summary` (across-year aggregates), `$prediction_files`
   (paths to the per-fold prediction tifs from the build run), and
   `$model_type`. Useful for
-  [`plot_model_assessment()`](https://cjhughes926.github.io/TemporalModelR/reference/plot_model_assessment.md)
-  and for downstream pattern analysis.
+  [`plot_model_assessment()`](../reference/plot_model_assessment.md) and
+  for downstream pattern analysis.
 - **`tmr_partition`** — partition built from rarefaction at year-season
   scale and extraction with `prseas_YEAR_SEASON`. Same list structure as
   the annual version, but with more points retained because
@@ -359,8 +357,8 @@ re-running upstream steps.
   specific year *and* season and has the corresponding seasonal
   predictor values attached.
 - **`tmr_glm`** —
-  [`build_temporal_glm()`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md)
-  fit with formula `~ forest_cover + prseas + elevation` and
+  [`build_temporal_glm()`](../reference/build_temporal_glm.md) fit with
+  formula `~ forest_cover + prseas + elevation` and
   `time_cols = c("year", "season")`.
 - **`tmr_predictions`** — predictions from `tmr_glm` projected to all 15
   years for the Spring season only (15 prediction layers per fold). The
@@ -386,21 +384,20 @@ list.files(pred_dir, pattern = "\\.tif$")
 The bundled subdirectories are:
 
 - **`inst/extdata/rasters_aligned/`** — outputs of
-  [`raster_align()`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md)
-  on the raw rasters: every layer reprojected and masked to the
-  reference grid.
+  [`raster_align()`](../reference/raster_align.md) on the raw rasters:
+  every layer reprojected and masked to the reference grid.
 - **`inst/extdata/rasters_scaled/`** — z-scored rasters for the seasonal
   workflow (`forest_cover`, `prseas`, `elevation`), produced by
-  [`scale_rasters()`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md).
+  [`scale_rasters()`](../reference/scale_rasters.md).
 - **`inst/extdata/rasters_scaled_annual/`** — z-scored rasters for the
   annual workflow (`forest_cover`, `pr_ann`, `elevation`).
 - **`inst/extdata/predictions/`** — 15 per-year fold-vote prediction
   rasters from the seasonal workflow’s
-  [`generate_spatiotemporal_predictions()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+  [`generate_spatiotemporal_predictions()`](../reference/generate_spatiotemporal_predictions.md)
   call. Direct input to
-  [`summarize_raster_outputs()`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md).
+  [`summarize_raster_outputs()`](../reference/summarize_raster_outputs.md).
 - **`inst/extdata/binary/`** — outputs of
-  [`summarize_raster_outputs()`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md)
+  [`summarize_raster_outputs()`](../reference/summarize_raster_outputs.md)
   applied to the prediction rasters above:
   - `consensus_stack.tif` — 15-layer binary consensus stack (one layer
     per year, suitable where ≥3 of 4 folds agree)

@@ -1,13 +1,12 @@
 # Generate Temporally Explicit Pseudoabsence Points
 
 Generates pseudoabsence or background points for each fold produced by
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md),
-distributed across time steps proportionally to the number of presence
-points in each time step within each fold. Three generation methods are
-supported: random sampling within the study area, buffer-constrained
-sampling around presence points, and environmentally biased sampling
-that targets areas outside the known environmental tolerance of the
-species.
+[`spatiotemporal_partition`](spatiotemporal_partition.md), distributed
+across time steps proportionally to the number of presence points in
+each time step within each fold. Three generation methods are supported:
+random sampling within the study area, buffer-constrained sampling
+around presence points, and environmentally biased sampling that targets
+areas outside the known environmental tolerance of the species.
 
 ## Usage
 
@@ -37,8 +36,8 @@ generate_absences(
 - partition_result:
 
   List or character. Output from
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
-  or path to an `.rds` file containing that output.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md) or path to
+  an `.rds` file containing that output.
 
 - reference_shapefile_path:
 
@@ -48,13 +47,11 @@ generate_absences(
 - raster_dir:
 
   Character. Directory containing environmental raster files (`.tif`),
-  typically the output of
-  [`raster_align`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md)
-  or
-  [`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md).
-  File names must follow the patterns supplied in `variable_patterns`,
-  with any time placeholder substituted for the corresponding value from
-  `time_cols`. Required for all methods.
+  typically the output of [`raster_align`](raster_align.md) or
+  [`scale_rasters`](scale_rasters.md). File names must follow the
+  patterns supplied in `variable_patterns`, with any time placeholder
+  substituted for the corresponding value from `time_cols`. Required for
+  all methods.
 
 - variable_patterns:
 
@@ -101,9 +98,8 @@ generate_absences(
 
   Character or character vector. Name of the column(s) containing the
   time step values. Must match `time_cols` used in
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
-  and the time placeholders used in `variable_patterns`. Default is
-  `NULL`.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md) and the time
+  placeholders used in `variable_patterns`. Default is `NULL`.
 
 - pseudoabsence_times:
 
@@ -201,14 +197,13 @@ ONE 8(8): e71218.
 ## See also
 
 Preprocessing:
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md),
-[`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md)
+[`spatiotemporal_partition`](spatiotemporal_partition.md),
+[`temporally_explicit_extraction`](temporally_explicit_extraction.md)
 
-Modeling:
-[`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
-[`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md)
+Modeling: [`build_temporal_hv`](build_temporal_hv.md),
+[`build_temporal_glm`](build_temporal_glm.md),
+[`build_temporal_gam`](build_temporal_gam.md),
+[`build_temporal_rf`](build_temporal_rf.md)
 
 ## Examples
 

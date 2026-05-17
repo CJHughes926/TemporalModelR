@@ -90,15 +90,13 @@ For each raster in `input_dir` matching `pattern`, the function:
 
 This preprocessing step ensures spatial alignment before applying other
 downstream analyses such as
-[`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md)
-or
-[`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md).
+[`temporally_explicit_extraction`](temporally_explicit_extraction.md) or
+[`scale_rasters`](scale_rasters.md).
 
 ## See also
 
-Preprocessing:
-[`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md),
-[`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md)
+Preprocessing: [`scale_rasters`](scale_rasters.md),
+[`temporally_explicit_extraction`](temporally_explicit_extraction.md)
 
 ## Examples
 

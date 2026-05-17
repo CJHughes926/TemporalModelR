@@ -35,10 +35,9 @@ temporally_explicit_extraction(
 - raster_dir:
 
   Character. Directory containing environmental raster files (`.tif`),
-  typically the output of
-  [`raster_align`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md).
-  File names must follow the patterns supplied in `variable_patterns`,
-  with any time placeholder substituted for the corresponding value from
+  typically the output of [`raster_align`](raster_align.md). File names
+  must follow the patterns supplied in `variable_patterns`, with any
+  time placeholder substituted for the corresponding value from
   `time_cols`.
 
 - variable_patterns:
@@ -110,8 +109,7 @@ Invisibly returns a list containing:
 
 - `scaling_params`: Data frame of per-variable means and standard
   deviations used for scaling (when `save_scaling_params = TRUE`; `NULL`
-  otherwise). Pass this to
-  [`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md).
+  otherwise). Pass this to [`scale_rasters`](scale_rasters.md).
 
 - `files_created`: Named list of file paths written, with elements
   `raw`, `scaled`, and `scaling_params` (each `NULL` when the
@@ -129,16 +127,15 @@ values, and scaling parameters.
 
 Scaling parameters (mean and standard deviation) are optionally computed
 across all occurrence records for each variable. These parameters should
-be used with
-[`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md)
-to standardize prediction layers.
+be used with [`scale_rasters`](scale_rasters.md) to standardize
+prediction layers.
 
 ## See also
 
 Preprocessing:
-[`spatiotemporal_rarefaction`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_rarefaction.md),
-[`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md),
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+[`spatiotemporal_rarefaction`](spatiotemporal_rarefaction.md),
+[`scale_rasters`](scale_rasters.md),
+[`spatiotemporal_partition`](spatiotemporal_partition.md)
 
 ## Examples
 

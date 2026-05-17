@@ -13,7 +13,7 @@ tmr_predictions_annual
 ## Format
 
 A list as returned by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 ## Source
 

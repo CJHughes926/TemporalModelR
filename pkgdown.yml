@@ -4,7 +4,4 @@ pkgdown_sha: ~
 articles:
   dataset: dataset.html
   Preprocessing: Preprocessing.html
-last_built: 2026-05-17T21:48Z
-urls:
-  reference: https://cjhughes926.github.io/TemporalModelR/reference
-  article: https://cjhughes926.github.io/TemporalModelR/articles
+last_built: 2026-05-17T21:57Z

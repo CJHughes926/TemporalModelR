@@ -221,15 +221,14 @@ workflows, ensuring spatial and/or temporal independence between folds.
 ## See also
 
 Preprocessing:
-[`spatiotemporal_rarefaction`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_rarefaction.md),
-[`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md),
-[`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
+[`spatiotemporal_rarefaction`](spatiotemporal_rarefaction.md),
+[`temporally_explicit_extraction`](temporally_explicit_extraction.md),
+[`generate_absences`](generate_absences.md)
 
-Modeling:
-[`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
-[`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md)
+Modeling: [`build_temporal_hv`](build_temporal_hv.md),
+[`build_temporal_glm`](build_temporal_glm.md),
+[`build_temporal_gam`](build_temporal_gam.md),
+[`build_temporal_rf`](build_temporal_rf.md)
 
 ## Examples
 

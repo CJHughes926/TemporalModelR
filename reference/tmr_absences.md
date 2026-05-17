@@ -1,12 +1,11 @@
 # Pre-built pseudoabsence result (seasonal workflow)
 
-Output from
-[`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-using the buffer method with a 300 m buffer (3 pixels at the synthetic
-landscape's 100 m resolution) and a 2:1 pseudoabsence-to-presence ratio.
-Pseudoabsences are stratified by fold from `tmr_partition` and have
-`forest_cover`, `prseas`, and `elevation` extracted at each location's
-year-season combination. Loaded with `data(tmr_absences)`.
+Output from [`generate_absences`](generate_absences.md) using the buffer
+method with a 300 m buffer (3 pixels at the synthetic landscape's 100 m
+resolution) and a 2:1 pseudoabsence-to-presence ratio. Pseudoabsences
+are stratified by fold from `tmr_partition` and have `forest_cover`,
+`prseas`, and `elevation` extracted at each location's year-season
+combination. Loaded with `data(tmr_absences)`.
 
 ## Usage
 
@@ -16,8 +15,7 @@ tmr_absences
 
 ## Format
 
-A list as returned by
-[`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md),
+A list as returned by [`generate_absences`](generate_absences.md),
 containing `$pseudoabsences` (an sf object with attached predictor
 columns), `$plots`, and `$summary`.
 

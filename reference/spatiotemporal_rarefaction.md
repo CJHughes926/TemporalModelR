@@ -114,13 +114,13 @@ and extent of `reference_raster`, then performs:
   written to `<output_prefix>_OnePerPixPerTimeStep.csv`.
 
 Output CSV files are suitable as direct input to
-[`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md).
+[`temporally_explicit_extraction`](temporally_explicit_extraction.md).
 
 ## See also
 
 Preprocessing:
-[`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md),
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+[`temporally_explicit_extraction`](temporally_explicit_extraction.md),
+[`spatiotemporal_partition`](spatiotemporal_partition.md)
 
 ## Examples
 

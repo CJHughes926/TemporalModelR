@@ -2,7 +2,7 @@
 
 Generates diagnostic plots from the per-timestep assessment table
 produced by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 optionally overlaying overall reference values from the model result
 object.
 
@@ -25,11 +25,11 @@ plot_model_assessment(
 - predictions:
 
   List returned by
-  [`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
+  [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
   or a named list with at least a `timestep_metrics` element. The
   `timestep_metrics` element may also be a path to a
   `Timestep_Assessment_Metrics.csv` file produced by
-  [`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+  [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 - time_column:
 
@@ -106,7 +106,7 @@ Invisibly returns a named list containing:
 ## Details
 
 Plots per-fold and per-timestep diagnostic plots for data produced by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 These quick visuals can be used by users to assess model performance and
 significance and decide if the model's performance warrants further
 interpretation of the results through postprocessing analyses.
@@ -114,18 +114,17 @@ interpretation of the results through postprocessing analyses.
 ## See also
 
 Preprocessing:
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md),
-[`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
+[`spatiotemporal_partition`](spatiotemporal_partition.md),
+[`generate_absences`](generate_absences.md)
 
-Modeling:
-[`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md),
-[`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
+Modeling: [`build_temporal_glm`](build_temporal_glm.md),
+[`build_temporal_gam`](build_temporal_gam.md),
+[`build_temporal_rf`](build_temporal_rf.md),
+[`build_temporal_hv`](build_temporal_hv.md),
 
 Postprocessing:
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
-[`summarize_raster_outputs`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md)
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
+[`summarize_raster_outputs`](summarize_raster_outputs.md)
 
 ## Examples
 

@@ -44,20 +44,18 @@ analyze_trends_by_spatial_unit(
 - pattern_raster:
 
   `SpatRaster` or character. Optional pattern classification raster from
-  [`analyze_temporal_patterns`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md).
-  Required for pattern composition summaries and scatterpie map.
+  [`analyze_temporal_patterns`](analyze_temporal_patterns.md). Required
+  for pattern composition summaries and scatterpie map.
 
 - time_decrease_raster:
 
   `SpatRaster` or character. Optional raster of first decrease time step
-  from
-  [`analyze_temporal_patterns`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md).
+  from [`analyze_temporal_patterns`](analyze_temporal_patterns.md).
 
 - time_increase_raster:
 
   `SpatRaster` or character. Optional raster of first increase time step
-  from
-  [`analyze_temporal_patterns`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md).
+  from [`analyze_temporal_patterns`](analyze_temporal_patterns.md).
 
 - time_steps:
 
@@ -120,8 +118,8 @@ patterns.
 ## See also
 
 Postprocessing:
-[`summarize_raster_outputs`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md),
-[`analyze_temporal_patterns`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md)
+[`summarize_raster_outputs`](summarize_raster_outputs.md),
+[`analyze_temporal_patterns`](analyze_temporal_patterns.md)
 
 ## Examples
 

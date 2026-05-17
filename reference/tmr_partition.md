@@ -1,7 +1,6 @@
 # Pre-built spatiotemporal partition (seasonal workflow)
 
-Output from
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+Output from [`spatiotemporal_partition`](spatiotemporal_partition.md)
 run on the synthetic occurrence dataset bundled in `inst/extdata/`.
 Built with `n_spatial_folds = 2` and `n_temporal_folds = 2`, producing
 four cross-validation folds (2 spatial + 2 temporal). Points span 15
@@ -20,9 +19,9 @@ tmr_partition
 ## Format
 
 A list as returned by
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md),
-containing `$folds`, `$points_sf`, `$voronoi_blocks`, `$voronoi_folds`,
-`$summary`, and `$plots`.
+[`spatiotemporal_partition`](spatiotemporal_partition.md), containing
+`$folds`, `$points_sf`, `$voronoi_blocks`, `$voronoi_folds`, `$summary`,
+and `$plots`.
 
 ## Source
 

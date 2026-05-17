@@ -13,8 +13,7 @@ tmr_absences_annual
 
 ## Format
 
-A list as returned by
-[`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md).
+A list as returned by [`generate_absences`](generate_absences.md).
 
 ## Source
 

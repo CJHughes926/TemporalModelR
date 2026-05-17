@@ -10,12 +10,10 @@ complementary log-log, or cauchit. Supports automatic or manual
 probability thresholding for converting continuous predictions to binary
 suitability classifications necessary for downstream analyses. The
 returned object follows the same structure as
-[`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-and
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md),
-and is accepted directly by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+[`build_temporal_hv`](build_temporal_hv.md),
+[`build_temporal_gam`](build_temporal_gam.md), and
+[`build_temporal_rf`](build_temporal_rf.md), and is accepted directly by
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 ## Usage
 
@@ -40,14 +38,14 @@ build_temporal_glm(
 - partition_result:
 
   List or character. Output from
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
-  or path to an `.rds` file containing that output.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md) or path to
+  an `.rds` file containing that output.
 
 - pseudoabsence_result:
 
   List or character. Output from
-  [`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-  or path to an `.rds` file containing that output.
+  [`generate_absences`](generate_absences.md) or path to an `.rds` file
+  containing that output.
 
 - model_formula:
 
@@ -120,8 +118,8 @@ build_temporal_glm(
 
   Character. Name of the column(s) containing year or time step values
   in the occurrence data. Must match `time_cols` used in
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md).
-  Default is `NULL`.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md). Default is
+  `NULL`.
 
 - verbose:
 
@@ -160,7 +158,7 @@ A list with class `"TemporalGLM"` containing:
 - `output_dir`: Path to the output directory.
 
 - `model_type`: Character string `"glm"`, used by
-  [`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+  [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 - `plots`: Named list of recorded plot objects when
   `create_plot = TRUE`. Plots can be replayed with
@@ -184,21 +182,20 @@ All models are fit as `stats::glm(..., family = binomial(link = link))`.
 Predicted values are always probabilities on the 0-1 scale.
 
 The returned object is recognised by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 which uses the `model_type` field to use the correct prediction and
 evaluation logic.
 
 ## See also
 
 Preprocessing:
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md),
-[`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
+[`spatiotemporal_partition`](spatiotemporal_partition.md),
+[`generate_absences`](generate_absences.md)
 
-Modeling:
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md),
-[`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+Modeling: [`build_temporal_gam`](build_temporal_gam.md),
+[`build_temporal_rf`](build_temporal_rf.md),
+[`build_temporal_hv`](build_temporal_hv.md),
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md)
 
 ## Examples
 

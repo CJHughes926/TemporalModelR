@@ -22,28 +22,26 @@ and environmental rasters and produces the structured inputs that the
 modeling functions expect. Six functions cover this phase, and they are
 typically run in order:
 
-1.  [`raster_align()`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md)
-    — reproject and mask all rasters to a common reference grid.
-2.  [`spatiotemporal_rarefaction()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_rarefaction.md)
+1.  [`raster_align()`](../reference/raster_align.md) — reproject and
+    mask all rasters to a common reference grid.
+2.  [`spatiotemporal_rarefaction()`](../reference/spatiotemporal_rarefaction.md)
     — subset occurrence points to one per pixel per time step.
-3.  [`temporally_explicit_extraction()`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md)
+3.  [`temporally_explicit_extraction()`](../reference/temporally_explicit_extraction.md)
     — extract environmental values matched to each point’s observation
     time.
-4.  [`scale_rasters()`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md)
-    — z-score rasters using the per-variable means and SDs from
-    extraction. This step is optional, but should be applied for models
-    sensitive to consistant scaling in predictor variabeles. If not, raw
-    values and aligned rasters may be used.
-5.  [`spatiotemporal_partition()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+4.  [`scale_rasters()`](../reference/scale_rasters.md) — z-score rasters
+    using the per-variable means and SDs from extraction. This step is
+    optional, but should be applied for models sensitive to consistant
+    scaling in predictor variabeles. If not, raw values and aligned
+    rasters may be used.
+5.  [`spatiotemporal_partition()`](../reference/spatiotemporal_partition.md)
     — assign points to single fold, spatial, temporal, spatiotemporal,
     or random cross-validation folds.
-6.  [`generate_absences()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-    — produce fold-stratified pseudoabsences for presence/absence
-    models.
+6.  [`generate_absences()`](../reference/generate_absences.md) — produce
+    fold-stratified pseudoabsences for presence/absence models.
 
 This vignette walks through each step using the bundled synthetic
-dataset described in the [About the Example
-Dataset](https://cjhughes926.github.io/TemporalModelR/articles/dataset.md)
+dataset described in the [About the Example Dataset](dataset.md)
 vignette. Read that vignette first if you have not already, as it
 explains the structure of the raw rasters and occurrence points used
 here. We use the **seasonal (compound time-step) workflow** throughout,
@@ -73,14 +71,13 @@ study_crs <- sf::st_crs(terra::rast(ref_file))
 
 ## Aligning rasters
 
-[`raster_align()`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md)
-standardises every raster in a directory to a single reference grid by
-reprojecting, resampling, and masking. This is essential because
-downstream functions assume all environmental layers share identical
-CRS, resolution, and extent. Even small differences are enough to
-misalign extraction at the pixel level. With the bundled dataset the raw
-rasters are already on the same grid, but we run the alignment step to
-show the call pattern.
+[`raster_align()`](../reference/raster_align.md) standardises every
+raster in a directory to a single reference grid by reprojecting,
+resampling, and masking. This is essential because downstream functions
+assume all environmental layers share identical CRS, resolution, and
+extent. Even small differences are enough to misalign extraction at the
+pixel level. With the bundled dataset the raw rasters are already on the
+same grid, but we run the alignment step to show the call pattern.
 
 ``` r
 
@@ -117,7 +114,7 @@ list.files(aligned_dir, pattern = "\\.tif$")[1:6]
 
 ## Spatiotemporal rarefaction
 
-[`spatiotemporal_rarefaction()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_rarefaction.md)
+[`spatiotemporal_rarefaction()`](../reference/spatiotemporal_rarefaction.md)
 reduces sampling bias and pseudoreplication by retaining one occurrence
 per pixel per unique time-step combination. The produces an only
 spatially rarefied table (one point per pixel, regardless of time), and
@@ -174,10 +171,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/RtmpcQDT7X/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/RtmpmubmAg/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/RtmpcQDT7X/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/RtmpmubmAg/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -219,7 +216,7 @@ explicit extraction.
 
 ## Temporally explicit extraction
 
-[`temporally_explicit_extraction()`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md)
+[`temporally_explicit_extraction()`](../reference/temporally_explicit_extraction.md)
 temporally aligns the raster dataset with the temporal columns of the
 now rarefied species occurrence dataset. For each occurrence record it
 extracts environmental values from the raster matched to that point’s
@@ -281,13 +278,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/RtmpcQDT7X/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/RtmpmubmAg/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/RtmpcQDT7X/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/RtmpmubmAg/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/RtmpcQDT7X/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/RtmpmubmAg/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
@@ -310,18 +307,16 @@ as those that rely on Euclidean distances and will misbehave if one
 variable’s units dwarf the others (e.g. Temperature running from -10 to
 38 C compared to precipitation running from 0 to 3000 mm. Use the
 scaling parameters CSV when running
-[`scale_rasters()`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md)
-so the rasters and the extracted point data share the same
-transformation.
+[`scale_rasters()`](../reference/scale_rasters.md) so the rasters and
+the extracted point data share the same transformation.
 
   
 
 ## Scaling rasters
 
-[`scale_rasters()`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md)
-z-scores every raster in a directory using the per-variable means and
-SDs from extraction. The transformation is `(value - mean) / sd`,
-applied pixel-wise.
+[`scale_rasters()`](../reference/scale_rasters.md) z-scores every raster
+in a directory using the per-variable means and SDs from extraction. The
+transformation is `(value - mean) / sd`, applied pixel-wise.
 
 ``` r
 
@@ -364,7 +359,7 @@ analyses.
 
 ## Spatiotemporal partitioning
 
-[`spatiotemporal_partition()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+[`spatiotemporal_partition()`](../reference/spatiotemporal_partition.md)
 assigns each occurrence record to a cross-validation fold which will be
 used to create training and testing datasets to build and assess our
 temporally explicit models. The function supports five modes:
@@ -390,7 +385,7 @@ We use the spatiotemporal design with two folds in each pool. The
 function requires the scaled (or raw) extracted points as input, a
 polygon defining the study area, and a single `time_cols` column (unlike
 the multi-column placeholders elsewhere; see
-[`?spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+[`?spatiotemporal_partition`](../reference/spatiotemporal_partition.md)
 for the rationale).
 
 ``` r
@@ -467,13 +462,13 @@ of seasonal environmental values.
 
 ## Generating pseudoabsences
 
-[`generate_absences()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-produces fold-stratified pseudoabsence/background points for
-presence/absence modeling. Pseudoabsences measure the environmental
-charactersitics of locations not otherwise characterized by species
-occcurances and are essential for GLMs, GAMs, and random forests when no
-‘true absence’ points exist. The hypervolume method is presence-only and
-does not need them.
+[`generate_absences()`](../reference/generate_absences.md) produces
+fold-stratified pseudoabsence/background points for presence/absence
+modeling. Pseudoabsences measure the environmental charactersitics of
+locations not otherwise characterized by species occcurances and are
+essential for GLMs, GAMs, and random forests when no ‘true absence’
+points exist. The hypervolume method is presence-only and does not need
+them.
 
 Three generation methods are supported:
 
@@ -558,18 +553,13 @@ At this point the three key downstream inputs are in hand:
 These are passed directly to any of the four model builders covered in
 the following parallel vignettes:
 
-- [Modeling with a
-  GLM](https://cjhughes926.github.io/TemporalModelR/articles/modeling_glm.md)
-- [Modeling with a
-  GAM](https://cjhughes926.github.io/TemporalModelR/articles/modeling_gam.md)
-- [Modeling with a Random
-  Forest](https://cjhughes926.github.io/TemporalModelR/articles/modeling_rf.md)
-- [Modeling with a
-  Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/modeling_hv.md)
+- [Modeling with a GLM](modeling_glm.md)
+- [Modeling with a GAM](modeling_gam.md)
+- [Modeling with a Random Forest](modeling_rf.md)
+- [Modeling with a Hypervolume](modeling_hv.md)
 
 Once a model is fitted, predictions are projected through space and time
 using
-[`generate_spatiotemporal_predictions()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
+[`generate_spatiotemporal_predictions()`](../reference/generate_spatiotemporal_predictions.md),
 and the resulting prediction stack is summarised in the [Postprocessing
-predictions](https://cjhughes926.github.io/TemporalModelR/articles/postprocessing.md)
-vignette.
+predictions](postprocessing.md) vignette.

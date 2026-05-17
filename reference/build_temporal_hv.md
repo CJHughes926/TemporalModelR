@@ -4,13 +4,10 @@ Modeling function that constructs hypervolume models for each
 cross-validation fold using either Gaussian kernel density estimation or
 one-class SVM. Each hypervolume reserves one fold as testing data and
 uses the remaining folds as training data. The returned object follows
-the same structure as
-[`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-and
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md),
-and is accepted directly by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+the same structure as [`build_temporal_glm`](build_temporal_glm.md),
+[`build_temporal_gam`](build_temporal_gam.md), and
+[`build_temporal_rf`](build_temporal_rf.md), and is accepted directly by
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 ## Usage
 
@@ -33,15 +30,15 @@ build_temporal_hv(
 - partition_result:
 
   List or character. Output from
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
-  or path to an `.rds` file containing that output.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md) or path to
+  an `.rds` file containing that output.
 
 - model_vars:
 
   Character vector. Names of predictor columns to use in hypervolume
   construction. All variables must be present as columns in the
   occurrence data produced by
-  [`temporally_explicit_extraction`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md).
+  [`temporally_explicit_extraction`](temporally_explicit_extraction.md).
 
 - method:
 
@@ -99,7 +96,7 @@ A list with class `"TemporalHypervolume"` containing:
 - `models`: Named list of fitted `Hypervolume` objects, one per fold,
   named `fold1`, `fold2`, etc. This naming convention matches the other
   `build_temporal_*()` functions and is required by
-  [`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+  [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 - `volumes`: Named numeric vector of hypervolume sizes (units depend on
   the number of dimensions and bandwidth).
@@ -123,7 +120,7 @@ A list with class `"TemporalHypervolume"` containing:
 - `output_dir`: Path to the output directory.
 
 - `model_type`: Character string `"hypervolume"`, used by
-  [`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+  [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 - `plots`: List of recorded plot objects (if `create_plot = TRUE`).
   Plots can be replayed with
@@ -142,21 +139,19 @@ If the file already exists and `overwrite = FALSE`, the saved file is
 loaded rather than re-fitting.
 
 The returned object is accepted directly by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 which uses the `model_type` field to dispatch hypervolume-specific
 projection logic via
 [`hypervolume_project`](https://rdrr.io/pkg/hypervolume/man/hypervolume_project.html).
 
 ## See also
 
-Preprocessing:
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+Preprocessing: [`spatiotemporal_partition`](spatiotemporal_partition.md)
 
-Modeling:
-[`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md),
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+Modeling: [`build_temporal_glm`](build_temporal_glm.md),
+[`build_temporal_gam`](build_temporal_gam.md),
+[`build_temporal_rf`](build_temporal_rf.md),
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md)
 
 External:
 [`hypervolume_gaussian`](https://rdrr.io/pkg/hypervolume/man/hypervolume_gaussian.html),

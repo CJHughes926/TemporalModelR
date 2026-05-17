@@ -171,29 +171,28 @@ under the *Articles* menu, also linked inline throughout this README.
 The preprocessing pipeline transforms raw occurrence records and
 environmental rasters into the structured inputs that downstream models
 expect. Six functions cover this phase.
-[`raster_align()`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md)
-standardises rasters to a common projection, extent, and resolution to
-prevent misalignment in future analyses.
-[`spatiotemporal_rarefaction()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_rarefaction.md)
+[`raster_align()`](reference/raster_align.md) standardises rasters to a
+common projection, extent, and resolution to prevent misalignment in
+future analyses.
+[`spatiotemporal_rarefaction()`](reference/spatiotemporal_rarefaction.md)
 subsets data to one point per pixel per time step, reducing
 pseudoreplication from your data but preserving trully unique temporally
 independent observations from the same location.
-[`temporally_explicit_extraction()`](https://cjhughes926.github.io/TemporalModelR/reference/temporally_explicit_extraction.md)
+[`temporally_explicit_extraction()`](reference/temporally_explicit_extraction.md)
 extracts environmental values from the raster that matches each point’s
 observation time step, producing a table of observations with their
 relevant E-space conditions correct in both space and time, along with
 the means and standard deviations of each variable across the dataset.
-[`scale_rasters()`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md)
-optionally uses those scaling parameters to z-score every raster,
-ensuring variables share a comparable range and contribute evenly to
-subsequent modeling algorythums sensitive to that.
-[`spatiotemporal_partition()`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+[`scale_rasters()`](reference/scale_rasters.md) optionally uses those
+scaling parameters to z-score every raster, ensuring variables share a
+comparable range and contribute evenly to subsequent modeling
+algorythums sensitive to that.
+[`spatiotemporal_partition()`](reference/spatiotemporal_partition.md)
 builds cross-validation folds via one of four methods: purely spatial,
 purely temporal, spatiotemporal (combining both), or random as a
 baseline. Finally,
-[`generate_absences()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-produces fold-stratified pseudoabsences relevant for presence/absence
-models.
+[`generate_absences()`](reference/generate_absences.md) produces
+fold-stratified pseudoabsences relevant for presence/absence models.
 
 > For a detailed workflow showcasing each preprocessing function, see
 > the [Preprocessing temporally explicit
@@ -211,24 +210,24 @@ fit per cross-validation fold; each is evaluated on its held-out test
 set, and for any continuous models a threshold is selected and applied
 to produce only binary results.
 
-- **[`build_temporal_glm()`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md)**
-  fits one generalised linear model per fold with a binomial link
-  function. Supports any combination of linear, polynomial, and
-  interactive terms via standard R formula syntax.
-- **[`build_temporal_gam()`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md)**
-  fits one generalised additive model per fold via
+- **[`build_temporal_glm()`](reference/build_temporal_glm.md)** fits one
+  generalised linear model per fold with a binomial link function.
+  Supports any combination of linear, polynomial, and interactive terms
+  via standard R formula syntax.
+- **[`build_temporal_gam()`](reference/build_temporal_gam.md)** fits one
+  generalised additive model per fold via
   [`mgcv::gam()`](https://rdrr.io/pkg/mgcv/man/gam.html). Allows for
   complex nonlinear relationships between environmental gradients and
   species presence.
-- **[`build_temporal_rf()`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md)**
-  fits one random forest classifier per fold via
+- **[`build_temporal_rf()`](reference/build_temporal_rf.md)** fits one
+  random forest classifier per fold via
   [`randomForest::randomForest()`](https://rdrr.io/pkg/randomForest/man/randomForest.html).
   Uses ensembles of decision trees to capture complex nonlinear
   relationships and interactions.
-- **[`build_temporal_hv()`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md)**
-  constructs n-dimensional hypervolumes per fold via Gaussian kernel
-  density estimation or one-class support vector machine. The
-  presence-only option; no pseudoabsences required.
+- **[`build_temporal_hv()`](reference/build_temporal_hv.md)** constructs
+  n-dimensional hypervolumes per fold via Gaussian kernel density
+  estimation or one-class support vector machine. The presence-only
+  option; no pseudoabsences required.
 
 Each model builder produces evaluation metrics across folds in E-space
 (time-independent), capturing overall niche estimation quality
@@ -237,7 +236,7 @@ gives a stable picture of model performance even in years where
 occurrence records are sparse.
 
 Once a model is fit,
-[`generate_spatiotemporal_predictions()`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+[`generate_spatiotemporal_predictions()`](reference/generate_spatiotemporal_predictions.md)
 projects it across user-defined time steps. The function accepts any of
 the four model types via the `model_result` argument and writes one
 prediction raster per fold per time step alongside per-time-step
@@ -275,12 +274,12 @@ Reporting both gives the most complete view of model performance.
 
 The postprocessing phase converts the per-fold prediction rasters into
 interpretable summaries.
-[`summarize_raster_outputs()`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md)
+[`summarize_raster_outputs()`](reference/summarize_raster_outputs.md)
 collapses fold-level predictions into a binary consensus stack (where a
 user-specified number of folds agree on suitability) and a frequency
 raster (proportion of time steps each pixel was suitable) which explored
 the stability of G-space suitablity projectiosn across time.
-[`analyze_temporal_patterns()`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md)
+[`analyze_temporal_patterns()`](reference/analyze_temporal_patterns.md)
 uses the `fastcpd` package to detect structured changes in each pixel’s
 suitability across the time series, classifying trajectories as
 never-suitable, always-suitable, no pattern, increasing, decreasing, or
@@ -290,7 +289,7 @@ predictor in the change point detection model; users can optionally
 enable spatial autocorrelation, which adds the proportion of a pixel’s
 first-order (queen’s case) neighbours predicted as suitable as an
 additional covariate.
-[`analyze_trends_by_spatial_unit()`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_trends_by_spatial_unit.md)
+[`analyze_trends_by_spatial_unit()`](reference/analyze_trends_by_spatial_unit.md)
 aggregates pixel-level patterns across user-defined polygons
 (administrative units, watersheds, ecoregions), producing useful tables
 summarizing losses and gains in suitbailty over time across a these

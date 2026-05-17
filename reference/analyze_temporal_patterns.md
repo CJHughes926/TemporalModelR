@@ -31,14 +31,13 @@ analyze_temporal_patterns(
 
   RasterStack, RasterBrick, or character. Stack of binary raster layers
   across time, or path to directory containing binary rasters. Typically
-  from
-  [`summarize_raster_outputs`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md).
+  from [`summarize_raster_outputs`](summarize_raster_outputs.md).
 
 - summary_raster:
 
   RasterLayer. Per-pixel proportion of time periods where a pixel is
   suitable. From
-  [`summarize_raster_outputs`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md).
+  [`summarize_raster_outputs`](summarize_raster_outputs.md).
 
 - time_steps:
 
@@ -127,7 +126,7 @@ Classification assumes consecutive rasters. Time periods shorter than
 ## See also
 
 Postprocessing:
-[`summarize_raster_outputs`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md)
+[`summarize_raster_outputs`](summarize_raster_outputs.md)
 
 External: [`fastcpd`](https://fastcpd.xingchi.li/reference/fastcpd.html)
 

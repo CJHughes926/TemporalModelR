@@ -2,7 +2,7 @@
 
 Postprocessing function that synthesizes per-time-step fold-vote rasters
 (output from
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md))
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md))
 into binary consensus predictions and a temporal frequency summary. Each
 input raster contains integer vote counts per pixel the number of
 cross-validation folds that classified that pixel as suitable. The
@@ -28,7 +28,7 @@ summarize_raster_outputs(
 
   Character. Directory containing prediction raster files, typically the
   `output_dir` used in
-  [`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md).
+  [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 
 - output_dir:
 
@@ -82,7 +82,7 @@ Invisibly returns a list containing:
 ## Details
 
 Input rasters are fold-vote-count rasters produced by
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md),
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 where each pixel value is the number of cross-validation fold models
 that predicted suitability at that location for that time step. The
 `consensus` threshold is applied as:
@@ -90,16 +90,15 @@ that predicted suitability at that location for that time step. The
 
 The frequency raster (proportion of time steps suitable under the chosen
 consensus) serves as input to
-[`analyze_temporal_patterns`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md)
-for identifying long-term trends in suitability.
+[`analyze_temporal_patterns`](analyze_temporal_patterns.md) for
+identifying long-term trends in suitability.
 
 ## See also
 
 Upstream:
-[`generate_spatiotemporal_predictions`](https://cjhughes926.github.io/TemporalModelR/reference/generate_spatiotemporal_predictions.md)
+[`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md)
 
-Downstream:
-[`analyze_temporal_patterns`](https://cjhughes926.github.io/TemporalModelR/reference/analyze_temporal_patterns.md)
+Downstream: [`analyze_temporal_patterns`](analyze_temporal_patterns.md)
 
 ## Examples
 

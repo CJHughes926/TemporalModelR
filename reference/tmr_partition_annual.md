@@ -16,7 +16,7 @@ tmr_partition_annual
 ## Format
 
 A list as returned by
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md).
+[`spatiotemporal_partition`](spatiotemporal_partition.md).
 
 ## Source
 

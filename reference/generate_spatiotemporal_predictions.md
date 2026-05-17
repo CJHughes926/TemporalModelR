@@ -28,41 +28,37 @@ generate_spatiotemporal_predictions(
 - partition_result:
 
   List or character. Output from
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
-  or path to an `.rds` file containing that output.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md) or path to
+  an `.rds` file containing that output.
 
 - model_result:
 
   List or character. Output from any of
-  [`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
-  [`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-  [`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-  or
-  [`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md),
-  or a path to an `.rds` file. Model type is detected automatically from
-  the `model_type` field.
+  [`build_temporal_hv`](build_temporal_hv.md),
+  [`build_temporal_glm`](build_temporal_glm.md),
+  [`build_temporal_gam`](build_temporal_gam.md), or
+  [`build_temporal_rf`](build_temporal_rf.md), or a path to an `.rds`
+  file. Model type is detected automatically from the `model_type`
+  field.
 
 - pseudoabsence_result:
 
   List, character, or `NULL`. Optional. Output from
-  [`generate_absences`](https://cjhughes926.github.io/TemporalModelR/reference/generate_absences.md)
-  or path to an `.rds` file. When supplied for presence/absence models
-  (GLM, GAM, RF), the held-out pseudoabsence test points for each fold
-  are filtered to the current time step and used alongside presence test
-  points to compute per-timestep TN, FP, Specificity, and TSS. These
-  columns are added to the timestep metrics table when pseudoabsences
-  are available. Ignored for hypervolume models. Default is `NULL`.
+  [`generate_absences`](generate_absences.md) or path to an `.rds` file.
+  When supplied for presence/absence models (GLM, GAM, RF), the held-out
+  pseudoabsence test points for each fold are filtered to the current
+  time step and used alongside presence test points to compute
+  per-timestep TN, FP, Specificity, and TSS. These columns are added to
+  the timestep metrics table when pseudoabsences are available. Ignored
+  for hypervolume models. Default is `NULL`.
 
 - raster_dir:
 
   Character. Directory containing environmental raster files (`.tif`),
-  typically the output of
-  [`raster_align`](https://cjhughes926.github.io/TemporalModelR/reference/raster_align.md)
-  or
-  [`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md).
-  File names must follow the patterns supplied in `variable_patterns`,
-  with any time placeholder substituted for the corresponding value from
-  `time_cols`.
+  typically the output of [`raster_align`](raster_align.md) or
+  [`scale_rasters`](scale_rasters.md). File names must follow the
+  patterns supplied in `variable_patterns`, with any time placeholder
+  substituted for the corresponding value from `time_cols`.
 
 - variable_patterns:
 
@@ -76,8 +72,8 @@ generate_spatiotemporal_predictions(
 
   Character. Name of the column(s) containing year or time step values
   in the occurrence data. Must match `time_cols` used in
-  [`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
-  and the time placeholders used in `variable_patterns`.
+  [`spatiotemporal_partition`](spatiotemporal_partition.md) and the time
+  placeholders used in `variable_patterns`.
 
 - time_steps:
 
@@ -140,19 +136,17 @@ predictions are better than random.
 
 ## See also
 
-Preprocessing:
-[`scale_rasters`](https://cjhughes926.github.io/TemporalModelR/reference/scale_rasters.md),
-[`spatiotemporal_partition`](https://cjhughes926.github.io/TemporalModelR/reference/spatiotemporal_partition.md)
+Preprocessing: [`scale_rasters`](scale_rasters.md),
+[`spatiotemporal_partition`](spatiotemporal_partition.md)
 
-Modeling:
-[`build_temporal_hv`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_hv.md),
-[`build_temporal_glm`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_glm.md),
-[`build_temporal_gam`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_gam.md),
-[`build_temporal_rf`](https://cjhughes926.github.io/TemporalModelR/reference/build_temporal_rf.md)
+Modeling: [`build_temporal_hv`](build_temporal_hv.md),
+[`build_temporal_glm`](build_temporal_glm.md),
+[`build_temporal_gam`](build_temporal_gam.md),
+[`build_temporal_rf`](build_temporal_rf.md)
 
 Postprocessing:
-[`summarize_raster_outputs`](https://cjhughes926.github.io/TemporalModelR/reference/summarize_raster_outputs.md),
-[`plot_model_assessment`](https://cjhughes926.github.io/TemporalModelR/reference/plot_model_assessment.md)
+[`summarize_raster_outputs`](summarize_raster_outputs.md),
+[`plot_model_assessment`](plot_model_assessment.md)
 
 ## Examples
 
