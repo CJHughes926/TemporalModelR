@@ -2,8 +2,9 @@ pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
-  temporalmodelr: temporalmodelr.html
-last_built: 2026-05-16T17:28Z
+  dataset: dataset.html
+  Preprocessing: Preprocessing.html
+last_built: 2026-05-17T21:48Z
 urls:
   reference: https://cjhughes926.github.io/TemporalModelR/reference
   article: https://cjhughes926.github.io/TemporalModelR/articles

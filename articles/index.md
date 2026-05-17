@@ -2,4 +2,7 @@
 
 ### All vignettes
 
-- [temporalmodelr](https://cjhughes926.github.io/TemporalModelR/articles/temporalmodelr.md):
+- [About the Example
+  Dataset](https://cjhughes926.github.io/TemporalModelR/articles/dataset.md):
+- [Preprocessing temporally explicit
+  data](https://cjhughes926.github.io/TemporalModelR/articles/Preprocessing.md):
