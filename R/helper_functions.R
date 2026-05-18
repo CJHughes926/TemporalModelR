@@ -2321,10 +2321,20 @@
   y_lo  <- if (!is.null(y_floor)) max(y_floor, y_rng[1] - y_pad) else y_rng[1] - y_pad
   y_hi  <- if (!is.null(y_ceil))  min(y_ceil,  y_rng[2] + y_pad) else y_rng[2] + y_pad
   if (is.na(y_lo) || is.na(y_hi) || y_lo >= y_hi) { y_lo <- 0; y_hi <- 1 }
-  bot_mar <- if (!is.null(x_labels_attr)) 6 else 4
+  bot_mar <- if (!is.null(x_labels_attr)) {
+    max(nchar(as.character(x_labels_attr[x_tck])), na.rm = TRUE) * 0.4 + 2.5
+  } else {
+    4
+  }
   graphics::par(mar = c(bot_mar, 5, 3.5, right_mar), xpd = FALSE)
-  graphics::plot(NULL, xlim = x_lim, ylim = c(y_lo, y_hi),
-                 xlab = x_axis_label, ylab = ylab, main = title, las = 1, xaxt = "n")
+  if (!is.null(x_labels_attr)) {
+    graphics::plot(NULL, xlim = x_lim, ylim = c(y_lo, y_hi),
+                   xlab = "", ylab = ylab, main = title, las = 1, xaxt = "n")
+    graphics::mtext(x_axis_label, side = 1, line = bot_mar - 1.2, cex = 0.9)
+  } else {
+    graphics::plot(NULL, xlim = x_lim, ylim = c(y_lo, y_hi),
+                   xlab = x_axis_label, ylab = ylab, main = title, las = 1, xaxt = "n")
+  }
   .draw_xaxis(x_tck, x_labels_attr)
 }
 

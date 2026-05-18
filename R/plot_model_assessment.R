@@ -426,12 +426,24 @@ plot_model_assessment <- function(predictions,
       lg   <- floor(log10(lim[1])):ceiling(log10(lim[2]))
       brks <- 10^lg
 
-      bot_mar <- if (!is.null(x_labels_attr)) 6 else 4
+      bot_mar <- if (!is.null(x_labels_attr)) {
+        max(nchar(as.character(x_labels_attr[x_tck])), na.rm = TRUE) * 0.4 + 2.5
+      } else {
+        4
+      }
       graphics::par(mar = c(bot_mar, 5, 3.5, 12), xpd = FALSE)
-      graphics::plot(NULL, xlim = x_lim, ylim = lim, log = "y",
-                     xlab = x_axis_label, ylab = "CBP (log scale)",
-                     main = "Cumulative Binomial Probability per Time Step",
-                     las = 1, xaxt = "n", yaxt = "n")
+      if (!is.null(x_labels_attr)) {
+        graphics::plot(NULL, xlim = x_lim, ylim = lim, log = "y",
+                       xlab = "", ylab = "CBP (log scale)",
+                       main = "Cumulative Binomial Probability per Time Step",
+                       las = 1, xaxt = "n", yaxt = "n")
+        graphics::mtext(x_axis_label, side = 1, line = bot_mar - 1.2, cex = 0.9)
+      } else {
+        graphics::plot(NULL, xlim = x_lim, ylim = lim, log = "y",
+                       xlab = x_axis_label, ylab = "CBP (log scale)",
+                       main = "Cumulative Binomial Probability per Time Step",
+                       las = 1, xaxt = "n", yaxt = "n")
+      }
       .draw_xaxis(x_tck, x_labels_attr)
 
       log_brks <- brks[brks > 0]
@@ -474,12 +486,24 @@ plot_model_assessment <- function(predictions,
       y_max <- max(c(tp_all[valid], tp_sum), na.rm = TRUE) * 1.15
       y_min <- -max(c(fn_all[valid], fn_sum), na.rm = TRUE) * 1.15
 
-      bot_mar <- if (!is.null(x_labels_attr)) 6 else 4
+      bot_mar <- if (!is.null(x_labels_attr)) {
+        max(nchar(as.character(x_labels_attr[x_tck])), na.rm = TRUE) * 0.4 + 2.5
+      } else {
+        4
+      }
       graphics::par(mar = c(bot_mar, 5, 3.5, 12), xpd = FALSE)
-      graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
-                     xlab = x_axis_label, ylab = "Count  (TP above 0 | FN below 0)",
-                     main = "True Positives and False Negatives per Time Step",
-                     las = 1, xaxt = "n")
+      if (!is.null(x_labels_attr)) {
+        graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
+                       xlab = "", ylab = "Count  (TP above 0 | FN below 0)",
+                       main = "True Positives and False Negatives per Time Step",
+                       las = 1, xaxt = "n")
+        graphics::mtext(x_axis_label, side = 1, line = bot_mar - 1.2, cex = 0.9)
+      } else {
+        graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
+                       xlab = x_axis_label, ylab = "Count  (TP above 0 | FN below 0)",
+                       main = "True Positives and False Negatives per Time Step",
+                       las = 1, xaxt = "n")
+      }
       .draw_xaxis(x_tck, x_labels_attr)
       graphics::abline(h = 0, col = "gray40", lwd = 0.8)
 
@@ -520,12 +544,24 @@ plot_model_assessment <- function(predictions,
       y_max <- max(c(tn_all[valid], tn_sum), na.rm = TRUE) * 1.15
       y_min <- -max(c(fp_all[valid], fp_sum), na.rm = TRUE) * 1.15
 
-      bot_mar <- if (!is.null(x_labels_attr)) 6 else 4
+      bot_mar <- if (!is.null(x_labels_attr)) {
+        max(nchar(as.character(x_labels_attr[x_tck])), na.rm = TRUE) * 0.4 + 2.5
+      } else {
+        4
+      }
       graphics::par(mar = c(bot_mar, 5, 3.5, 12), xpd = FALSE)
-      graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
-                     xlab = x_axis_label, ylab = "Count  (TN above 0 | FP below 0)",
-                     main = "True Negatives and False Positives per Time Step",
-                     las = 1, xaxt = "n")
+      if (!is.null(x_labels_attr)) {
+        graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
+                       xlab = "", ylab = "Count  (TN above 0 | FP below 0)",
+                       main = "True Negatives and False Positives per Time Step",
+                       las = 1, xaxt = "n")
+        graphics::mtext(x_axis_label, side = 1, line = bot_mar - 1.2, cex = 0.9)
+      } else {
+        graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
+                       xlab = x_axis_label, ylab = "Count  (TN above 0 | FP below 0)",
+                       main = "True Negatives and False Positives per Time Step",
+                       las = 1, xaxt = "n")
+      }
       .draw_xaxis(x_tck, x_labels_attr)
       graphics::abline(h = 0, col = "gray40", lwd = 0.8)
 
