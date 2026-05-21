@@ -3,5 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   dataset: dataset.html
+  GLM: GLM.html
+  Postprocessing: Postprocessing.html
   Preprocessing: Preprocessing.html
-last_built: 2026-05-21T18:44Z
+last_built: 2026-05-21T20:38Z
