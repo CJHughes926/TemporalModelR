@@ -2,7 +2,7 @@
 
 ### All vignettes
 
-- [About the Example Dataset](dataset.md):
-- [Modeling with a GLM](GLM.md):
-- [Postprocessing predictions](Postprocessing.md):
-- [Preprocessing temporally explicit data](Preprocessing.md):
+- [1. About the Example Dataset](dataset.md):
+- [3a. Modeling with a GLM](GLM.md):
+- [4. Postprocessing predictions](Postprocessing.md):
+- [2. Preprocessing temporally explicit data](Preprocessing.md):
