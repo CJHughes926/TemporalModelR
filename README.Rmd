@@ -1,6 +1,6 @@
 ---
 title: Temporally Explicit Species Distribution Modeling in R
-author: "Connor Hughes, Mariana Castaneda-Guzman"
+author: "Connor Hughes, Mariana Castaneda-Guzman, Luis E. Escobar"
 output: 
   github_document:
     toc: yes
