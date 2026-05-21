@@ -39,12 +39,12 @@ knitr::opts_chunk$set(
 
 The preprocessing phase of TemporalModelR takes raw occurrence records and environmental rasters and produces the structured inputs that the modeling functions expect. Six functions cover this phase, and they are typically run in order:
 
-1.  `raster_align()` — reproject and mask all rasters to a common reference grid.
-2.  `spatiotemporal_rarefaction()` — subset occurrence points to one per pixel per time step.
-3.  `temporally_explicit_extraction()` — extract environmental values matched to each point's observation time.
-4.  `scale_rasters()` — z-score rasters using the per-variable means and SDs from extraction. This step is optional, but should be applied for models sensitive to consistant scaling in predictor variabeles. If not, raw values and aligned rasters may be used. 
-5.  `spatiotemporal_partition()` — assign points to single fold, spatial, temporal, spatiotemporal, or random cross-validation folds.
-6.  `generate_absences()` — produce fold-stratified pseudoabsences for presence/absence models.
+1.  `raster_align()` - reproject and mask all rasters to a common reference grid.
+2.  `spatiotemporal_rarefaction()` - subset occurrence points to one per pixel per time step.
+3.  `temporally_explicit_extraction()` - extract environmental values matched to each point's observation time.
+4.  `scale_rasters()` - z-score rasters using the per-variable means and SDs from extraction. This step is optional, but should be applied for models sensitive to consistant scaling in predictor variabeles. If not, raw values and aligned rasters may be used. 
+5.  `spatiotemporal_partition()` - assign points to single fold, spatial, temporal, spatiotemporal, or random cross-validation folds.
+6.  `generate_absences()` - produce fold-stratified pseudoabsences for presence/absence models.
 
 This vignette walks through each step using the bundled synthetic dataset described in the [About the Example Dataset](dataset.html) vignette. Read that vignette first if you have not already, as it explains the structure of the raw rasters and occurrence points used here. We use the **seasonal (compound time-step) workflow** throughout, with `forest_cover` (annual), `prseas` (year-season), and `elevation` (static) as predictors. The annual workflow is identical apart from substituting `pr_ann` for `prseas` and dropping `season` from the time columns.
 
@@ -336,9 +336,9 @@ Note that `variable_patterns` and `time_cols` here use both `year` and `season`.
 
 At this point the three key downstream inputs are in hand:
 
--   `scaled_dir` — the directory of scaled (or aligned in `rasters_aligned`, if scaling was skipped) rasters from which environmental conditions will be projected across space and time.
--   `partition` — the rarified, fold-assigned, time explicit environment data from species occurrence points.
--   `absences` — the fold-stratified pseudoabsences with matching environmental attributes.
+-   `scaled_dir` - the directory of scaled (or aligned in `rasters_aligned`, if scaling was skipped) rasters from which environmental conditions will be projected across space and time.
+-   `partition` - the rarified, fold-assigned, time explicit environment data from species occurrence points.
+-   `absences` - the fold-stratified pseudoabsences with matching environmental attributes.
 
 These are passed directly to any of the four model builders covered in the following parallel vignettes:
 

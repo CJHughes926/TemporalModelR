@@ -40,8 +40,8 @@ knitr::opts_chunk$set(
 
 TemporalModelR operates across two complementary dimensions to support temporally explicit modeling:
 
--   `E-space` — (Environmental Space) represents a location in terms of its environmental conditions, independent of geography. A species' niche in E-space is its tolerance for a given set of environmental variables.
--   `G-space` — (Geographic Space) represents a location in terms of where it physically sits on the landscape. Every point in G-space has a corresponding location in E-space.
+-   `E-space` - (Environmental Space) represents a location in terms of its environmental conditions, independent of geography. A species' niche in E-space is its tolerance for a given set of environmental variables.
+-   `G-space` - (Geographic Space) represents a location in terms of where it physically sits on the landscape. Every point in G-space has a corresponding location in E-space.
 
 Because environmental conditions change over time, the same point in G-space may move through E-space across years, decades, or seasons. Traditional, temporally-static workflows assume both G-space and E-space to be stable in time. TemporalModelR assumes only that the niche (i.e., the species' tolerance in E-space) is stable across the study period, while the E-space coordinates of any G-space location may change over time. Species observations are therefore matched to E-space data correct in both space and time, the niche is modeled in time-independent E-space. This is done in the [Preprocessing temporally explicit data](preprocessing.html) vignette.
 
@@ -98,17 +98,17 @@ names(glm_out)
 
 The returned object is a list of class `"TemporalGLM"` containing the following objects:
 
--   `$models` — named list of `glm` objects, one per fold (`fold1`, `fold2`, ...). Each is a standard `glm` fit and accepts R's standard `summary()`, `coef()`, and `predict()` calls.
--   `$thresholds` — named numeric vector of probability thresholds used to binarise predictions for each fold.
--   `$threshold_method` — character or numeric value recording how the thresholds were chosen (`"tss"`, `"prevalence"`, or a fixed numeric value).
--   `$model_formula` — the right hand side formula supplied to the function.
--   `$link` — the link function used (`"logit"`, `"probit"`, `"cloglog"`, or `"cauchit"`) supplied to the function.
--   `$model_vars` — character vector of the predictor variable names extracted from the formula. Used by `generate_spatiotemporal_predictions()` to know which raster layers to assemble at projection time.
--   `$fold_training_data` — named list of the training data frames used for each fold, with presences and pseudoabsences combined and environmental columns attached.
--   `$fold_test_metrics` — data frame of per-fold E-space metrics computed on the held-out test set. See [E-space performance](#sec-espace).
--   `$output_dir` — path to the directory where the saved RDS of fitted models and the fold test metrics CSV were written.
--   `$model_type` — `"glm"`, used by `generate_spatiotemporal_predictions()` to choose the correct projection logic.
--   `$plots` — list of recorded base-R plots produced when `create_plot = TRUE` (response curves and the fold metrics bar chart).
+-   `$models` - named list of `glm` objects, one per fold (`fold1`, `fold2`, ...). Each is a standard `glm` fit and accepts R's standard `summary()`, `coef()`, and `predict()` calls.
+-   `$thresholds` - named numeric vector of probability thresholds used to binarise predictions for each fold.
+-   `$threshold_method` - character or numeric value recording how the thresholds were chosen (`"tss"`, `"prevalence"`, or a fixed numeric value).
+-   `$model_formula` - the right hand side formula supplied to the function.
+-   `$link` - the link function used (`"logit"`, `"probit"`, `"cloglog"`, or `"cauchit"`) supplied to the function.
+-   `$model_vars` - character vector of the predictor variable names extracted from the formula. Used by `generate_spatiotemporal_predictions()` to know which raster layers to assemble at projection time.
+-   `$fold_training_data` - named list of the training data frames used for each fold, with presences and pseudoabsences combined and environmental columns attached.
+-   `$fold_test_metrics` - data frame of per-fold E-space metrics computed on the held-out test set. See [E-space performance](#sec-espace).
+-   `$output_dir` - path to the directory where the saved RDS of fitted models and the fold test metrics CSV were written.
+-   `$model_type` - `"glm"`, used by `generate_spatiotemporal_predictions()` to choose the correct projection logic.
+-   `$plots` - list of recorded base-R plots produced when `create_plot = TRUE` (response curves and the fold metrics bar chart).
 
 <br>
 
@@ -138,9 +138,9 @@ If you choose a link other than logit, set it via the `link` argument.
 
 GLMs produce probabilities on the 0–1 scale. The rest of the TemporalModelR pipeline operates on binary suitability rasters, so a probability threshold must be chosen to convert probabilities into 0/1 predictions. `threshold_method` supports three options:
 
--   `"tss"` (default) — selects the threshold that maximises True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
--   `"prevalence"` — sets the threshold equal to the prevalence (proportion of presences) in the training data for that fold.
--   A numeric value between 0 and 1 — used as a fixed threshold for all folds, e.g. `threshold_method = 0.4`.
+-   `"tss"` (default) - selects the threshold that maximises True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
+-   `"prevalence"` - sets the threshold equal to the prevalence (proportion of presences) in the training data for that fold.
+-   A numeric value between 0 and 1 - used as a fixed threshold for all folds, e.g. `threshold_method = 0.4`.
 
 The chosen thresholds for our four folds:
 
@@ -162,17 +162,17 @@ glm_out$fold_test_metrics
 
 Columns:
 
--   `Fold` — fold identifier matching the folds in `tmr_partition$points_sf$fold`.
--   `Threshold` — the per-fold probability threshold used to binarise predictions.
--   `Testing_TP` — count of test-set presence points correctly classified as suitable (true positives).
--   `Testing_FN` — count of test-set presence points incorrectly classified as unsuitable (false negatives).
--   `Testing_TN` — count of test-set pseudoabsence points correctly classified as unsuitable (true negatives).
--   `Testing_FP` — count of test-set pseudoabsence points incorrectly classified as suitable (false positives).
--   `Sensitivity` — proportion of test-set presences correctly classified, `Testing_TP / (Testing_TP + Testing_FN)`. Values close to 1 mean the model rarely misses presences.
--   `Specificity` — proportion of test-set pseudoabsences correctly classified, `Testing_TN / (Testing_TN + Testing_FP)`. Values close to 1 mean the model rarely flags pseudoabsence points as suitable.
--   `TSS` — True Skill Statistic, `Sensitivity + Specificity - 1`. Ranges from -1 to 1, with 0 indicating performance no better than random and values above ~0.4 considered useful for most applications.
--   `Kappa` — Cohen's kappa statistic adjusting overall classification accuracy for the accuracy expected by chance. Ranges from -1 to 1 with similar interpretation to TSS.
--   `AUC` — area under the ROC curve, computed on continuous probabilities rather than binarised predictions, so it is threshold-independent. Useful for comparing the models overall preformance independent of threshold.
+-   `Fold` - fold identifier matching the folds in `tmr_partition$points_sf$fold`.
+-   `Threshold` - the per-fold probability threshold used to binarise predictions.
+-   `Testing_TP` - count of test-set presence points correctly classified as suitable (true positives).
+-   `Testing_FN` - count of test-set presence points incorrectly classified as unsuitable (false negatives).
+-   `Testing_TN` - count of test-set pseudoabsence points correctly classified as unsuitable (true negatives).
+-   `Testing_FP` - count of test-set pseudoabsence points incorrectly classified as suitable (false positives).
+-   `Sensitivity` - proportion of test-set presences correctly classified, `Testing_TP / (Testing_TP + Testing_FN)`. Values close to 1 mean the model rarely misses presences.
+-   `Specificity` - proportion of test-set pseudoabsences correctly classified, `Testing_TN / (Testing_TN + Testing_FP)`. Values close to 1 mean the model rarely flags pseudoabsence points as suitable.
+-   `TSS` - True Skill Statistic, `Sensitivity + Specificity - 1`. Ranges from -1 to 1, with 0 indicating performance no better than random and values above ~0.4 considered useful for most applications.
+-   `Kappa` - Cohen's kappa statistic adjusting overall classification accuracy for the accuracy expected by chance. Ranges from -1 to 1 with similar interpretation to TSS.
+-   `AUC` - area under the ROC curve, computed on continuous probabilities rather than binarised predictions, so it is threshold-independent. Useful for comparing the models overall preformance independent of threshold.
 
 The full ROC curve and each above metric are also graphed as an output of `create_plot = T` in the [Fitting a temporal GLM](#sec-fit) section.
 
@@ -278,19 +278,19 @@ head(preds$timestep_metrics)
 
 Columns:
 
--   `Fold` — fold identifier; one row per fold per time step.
--   `Pct_Suitable` — proportion of the study area predicted suitable in that time step.
--   `N_Pres` — number of held-out presence test points falling in that time step for that fold.
--   `TP` — true positives, presences correctly classified as suitable in that time step.
--   `FN` — false negatives, presences incorrectly classified as unsuitable in that time step.
--   `Sensitivity` — `TP / (TP + FN)` for that fold-time step.
--   `CBP` — cumulative binomial probability. Under the null that each test point lands in suitable area at the rate `Pct_Suitable`, this is the probability of observing exactly `TP` correctly classified points by chance. Small values indicate predictions are better than random.
--   `N_Abs` — number of held-out pseudoabsence test points falling in that time step. `NA` for presence-only models.
--   `TN` — true negatives, pseudoabsences correctly classified as unsuitable.
--   `FP` — false positives, pseudoabsences incorrectly classified as suitable.
--   `Specificity` — `TN / (TN + FP)` for that fold-time step.
--   `TSS` — `Sensitivity + Specificity - 1` for that fold-time step.
--   `year` and `season` — the values of `time_cols` for that row, identifying which time step the metrics belong to.
+-   `Fold` - fold identifier; one row per fold per time step.
+-   `Pct_Suitable` - proportion of the study area predicted suitable in that time step.
+-   `N_Pres` - number of held-out presence test points falling in that time step for that fold.
+-   `TP` - true positives, presences correctly classified as suitable in that time step.
+-   `FN` - false negatives, presences incorrectly classified as unsuitable in that time step.
+-   `Sensitivity` - `TP / (TP + FN)` for that fold-time step.
+-   `CBP` - cumulative binomial probability. Under the null that each test point lands in suitable area at the rate `Pct_Suitable`, this is the probability of observing exactly `TP` correctly classified points by chance. Small values indicate predictions are better than random.
+-   `N_Abs` - number of held-out pseudoabsence test points falling in that time step. `NA` for presence-only models.
+-   `TN` - true negatives, pseudoabsences correctly classified as unsuitable.
+-   `FP` - false positives, pseudoabsences incorrectly classified as suitable.
+-   `Specificity` - `TN / (TN + FP)` for that fold-time step.
+-   `TSS` - `Sensitivity + Specificity - 1` for that fold-time step.
+-   `year` and `season` - the values of `time_cols` for that row, identifying which time step the metrics belong to.
 
 G-space metrics are powerful in time steps with substantial sample sizes but lose meaning when few records exist (as with out example). A fold with only one presence in a given year can score sensitivity 0 or 1 with no real information content. Likewise, the ability to earn a significant G-space CBP score explicitly depends on sample size. Report E-space (from `$fold_test_metrics`) and G-space (from `$timestep_metrics`) together for a complete view of model performance.
 
@@ -331,6 +331,6 @@ Now that predictions have been generated, you can assess the model and see if it
 
 For comparison with other algorithms applied to the same dataset:
 
--   [Modeling with a GAM](modeling_gam.html) — smooth nonlinear responses.
--   [Modeling with a Random Forest](modeling_rf.html) — flexible ensemble of decision trees for complicated relationships to variables.
--   [Modeling with a Hypervolume](modeling_hv.html) — presence-only modeling using n-dimensional kernel density or one-class SVM.
+-   [Modeling with a GAM](modeling_gam.html) - smooth nonlinear responses.
+-   [Modeling with a Random Forest](modeling_rf.html) - flexible ensemble of decision trees for complicated relationships to variables.
+-   [Modeling with a Hypervolume](modeling_hv.html) - presence-only modeling using n-dimensional kernel density or one-class SVM.
