@@ -12,6 +12,10 @@ Authors@R: c(
       "Mariana", "Castaneda-Guzman",
       email = "mcguzman1997@gmail.com",
       role  = c("aut")
+    ),
+    person(
+      "Luis", "E. Escobar",
+      role  = c("aut")
     )
   )
 Description: TemporalModelR is an R package built with the goal of increasing

@@ -1,5 +1,5 @@
 ---
-title: "About the Example Dataset"
+title: "1. About the Example Dataset"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{About the Example Dataset}

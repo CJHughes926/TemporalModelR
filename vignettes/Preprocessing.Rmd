@@ -1,5 +1,5 @@
 ---
-title: "Preprocessing temporally explicit data"
+title: "2. Preprocessing temporally explicit data"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Preprocessing temporally explicit data}

@@ -1,5 +1,5 @@
 ---
-title: "Modeling with a GLM"
+title: "3a. Modeling with a GLM"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Modeling with a GLM}
