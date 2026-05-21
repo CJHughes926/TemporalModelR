@@ -230,6 +230,7 @@
     mean_val <- pixel_vals[2 * n_middle + 1]
   }
 
+  if (is.na(mean_val)) return(c(NA, NA, NA))
   if (mean_val < 0.01) return(c(1, NA, NA))
   if (mean_val > 0.99) return(c(2, NA, NA))
   if (any(is.na(c(y, lag)))) return(c(NA, NA, NA))
