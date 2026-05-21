@@ -57,7 +57,7 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="temporally-explicit-species-distribution-modeling-in-r">Temporally Explicit Species Distribution Modeling in R<a class="anchor" aria-label="anchor" href="#temporally-explicit-species-distribution-modeling-in-r"></a>
 </h1></div>
-<p>Connor Hughes, Mariana Castaneda-Guzman</p>
+<p>Connor Hughes, Mariana Castaneda-Guzman, Luis E. Escobar</p>
 <ul>
 <li><a href="#background">Background</a></li>
 <li><a href="#package-description">Package description</a></li>
@@ -140,6 +140,10 @@
 <strong>Postprocess</strong> — summarise predictions to consensus surfaces, identify temporal patterns, and aggregate by spatial unit</li>
 </ol>
 <p>A brief description of each step is presented below. For full walkthroughs of each phase, see the vignettes hosted on the <a href="https://CJHughes926.github.io/TemporalModelR/" class="external-link">TemporalModelR site</a> under the <em>Articles</em> menu, also linked inline throughout this README.</p>
+<p>The package ships a small synthetic dataset that every vignette runs against, so the full workflow can be reproduced end-to-end without downloading any external data. The dataset includes raw and aligned environmental rasters, an occurrence point database, intermediate point files, and pre-computed <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> objects from each phase of the workflow. Reading the dataset vignette first is recommended, as it provides the shared context every other vignette refers back to.</p>
+<blockquote>
+<p>For a description of the synthetic data and the bundled <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> objects used in the workflow vignettes, see the <a href="https://CJHughes926.github.io/TemporalModelR/articles/dataset.html" class="external-link">About the Example Dataset</a> vignette.</p>
+</blockquote>
 <p><br></p>
 <div class="section level3">
 <h3 id="preprocessing">Preprocessing<a class="anchor" aria-label="anchor" href="#preprocessing"></a>

@@ -1,6 +1,6 @@
 # Temporally Explicit Species Distribution Modeling in R
 
-Connor Hughes, Mariana Castaneda-Guzman
+Connor Hughes, Mariana Castaneda-Guzman, Luis E. Escobar
 
 - [Background](#background)
 - [Package description](#package-description)
@@ -163,6 +163,21 @@ A brief description of each step is presented below. For full
 walkthroughs of each phase, see the vignettes hosted on the
 [TemporalModelR site](https://CJHughes926.github.io/TemporalModelR/)
 under the *Articles* menu, also linked inline throughout this README.
+
+The package ships a small synthetic dataset that every vignette runs
+against, so the full workflow can be reproduced end-to-end without
+downloading any external data. The dataset includes raw and aligned
+environmental rasters, an occurrence point database, intermediate point
+files, and pre-computed [`data()`](https://rdrr.io/r/utils/data.html)
+objects from each phase of the workflow. Reading the dataset vignette
+first is recommended, as it provides the shared context every other
+vignette refers back to.
+
+> For a description of the synthetic data and the bundled
+> [`data()`](https://rdrr.io/r/utils/data.html) objects used in the
+> workflow vignettes, see the [About the Example
+> Dataset](https://CJHughes926.github.io/TemporalModelR/articles/dataset.html)
+> vignette.
 
   
 
