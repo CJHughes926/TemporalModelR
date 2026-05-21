@@ -2,8 +2,8 @@ pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
-  dataset: dataset.html
-  GLM: GLM.html
-  Postprocessing: Postprocessing.html
-  Preprocessing: Preprocessing.html
-last_built: 2026-05-21T20:54Z
+  1_dataset: 1_dataset.html
+  2_Preprocessing: 2_Preprocessing.html
+  3a_GLM: 3a_GLM.html
+  4_Postprocessing: 4_Postprocessing.html
+last_built: 2026-05-21T20:59Z
