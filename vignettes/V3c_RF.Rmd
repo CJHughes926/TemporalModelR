@@ -1,8 +1,8 @@
 ---
-title: "3a. Modeling with a GLM"
+title: "3c. Modeling with a Random Forest"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Modeling with a GLM}
+  %\VignetteIndexEntry{Modeling with a Random Forest}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -26,9 +26,9 @@ knitr::opts_chunk$set(
 
 -   [Theory](#sec-theory)
 -   [Overview](#sec-overview)
--   [Fitting a temporal GLM](#sec-fit)
--   [Formula syntax](#sec-formula)
+-   [Fitting a temporal random forest](#sec-fit)
 -   [Threshold selection](#sec-threshold)
+-   [Variable importance](#sec-importance)
 -   [E-space performance](#sec-espace)
 -   [Projecting predictions](#sec-project)
 -   [G-space performance](#sec-gspace)
@@ -51,12 +51,18 @@ By modeling the niche in time-independent E-space using time-independent trainin
 
 # Overview {#sec-overview}
 
-`build_temporal_glm()` fits one binomial GLM per cross-validation fold as was created during the [Preprocessing temporally explicit data](preprocessing.html) vignette. Each fold's model is trained on all data outside the fold and evaluated on the held-out fold. The user supplies the right-hand side of the model formula directly in standard R syntax, with this function supporting linear, polynomial, and interactive terms. See [Formula syntax](#sec-formula). The link function defaults to logit but can be set to probit, complementary log-log, or cauchit. A threshold is selected on the training data and applied to the continuous predictions to produce binary suitability output for downstream summarisation.
+`build_temporal_rf()` fits one random forest classifier per cross-validation fold as was created during the [Preprocessing temporally explicit data](preprocessing.html) vignette. Each fold's model is trained on all data outside the fold and evaluated on the held-out fold. Predictors are supplied as a character vector via `model_vars` rather than as a formula, since random forests automatically capture nonlinearities and interactions without needing them to be specified. A threshold is selected on the training data and applied to the continuous probability predictions (the per-tree vote fraction for the presence class) to produce binary suitability output for downstream summarisation.
 
-GLMs are fast to fit, transparent to interpret, and tolerant of the kind of small datasets that occurrence records often provide. The trade-off is that nonlinear environmental responses must be specified manually with polynomial terms or transformations. If you want a more flexible response shape, use `build_temporal_gam()` instead.
+Random forests are an ensemble of decision trees, each grown on a bootstrap sample of the training data and split using a random subset of predictors at each node. The result is a flexible model that captures nonlinear environmental responses and interactions automatically, but sometimes with the the trade-off of interpretability. Random forests do not produce explicit response curves or coefficients, so effects on the response are visualized through variable importance and partial dependence plots. See [Variable importance](#sec-importance).
 
-This vignette runs the seasonal workflow using the bundled `tmr_partition` and `tmr_absences` objects, which are pre-built outputs of the partitioning and pseudoabsence steps produced by the [Preprocessing temporally explicit data](preprocessing.html) vignette using the same call patterns shown there. The dataset itself is described in [About the Example Dataset](dataset.html). This is the same dataset as is used in each modeling vignette [GLM](modeling_glm.html), [GAM](modeling_gam.html), [Random Forest](modeling_rf.html) or [Hypervolume](modeling_hv.html).
+This vignette runs the seasonal workflow using the bundled `tmr_partition` and `tmr_absences` objects, which are pre-built outputs of the partitioning and pseudoabsence steps produced by the [Preprocessing temporally explicit data](preprocessing.html) vignette using the same call patterns shown there. The dataset itself is described in [About the Example Dataset](dataset.html).This is the same dataset as is used in each modeling vignette [GLM](modeling_glm.html), [GAM](modeling_gam.html), [Random Forest](modeling_rf.html) or [Hypervolume](modeling_hv.html).
 
+
+The `randomForest` package is a hard dependency of `build_temporal_rf()` and must be installed before running:
+
+```{r, eval=FALSE}
+install.packages("randomForest")
+```
 
 ```{r}
 library(TemporalModelR)
@@ -69,75 +75,56 @@ data(tmr_absences,  package = "TemporalModelR")
 
 <br>
 
-# Fitting a temporal GLM {#sec-fit}
+# Fitting a temporal random forest {#sec-fit}
 
-The minimal call needs the partition, the pseudoabsences, a formula, and the time columns. We fit an additive model in three predictors and let the function select per-fold thresholds via the True Skill Statistic (TSS), though this threshold may also be set manually or using prevalence. See [Threshold selection](#sec-threshold).
+The minimal call needs the partition, the pseudoabsences, a character vector of predictor variable names, and the time columns. We fit a forest with default settings (500 trees, `mtry = floor(sqrt(p))`) and let the function select per-fold thresholds via the True Skill Statistic (TSS), though this threshold may also be set manually or using prevalence. See [Threshold selection](#sec-threshold).
 
-`create_plot = TRUE` allows the function to generate visual response curves for each per-fold model result. On the below graphs, response curves are shown per-fold, and the selected threshold is indicated with a horizontal dashed line.
+`create_plot = TRUE` allows the function to generate partial dependence plots for each per-fold model result. On the below graphs, variable importance and partial dependence plots are shown per-fold, and the selected threshold is indicated with a horizontal dashed line.
 
 ```{r}
-glm_out <- build_temporal_glm(
+rf_out <- build_temporal_rf(
   partition_result     = tmr_partition,
   pseudoabsence_result = tmr_absences,
-  model_formula        = ~ elevation + forest_cover + prseas,
-  link                 = "logit",
+  model_vars           = c("elevation", "forest_cover", "prseas"),
+  rf_params            = list(),
   threshold_method     = "tss",
-  output_dir           = file.path(tempdir(), "GLM_Models"),
+  output_dir           = file.path(tempdir(), "RF_Models"),
   create_plot          = TRUE,
   time_cols            = c("year", "season"),
   verbose              = FALSE
 )
 ```
 
-We see that our model correctly identifies a strong positive relationship between both elevation and forest cover and species occurance. The same `create_plot = TRUE` function also visualizes time independent model assessment metrics relevant to the GLM (above). See [E-space performance](#sec-espace).
+The partial dependence plots show how the model captures each predictor's marginal effect on suitability, averaged over the other predictors. The same `create_plot = TRUE` function also visualizes time independent model assessment metrics relevant to the random forest (above). See [E-space performance](#sec-espace).
 
 ```{r}
-class(glm_out)
+class(rf_out)
 
-names(glm_out)
+names(rf_out)
 ```
 
-The returned object is a list of class `"TemporalGLM"` containing the following objects:
+The returned object is a list of class `"TemporalRF"` containing the following objects:
 
--   `$models` - named list of `glm` objects, one per fold (`fold1`, `fold2`, ...). Each is a standard `glm` fit and accepts R's standard `summary()`, `coef()`, and `predict()` calls.
+-   `$models` - named list of `randomForest` objects, one per fold (`fold1`, `fold2`, ...). Each is a standard `randomForest::randomForest` fit and accepts the usual `predict()`, `print()`, and `randomForest::importance()` calls.
 -   `$thresholds` - named numeric vector of probability thresholds used to binarise predictions for each fold.
 -   `$threshold_method` - character or numeric value recording how the thresholds were chosen (`"tss"`, `"prevalence"`, or a fixed numeric value).
--   `$model_formula` - the right hand side formula supplied to the function.
--   `$link` - the link function used (`"logit"`, `"probit"`, `"cloglog"`, or `"cauchit"`) supplied to the function.
--   `$model_vars` - character vector of the predictor variable names extracted from the formula. Used by `generate_spatiotemporal_predictions()` to know which raster layers to assemble at projection time.
+-   `$model_vars` - character vector of the predictor variable names supplied to the function. Used by `generate_spatiotemporal_predictions()` to know which raster layers to assemble at projection time.
+-   `$variable_importance` - named list of per-fold variable importance tables. Each is a data frame with columns `variable`, `mean_decr_acc` (mean decrease in accuracy from permutation), and `mean_decr_gini` (mean decrease in Gini impurity). See [Variable importance](#sec-importance).
 -   `$fold_training_data` - named list of the training data frames used for each fold, with presences and pseudoabsences combined and environmental columns attached.
 -   `$fold_test_metrics` - data frame of per-fold E-space metrics computed on the held-out test set. See [E-space performance](#sec-espace).
 -   `$output_dir` - path to the directory where the saved RDS of fitted models and the fold test metrics CSV were written.
--   `$model_type` - `"glm"`, used by `generate_spatiotemporal_predictions()` to choose the correct projection logic.
--   `$plots` - list of recorded base-R plots produced when `create_plot = TRUE` (response curves and the fold metrics bar chart).
+-   `$model_type` - `"rf"`, used by `generate_spatiotemporal_predictions()` to choose the correct projection logic.
+-   `$plots` - list of recorded base-R plots produced when `create_plot = TRUE` (partial dependence plots and the fold metrics bar chart).
 
-<br>
+Note that unlike GLMs and GAMs, the random forest builder does not take a `model_formula` or `link` argument. Interactions and nonlinearities are captured automatically by the tree structure, and the probability scale comes directly from class vote fractions rather than a link function.
 
-# Formula syntax {#sec-formula}
-
-The response variable `presence` is added automatically to each formula, so only the right-hand side needs to be supplied. Standard R formula operators are valid: `+` for additive terms, `:` for interaction only, `*` for main effects plus interaction, `I()` for arithmetic transformations, `poly()` for orthogonal polynomials, `log()`, `sqrt()`, and so on. Variable names must match column names in the data exactly. These examples that all work:
-
-```{r, eval=FALSE}
-### Additive
-~ elevation + forest_cover + prseas
-
-### Quadratic term on elevation
-~ elevation + I(elevation^2) + forest_cover + prseas
-
-### Orthogonal polynomial of degree 2 on elevation
-~ poly(elevation, 2) + forest_cover + prseas
-
-### Forest cover by precipitation interaction
-~ elevation + forest_cover * prseas
-```
-
-If you choose a link other than logit, set it via the `link` argument.
+Anything that would normally be passed to `randomForest::randomForest()` can go in `rf_params`. See `?randomForest::randomForest()` for the full list.
 
 <br>
 
 # Threshold selection {#sec-threshold}
 
-GLMs produce probabilities on the 0–1 scale. The rest of the TemporalModelR pipeline operates on binary suitability rasters, so a probability threshold must be chosen to convert probabilities into 0/1 predictions. `threshold_method` supports three options:
+Random forests produce probabilities on the 0–1 scale via the vote fraction for the presence class across all trees in the forest. The rest of the TemporalModelR pipeline operates on binary suitability rasters, so a probability threshold must be chosen to convert probabilities into 0/1 predictions. `threshold_method` supports three options:
 
 -   `"tss"` (default) - selects the threshold that maximises True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
 -   `"prevalence"` - sets the threshold equal to the prevalence (proportion of presences) in the training data for that fold.
@@ -146,10 +133,24 @@ GLMs produce probabilities on the 0–1 scale. The rest of the TemporalModelR pi
 The chosen thresholds for our four folds:
 
 ```{r}
-glm_out$thresholds
+rf_out$thresholds
 ```
 
 These are per-fold values because each fold trains on a different subset of data and may end up with different probability distributions. Using a single global threshold across folds risks underclassifying suitability in some folds.
+
+<br>
+
+# Variable importance {#sec-importance}
+
+Random forests give per-fold variable importance via the mean decrease in classification accuracy when each predictor is permuted, and via the mean decrease in Gini impurity at the splits each predictor participates in. The function records both in `$variable_importance`:
+
+```{r}
+rf_out$variable_importance$fold1
+```
+
+Comparing across folds tells you whether the same predictors are consistently informative, or whether their relative ranking changes between spatially or temporally distinct folds. Predictors that flip rank dramatically across folds often indicate that the model is detecting fold-specific patterns rather than a stable niche signal.
+
+When `create_plot = TRUE` was set in [Fitting a temporal random forest](#sec-fit), the function additionally produces partial dependence curves for each predictor, showing the marginal effect of that variable averaged over all others.
 
 <br>
 
@@ -158,7 +159,7 @@ These are per-fold values because each fold trains on a different subset of data
 Each fold's held-out test set provides a set of presence and pseudoabsence points the model has never seen based on the folds defined in the [Preprocessing temporally explicit data](preprocessing.html) vignette. We compare predicted vs observed at those points and compute confusion-matrix metrics. Because these are evaluated in E-space (the species' environmental tolerance, independent of geography or time), they give a stable picture of how well the model is preforming.
 
 ```{r}
-glm_out$fold_test_metrics
+rf_out$fold_test_metrics
 ```
 
 Columns:
@@ -175,9 +176,9 @@ Columns:
 -   `Kappa` - Cohen's kappa statistic adjusting overall classification accuracy for the accuracy expected by chance. Ranges from -1 to 1 with similar interpretation to TSS.
 -   `AUC` - area under the ROC curve, computed on continuous probabilities rather than binarised predictions, so it is threshold-independent. Useful for comparing the models overall preformance independent of threshold.
 
-The full ROC curve and each above metric are also graphed as an output of `create_plot = T` in the [Fitting a temporal GLM](#sec-fit) section.
+The full ROC curve and each above metric are also graphed as an output of `create_plot = T` in the [Fitting a temporal random forest](#sec-fit) section.
 
-E-space metrics are robust to imbalanced sample sizes across time, because they pool across the time series. They are a good metric for assessing overall model fit. Time-specific (G-space) metrics can also be assessed later when we project the model to spesific G-space and time combinations.
+E-space metrics are robust to imbalanced sample sizes across time, because they pool across the time series. They are a good metric for assessing overall model fit. Random forest AUC is typically higher than GLM or GAM AUC on the same data, which can be a sign of genuinely better performance or of overfitting. Compare against the G-space metrics computed during projection to distinguish the two. Time-specific (G-space) metrics can also be assessed later when we project the model to spesific G-space and time combinations.
 
 <br>
 
@@ -198,7 +199,7 @@ time_steps <- expand.grid(
 
 preds <- generate_spatiotemporal_predictions(
   partition_result     = tmr_partition,
-  model_result         = glm_out,
+  model_result         = rf_out,
   pseudoabsence_result = tmr_absences,
   raster_dir           = scaled_dir,
   variable_patterns    = c(
@@ -208,13 +209,13 @@ preds <- generate_spatiotemporal_predictions(
   ),
   time_cols            = c("year", "season"),
   time_steps           = time_steps,
-  output_dir           = file.path(tempdir(), "GLM_Predictions"),
+  output_dir           = file.path(tempdir(), "RF_Predictions"),
   overwrite            = TRUE,
   verbose              = FALSE
 )
 ```
 
-We can now visualize the 60 prediction rasters as a year-by-season grid. Each cell shows the number of folds (0 to 4) that classified that pixel as suitable. 
+We can now visualize the 60 prediction rasters as a year-by-season grid. Each cell shows the number of folds (0 to 4) that classified that pixel as suitable.
 
 `terra::plot()` limits each call to 16 layers, so we render the stack in four blocks of four years each.
 
@@ -241,27 +242,29 @@ block4 <- which(ordered_years %in% 13:15)
 
 ```{r fig.width=10, fig.height=5}
 terra::plot(pred_stack[[block1]], nr = 4, nc = 4,
-            mar = c(1.0, 1.0, 1.5, 3.0),  legend = FALSE)
+            mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
 ```{r fig.width=10, fig.height=5}
 terra::plot(pred_stack[[block2]], nr = 4, nc = 4,
-            mar = c(1.0, 1.0, 1.5, 3.0),  legend = FALSE)
+            mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
 ```{r fig.width=10, fig.height=5}
 terra::plot(pred_stack[[block3]], nr = 4, nc = 4,
-            mar = c(1.0, 1.0, 1.5, 3.0),  legend = FALSE)
+            mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
 ```{r fig.width=10, fig.height=4}
 terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
-            mar = c(1.0, 1.0, 1.5, 3.0),  legend = FALSE)
+            mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
-Visualizing our predictions across each season and year, we see that there is generally high agreement among models. These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitbale) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
+These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitbale) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
 
-The GLM here does not pick up on the seasonal variability in precipitation patterns driving activity patterns for this hypothetical species, partially because the model itself is missing the relationship between precipitation and occupancy. This is in part due to the lack of low precipitation value background points in our dataset which would correctly identify the gap here and this methods reliance on that background data to make inference. We can explore if other modeling methods are able to fix this hurdle in other vignettes. Alternatively, we could use an alternative method for generating absence points which we describe more in the the [Preprocessing](preprocessing.html) vignette.
+Visualizing our predictions across each season and year, we see more inconsistant agreement among models than in other model methods presented in the modeling vingettes. RF models have an ability to fit much more complex relationships to variables compared to GLM and GAM, but lack an ability to extrapolate which both of those models have. As a result, RF may be prone to overfitting and this should be watched for. The per-fold partial dependence plots produced when `create_plot = TRUE` are the most direct way to check for this issues, with erratic curves indicating overfitting and curves that don't drop to a clear low value at the edges of the rug indicating extrapolation risk. We see some indication of this above and it manifests in the resulting predictive maps.
+
+The random forest model was unable to find a clean precipitation cutoff, and as a result the predictions vary erratically across folds rather than producing a stable suitability surface. This likewise has to do with the distribution of our absence data.This likewise has to do with the distribution of our absence data, which is restricted to the same Spring and Autumn time steps as the presences and so cannot teach the model what unsuitable precipitation looks like in the other seasons, the same issue seen in our [GLM](modeling_glm.html) and [GLM](modeling_gam.html) models but manifest in a different way. We can explore if other modeling methods are able to fix this hurdle in other vignettes. Alternatively, we could use an alternative method for generating absence points which we describe more in the the [Preprocessing](preprocessing.html) vignette.
 
 Note that here we show that `time_steps` can handle making predictions from compound variables or variables at different temporal scales so long as their temporal scales are nested. For example here "elevation" has no temporal value and is considered to be static across all time steps. "forest_cover" is measured annually, but is considered to be static across all seasons within a year for the purposes of predictions. "prseason" is measured both by year and season, so resulting seasonal predictions reflect that. However if precipitation was only measured based on aggregate seasons but had no associated year, predictios would fail. Predictions can also be made where all variables share the same time step- for example annuual forest cover, annual temprerature, and annual precipitation.
 
@@ -308,7 +311,7 @@ plot_model_assessment(
   predictions         = preds,
   time_column         = c("year", "season"),
   secondary_time_mode = "combine",
-  model_result        = glm_out
+  model_result        = rf_out
 )
 ```
 
@@ -319,7 +322,7 @@ plot_model_assessment(
   predictions         = preds,
   time_column         = c("year", "season"),
   secondary_time_mode = "facet",
-  model_result        = glm_out,
+  model_result        = rf_out,
   cbp_threshold       = 0.001
 )
 ```
@@ -332,6 +335,6 @@ Now that predictions have been generated, you can assess the model and see if it
 
 For comparison with other algorithms applied to the same dataset:
 
+-   [Modeling with a GLM](modeling_glm.html) - linear and polynomial responses.
 -   [Modeling with a GAM](modeling_gam.html) - smooth nonlinear responses.
--   [Modeling with a Random Forest](modeling_rf.html) - flexible ensemble of decision trees for complicated relationships to variables.
--   [Modeling with a Hypervolume](modeling_hv.html) - presence-only modeling using n-dimensional kernel density or one-class SVM.
+-   [Modeling with a Hypervolume](modeling_hv.html) - presence-only n-dimensional kernel density or one-class SVM.

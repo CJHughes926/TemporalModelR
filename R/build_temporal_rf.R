@@ -409,7 +409,7 @@ build_temporal_rf <- function(partition_result,
   }
 
   if (create_plot && nrow(fold_metrics_df) > 0) {
-    plot_rate_cols <- c("Sensitivity", "Specificity", "TSS", "Kappa")
+    plot_rate_cols <- c("Sensitivity", "Specificity", "TSS", "Kappa", "AUC")
     plot_rate_cols <- plot_rate_cols[plot_rate_cols %in% names(fold_metrics_df) &
                                        !vapply(fold_metrics_df[plot_rate_cols],
                                                function(x) all(is.na(x)), logical(1))]
