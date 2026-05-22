@@ -74,7 +74,10 @@ This vignette runs the seasonal workflow using the bundled
 of the partitioning and pseudoabsence steps produced by the
 [Preprocessing temporally explicit data](preprocessing.md) vignette
 using the same call patterns shown there. The dataset itself is
-described in [About the Example Dataset](dataset.md).
+described in [About the Example Dataset](dataset.md). This is the same
+dataset as is used in each modeling vignette [GLM](modeling_glm.md),
+[GAM](modeling_gam.md), [Random Forest](modeling_rf.md) or
+[Hypervolume](modeling_hv.md).
 
 ``` r
 
@@ -122,8 +125,8 @@ glm_out <- build_temporal_glm(
 We see that our model correctly identifies a strong positive
 relationship between both elevation and forest cover and species
 occurance. The same `create_plot = TRUE` function also visualizes time
-independent model assessment metrics relevant to the GLM. See [E-space
-performance](#sec-espace).
+independent model assessment metrics relevant to the GLM (above). See
+[E-space performance](#sec-espace).
 
 ``` r
 
@@ -421,7 +424,8 @@ precipitation patterns driving activity patterns for this hypothetical
 species, partially because the model itself is missing the relationship
 between precipitation and occupancy. This is in part due to the lack of
 low precipitation value background points in our dataset which would
-correctly identify the gap here. We can explore if other modeling
+correctly identify the gap here and this methods reliance on that
+background data to make inference. We can explore if other modeling
 methods are able to fix this hurdle in other vignettes. Alternatively,
 we could use an alternative method for generating absence points which
 we describe more in the the [Preprocessing](preprocessing.md) vignette.

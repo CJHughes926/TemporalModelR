@@ -5,5 +5,8 @@ articles:
   V1_dataset: V1_dataset.html
   V2_Preprocessing: V2_Preprocessing.html
   V3a_GLM: V3a_GLM.html
+  V3b_GAM: V3b_GAM.html
+  V3c_RF: V3c_RF.html
+  V3d_HV: V3d_HV.html
   V4_Postprocessing: V4_Postprocessing.html
-last_built: 2026-05-21T21:17Z
+last_built: 2026-05-22T00:42Z

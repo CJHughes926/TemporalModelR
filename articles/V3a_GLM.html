@@ -36,6 +36,9 @@
 <li><a class="dropdown-item" href="../articles/V1_dataset.html">1. About the Example Dataset</a></li>
     <li><a class="dropdown-item" href="../articles/V2_Preprocessing.html">2. Preprocessing temporally explicit data</a></li>
     <li><a class="dropdown-item" href="../articles/V3a_GLM.html">3a. Modeling with a GLM</a></li>
+    <li><a class="dropdown-item" href="../articles/V3b_GAM.html">3b. Modeling with a GAM</a></li>
+    <li><a class="dropdown-item" href="../articles/V3c_RF.html">3c. Modeling with a Random Forest</a></li>
+    <li><a class="dropdown-item" href="../articles/V3d_HV.html">3d. Modeling with a Hypervolume</a></li>
     <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Postprocessing predictions</a></li>
   </ul>
 </li>
@@ -143,7 +146,9 @@ are pre-built outputs of the partitioning and pseudoabsence steps
 produced by the <a href="preprocessing.html">Preprocessing temporally
 explicit data</a> vignette using the same call patterns shown there. The
 dataset itself is described in <a href="dataset.html">About the Example
-Dataset</a>.</p>
+Dataset</a>. This is the same dataset as is used in each modeling
+vignette <a href="modeling_glm.html">GLM</a>, <a href="modeling_gam.html">GAM</a>, <a href="modeling_rf.html">Random
+Forest</a> or <a href="modeling_hv.html">Hypervolume</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/CJHughes926/TemporalModelR" class="external-link">TemporalModelR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
@@ -182,8 +187,8 @@ is indicated with a horizontal dashed line.</p>
 <p>We see that our model correctly identifies a strong positive
 relationship between both elevation and forest cover and species
 occurance. The same <code>create_plot = TRUE</code> function also
-visualizes time independent model assessment metrics relevant to the
-GLM. See <a href="#sec-espace">E-space performance</a>.</p>
+visualizes time independent model assessment metrics relevant to the GLM
+(above). See <a href="#sec-espace">E-space performance</a>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">glm_out</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "TemporalGLM" "list"</span></span>
@@ -466,7 +471,8 @@ precipitation patterns driving activity patterns for this hypothetical
 species, partially because the model itself is missing the relationship
 between precipitation and occupancy. This is in part due to the lack of
 low precipitation value background points in our dataset which would
-correctly identify the gap here. We can explore if other modeling
+correctly identify the gap here and this methods reliance on that
+background data to make inference. We can explore if other modeling
 methods are able to fix this hurdle in other vignettes. Alternatively,
 we could use an alternative method for generating absence points which
 we describe more in the the <a href="preprocessing.html">Preprocessing</a> vignette.</p>
