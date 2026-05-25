@@ -810,7 +810,7 @@
   }
 
   stop(paste0(
-    "ERROR: Palette '", palette, "' not recognised. ",
+    "ERROR: Palette '", palette, "' not recognized. ",
     "Use grDevices::hcl.pals() to see available HCL palettes, or install ",
     "RColorBrewer for additional palette options."
   ))

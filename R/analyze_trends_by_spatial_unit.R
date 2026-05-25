@@ -43,7 +43,7 @@ utils::globalVariables(c("x", "y", "radius"))
 #'   diameter = 30\%). Smaller pies scale so their area is proportional to
 #'   the unit's pixel count. The fraction is converted internally to
 #'   coordinate units, so this argument works identically across CRSes
-#'   (degrees, metres, etc.) without manual rescaling.
+#'   (degrees, meters, etc.) without manual rescaling.
 #' @param verbose Logical. If \code{TRUE} (default), prints progress
 #'   messages during processing. Includes details on raster extraction and
 #'   per-spatial-unit summaries.
@@ -61,11 +61,11 @@ utils::globalVariables(c("x", "y", "radius"))
 #' }
 #'
 #' @details
-#' Summarizes results from modeling and postprocessing at the scale of specific
+#' Summarizes results from modeling and post-processing at the scale of specific
 #' spatial blocks to allow for a nuanced look at spatiotemporal patterns.
 #'
 #' @seealso
-#' Postprocessing: \code{\link{summarize_raster_outputs}},
+#' Post-processing: \code{\link{summarize_raster_outputs}},
 #'   \code{\link[TemporalModelR]{analyze_temporal_patterns}}
 #'
 #' @examples
@@ -565,7 +565,7 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
       ### pie_scale is a fraction of the smaller map dimension - convert to
       ### coordinate units here. This keeps the user-facing argument CRS-
       ### independent: pie_scale = 0.15 looks the same on a degrees map as on
-      ### a metres map.
+      ### a meters map.
       if (!is.numeric(pie_scale) || length(pie_scale) != 1 ||
           pie_scale <= 0 || pie_scale > 1) {
         stop("ERROR: 'pie_scale' must be a single numeric value in (0, 1]. ",

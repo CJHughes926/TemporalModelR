@@ -39,7 +39,7 @@ knitr::opts_chunk$set(
 
 To keep the package vignettes self-contained, TemporalModelR ships a small synthetic dataset that the entire workflow can run against in seconds, without requiring you to download external occurrence or environmental data. The dataset is deliberately small but complete, including everything a real temporally explicit SDM workflow would need. The small dataset is meant to represent a simple but changing landscape to visualize the utility of this package and the variety of the types of data that it may be useful for.
 
-This vignette describes the dataset in detail so that the workflow vignettes ([Preprocessing temporally explicit data](preprocessing.html), [Modeling](modeling_glm.html), [Postprocessing](postprocessing.html)) can refer back to a single source for what's in `inst/extdata/` and `data()` rather than explaining the dataset through each other vignette. If you're working through the package for the first time, read this first.
+This vignette describes the dataset in detail so that the workflow vignettes ([Preprocessing temporally explicit data](preprocessing.html), [Modeling](modeling_glm.html), [Post-processing](post-processing.html)) can refer back to a single source for what's in `inst/extdata/` and `data()` rather than explaining the dataset through each other vignette. If you're working through the package for the first time, read this first.
 
 <br>
 
@@ -49,7 +49,7 @@ The included dataset is generated over the following spatial and temporal dimens
 
 **Spatial.** A 15 × 30 cell grid at 100 m resolution, giving a 3000 m × 1500 m study area in a custom synthetic local CRS (a Transverse Mercator projection anchored at the equator and prime meridian).
 
-**Temporal.** Fifteen years (labelled 1 through 15) and four seasons (Spring, Summer, Autumn, Winter).
+**Temporal.** Fifteen years (labeled 1 through 15) and four seasons (Spring, Summer, Autumn, Winter).
 
 The example landscape has three primary environmental variables driving suitability for our example species: Elevation, Forest Cover, and Precipitation. Elevation is representative of a temporally static variable which will not change over the 15 year study period. Forest cover is representative here of a temporally dynamic variable which changes across time and is measured at a single time step (annually). Precipitation is representative here of a temporally dynamic variable which is measured at compound time steps (here, measurements are made seasonally so that each precipitation measurement is associated with both a year and season). We also include a simplified 'annual precipitation' dataset for alternative simplified examples.
 
@@ -117,7 +117,7 @@ names(forest_pr_stack) <- c(rbind(paste("Forest_yr", years_to_plot),
 plot(forest_pr_stack, nc = 2)
 ```
 
-The left column shows forest cover thinning in two locations: a gradual loss on the northeast hill starting around year 4 and a faster loss in a southwest-central patch starting around year 7. The right column shows annual precipitation with a slight overall decline plus the wet (year 3 and year 9) and dry (year 11) years that stand out from their neighbours.
+The left column shows forest cover thinning in two locations: a gradual loss on the northeast hill starting around year 4 and a faster loss in a southwest-central patch starting around year 7. The right column shows annual precipitation with a slight overall decline plus the wet (year 3 and year 9) and dry (year 11) years that stand out from their neighbors.
 
 ## Seasonal precipitation within a year {#sec-tour-prseas-within}
 
@@ -199,7 +199,7 @@ for (yr in 1:15) {
 }
 ```
 
-Together, this points dataset and the rasters above make up the landscape and species occurance data for all of the example applications presented in this package's vignettes.
+Together, this points dataset and the rasters above make up the landscape and species occurrence data for all of the example applications presented in this package's vignettes.
 
 <br>
 

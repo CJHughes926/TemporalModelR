@@ -51,7 +51,7 @@ By modeling the niche in time-independent E-space using time-independent trainin
 
 # Overview {#sec-overview}
 
-`build_temporal_rf()` fits one random forest classifier per cross-validation fold as was created during the [Preprocessing temporally explicit data](preprocessing.html) vignette. Each fold's model is trained on all data outside the fold and evaluated on the held-out fold. Predictors are supplied as a character vector via `model_vars` rather than as a formula, since random forests automatically capture nonlinearities and interactions without needing them to be specified. A threshold is selected on the training data and applied to the continuous probability predictions (the per-tree vote fraction for the presence class) to produce binary suitability output for downstream summarisation.
+`build_temporal_rf()` fits one random forest classifier per cross-validation fold as was created during the [Preprocessing temporally explicit data](preprocessing.html) vignette. Each fold's model is trained on all data outside the fold and evaluated on the held-out fold. Predictors are supplied as a character vector via `model_vars` rather than as a formula, since random forests automatically capture nonlinearities and interactions without needing them to be specified. A threshold is selected on the training data and applied to the continuous probability predictions (the per-tree vote fraction for the presence class) to produce binary suitability output for downstream summarization.
 
 Random forests are an ensemble of decision trees, each grown on a bootstrap sample of the training data and split using a random subset of predictors at each node. The result is a flexible model that captures nonlinear environmental responses and interactions automatically, but sometimes with the the trade-off of interpretability. Random forests do not produce explicit response curves or coefficients, so effects on the response are visualized through variable importance and partial dependence plots. See [Variable importance](#sec-importance).
 
@@ -106,7 +106,7 @@ names(rf_out)
 The returned object is a list of class `"TemporalRF"` containing the following objects:
 
 -   `$models` - named list of `randomForest` objects, one per fold (`fold1`, `fold2`, ...). Each is a standard `randomForest::randomForest` fit and accepts the usual `predict()`, `print()`, and `randomForest::importance()` calls.
--   `$thresholds` - named numeric vector of probability thresholds used to binarise predictions for each fold.
+-   `$thresholds` - named numeric vector of probability thresholds used to binarize predictions for each fold.
 -   `$threshold_method` - character or numeric value recording how the thresholds were chosen (`"tss"`, `"prevalence"`, or a fixed numeric value).
 -   `$model_vars` - character vector of the predictor variable names supplied to the function. Used by `generate_spatiotemporal_predictions()` to know which raster layers to assemble at projection time.
 -   `$variable_importance` - named list of per-fold variable importance tables. Each is a data frame with columns `variable`, `mean_decr_acc` (mean decrease in accuracy from permutation), and `mean_decr_gini` (mean decrease in Gini impurity). See [Variable importance](#sec-importance).
@@ -126,7 +126,7 @@ Anything that would normally be passed to `randomForest::randomForest()` can go 
 
 Random forests produce probabilities on the 0–1 scale via the vote fraction for the presence class across all trees in the forest. The rest of the TemporalModelR pipeline operates on binary suitability rasters, so a probability threshold must be chosen to convert probabilities into 0/1 predictions. `threshold_method` supports three options:
 
--   `"tss"` (default) - selects the threshold that maximises True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
+-   `"tss"` (default) - selects the threshold that maximizes True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
 -   `"prevalence"` - sets the threshold equal to the prevalence (proportion of presences) in the training data for that fold.
 -   A numeric value between 0 and 1 - used as a fixed threshold for all folds, e.g. `threshold_method = 0.4`.
 
@@ -165,7 +165,7 @@ rf_out$fold_test_metrics
 Columns:
 
 -   `Fold` - fold identifier matching the folds in `tmr_partition$points_sf$fold`.
--   `Threshold` - the per-fold probability threshold used to binarise predictions.
+-   `Threshold` - the per-fold probability threshold used to binarize predictions.
 -   `Testing_TP` - count of test-set presence points correctly classified as suitable (true positives).
 -   `Testing_FN` - count of test-set presence points incorrectly classified as unsuitable (false negatives).
 -   `Testing_TN` - count of test-set pseudoabsence points correctly classified as unsuitable (true negatives).
@@ -174,11 +174,11 @@ Columns:
 -   `Specificity` - proportion of test-set pseudoabsences correctly classified, `Testing_TN / (Testing_TN + Testing_FP)`. Values close to 1 mean the model rarely flags pseudoabsence points as suitable.
 -   `TSS` - True Skill Statistic, `Sensitivity + Specificity - 1`. Ranges from -1 to 1, with 0 indicating performance no better than random and values above ~0.4 considered useful for most applications.
 -   `Kappa` - Cohen's kappa statistic adjusting overall classification accuracy for the accuracy expected by chance. Ranges from -1 to 1 with similar interpretation to TSS.
--   `AUC` - area under the ROC curve, computed on continuous probabilities rather than binarised predictions, so it is threshold-independent. Useful for comparing the models overall preformance independent of threshold.
+-   `AUC` - area under the ROC curve, computed on continuous probabilities rather than binarized predictions, so it is threshold-independent. Useful for comparing the models overall performance independent of threshold.
 
 The full ROC curve and each above metric are also graphed as an output of `create_plot = T` in the [Fitting a temporal random forest](#sec-fit) section.
 
-E-space metrics are robust to imbalanced sample sizes across time, because they pool across the time series. They are a good metric for assessing overall model fit. Random forest AUC is typically higher than GLM or GAM AUC on the same data, which can be a sign of genuinely better performance or of overfitting. Compare against the G-space metrics computed during projection to distinguish the two. Time-specific (G-space) metrics can also be assessed later when we project the model to spesific G-space and time combinations.
+E-space metrics are robust to imbalanced sample sizes across time, because they pool across the time series. They are a good metric for assessing overall model fit. Random forest AUC is typically higher than GLM or GAM AUC on the same data, which can be a sign of genuinely better performance or of overfitting. Compare against the G-space metrics computed during projection to distinguish the two. Time-specific (G-space) metrics can also be assessed later when we project the model to specific G-space and time combinations.
 
 <br>
 
@@ -260,13 +260,13 @@ terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
             mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
-These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitbale) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
+These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitable) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
 
-Visualizing our predictions across each season and year, we see more inconsistant agreement among models than in other model methods presented in the modeling vingettes. RF models have an ability to fit much more complex relationships to variables compared to GLM and GAM, but lack an ability to extrapolate which both of those models have. As a result, RF may be prone to overfitting and this should be watched for. The per-fold partial dependence plots produced when `create_plot = TRUE` are the most direct way to check for this issues, with erratic curves indicating overfitting and curves that don't drop to a clear low value at the edges of the rug indicating extrapolation risk. We see some indication of this above and it manifests in the resulting predictive maps.
+Visualizing our predictions across each season and year, we see more inconsistent agreement among models than in other model methods presented in the modeling vignettes. RF models have an ability to fit much more complex relationships to variables compared to GLM and GAM, but lack an ability to extrapolate which both of those models have. As a result, RF may be prone to overfitting and this should be watched for. The per-fold partial dependence plots produced when `create_plot = TRUE` are the most direct way to check for this issues, with erratic curves indicating overfitting and curves that don't drop to a clear low value at the edges of the rug indicating extrapolation risk. We see some indication of this above and it manifests in the resulting predictive maps.
 
 The random forest model was unable to find a clean precipitation cutoff, and as a result the predictions vary erratically across folds rather than producing a stable suitability surface. This likewise has to do with the distribution of our absence data.This likewise has to do with the distribution of our absence data, which is restricted to the same Spring and Autumn time steps as the presences and so cannot teach the model what unsuitable precipitation looks like in the other seasons, the same issue seen in our [GLM](modeling_glm.html) and [GLM](modeling_gam.html) models but manifest in a different way. We can explore if other modeling methods are able to fix this hurdle in other vignettes. Alternatively, we could use an alternative method for generating absence points which we describe more in the the [Preprocessing](preprocessing.html) vignette.
 
-Note that here we show that `time_steps` can handle making predictions from compound variables or variables at different temporal scales so long as their temporal scales are nested. For example here "elevation" has no temporal value and is considered to be static across all time steps. "forest_cover" is measured annually, but is considered to be static across all seasons within a year for the purposes of predictions. "prseason" is measured both by year and season, so resulting seasonal predictions reflect that. However if precipitation was only measured based on aggregate seasons but had no associated year, predictios would fail. Predictions can also be made where all variables share the same time step- for example annuual forest cover, annual temprerature, and annual precipitation.
+Note that here we show that `time_steps` can handle making predictions from compound variables or variables at different temporal scales so long as their temporal scales are nested. For example here "elevation" has no temporal value and is considered to be static across all time steps. "forest_cover" is measured annually, but is considered to be static across all seasons within a year for the purposes of predictions. "preseason" is measured both by year and season, so resulting seasonal predictions reflect that. However if precipitation was only measured based on aggregate seasons but had no associated year, predictions would fail. Predictions can also be made where all variables share the same time step- for example annual forest cover, annual temperature, and annual precipitation.
 
 Additionally, a plain vector like `time_steps = 1:15` produces one prediction per value of the first time column; the other time columns are filled in with every unique value present in the occurrence data. So a vector input with `time_cols = c("year", "season")` would produce one prediction per year-season combination observed in the data. A data frame like the `expand.grid()` above gives explicit control: any combination of values can be requested, including ones not present in the occurrence data, as long as the matching rasters exist (Such as Summer or Winter predictions).
 
@@ -315,7 +315,7 @@ plot_model_assessment(
 )
 ```
 
-This produces per-fold time series of percent suitable, sensitivity, specificity, CBP, TP/FN, and TN/FP. When `model_result` is also supplied, overall sensitivity and specificity from `$fold_test_metrics` are added as reference lines. When compound time steps are used (such as year and season), you must choose how they are visualized. Choosing `secondary_time_mode = "combine"` will roll them into one continuous x axis. `secondary_time_mode = "facet"` produces stacked plots as seen below, where the first `time_col` is displayed as the x axis, and a differnt plot is made for each secondary variable (`season` here). By default, the threshold for which CBP is identified as signifcant is 0.05, but this may also be adjusted mannually.
+This produces per-fold time series of percent suitable, sensitivity, specificity, CBP, TP/FN, and TN/FP. When `model_result` is also supplied, overall sensitivity and specificity from `$fold_test_metrics` are added as reference lines. When compound time steps are used (such as year and season), you must choose how they are visualized. Choosing `secondary_time_mode = "combine"` will roll them into one continuous x axis. `secondary_time_mode = "facet"` produces stacked plots as seen below, where the first `time_col` is displayed as the x axis, and a different plot is made for each secondary variable (`season` here). By default, the threshold for which CBP is identified as significant is 0.05, but this may also be adjusted manually.
 
 ```{r fig.height=20}
 plot_model_assessment(
@@ -331,7 +331,7 @@ plot_model_assessment(
 
 # Next steps {#sec-next}
 
-Now that predictions have been generated, you can assess the model and see if it is preforming satisfactory enough for what your goals are. If this is the case, you can preform postprocessing analyses to try to gain additional inference about the spatiotemporal patterns of change in the study region See the [Postprocessing predictions](postprocessing.html) vignette.
+Now that predictions have been generated, you can assess the model and see if it is preforming satisfactory enough for what your goals are. If this is the case, you can preform post-processing analyses to try to gain additional inference about the spatiotemporal patterns of change in the study region See the [Post-processing predictions](post-processing.html) vignette.
 
 For comparison with other algorithms applied to the same dataset:
 

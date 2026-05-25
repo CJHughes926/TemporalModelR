@@ -130,7 +130,7 @@
 #' Bundled rasters, point files, and prediction outputs
 #'
 #' Several non-R objects ship in \code{inst/extdata/} for use in function
-#' examples and the package vignette. They cannot be portably serialised
+#' examples and the package vignette. They cannot be portably serialized
 #' as \code{.rda} files, so they are stored as GeoTIFF and CSV files and
 #' loaded via \code{\link[base]{system.file}}.
 #'
@@ -146,11 +146,11 @@
 #'     reference grid.}
 #'   \item{\code{extdata/rasters_scaled/}}{Aligned rasters z-scored using
 #'     the scaling parameters from the seasonal extraction. Used by
-#'     examples and modelling functions that work with the seasonal
+#'     examples and modeling functions that work with the seasonal
 #'     predictor set.}
 #'   \item{\code{extdata/rasters_scaled_annual/}}{Aligned rasters z-scored
 #'     using the scaling parameters from the annual extraction. Used by
-#'     examples and modelling functions that work with the annual
+#'     examples and modeling functions that work with the annual
 #'     predictor set (\code{pr_ann} instead of \code{prseas}).}
 #'   \item{\code{extdata/points/synthetic_occurrence_points.csv}}{The raw
 #'     synthetic presence dataset: 150 points with \code{x}, \code{y},

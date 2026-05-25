@@ -69,7 +69,7 @@
 #' \code{\link{generate_spatiotemporal_predictions}}. These quick visuals can
 #' be used by users to assess model performance and significance and decide
 #' if the model's performance warrants further interpretation of the results
-#' through postprocessing analyses.
+#' through post-processing analyses.
 #'
 #' @seealso
 #' Preprocessing: \code{\link{spatiotemporal_partition}},
@@ -78,7 +78,7 @@
 #' Modeling: \code{\link{build_temporal_glm}}, \code{\link{build_temporal_gam}},
 #'   \code{\link{build_temporal_rf}}, \code{\link{build_temporal_hv}},
 #'
-#' Postprocessing: \code{\link{generate_spatiotemporal_predictions}},
+#' Post-processing: \code{\link{generate_spatiotemporal_predictions}},
 #'   \code{\link{summarize_raster_outputs}}
 #'
 #' @examples
