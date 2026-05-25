@@ -7,16 +7,9 @@ Supports both temporally static and dynamic rasters.
 ## Usage
 
 ``` r
-scale_rasters(
-  input_dir,
-  output_dir,
-  scaling_params_file,
-  variable_patterns,
-  time_cols = NULL,
-  output_suffix = "_Scaled",
-  overwrite = FALSE,
-  verbose = TRUE
-)
+scale_rasters(input_dir, output_dir, scaling_params_file,
+              variable_patterns, time_cols = NULL, output_suffix = "_Scaled",
+              overwrite = FALSE, verbose = TRUE)
 ```
 
 ## Arguments

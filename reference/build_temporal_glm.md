@@ -18,19 +18,11 @@ returned object follows the same structure as
 ## Usage
 
 ``` r
-build_temporal_glm(
-  partition_result,
-  pseudoabsence_result,
-  model_formula,
-  link = "logit",
-  threshold_method = "tss",
-  output_dir = file.path(tempdir(), "GLM_Models"),
-  create_plot = TRUE,
-  plot_palette = "Dark 2",
-  overwrite = FALSE,
-  time_cols = NULL,
-  verbose = TRUE
-)
+build_temporal_glm(partition_result, pseudoabsence_result, model_formula,
+          link = "logit", threshold_method = "tss",
+          output_dir = file.path(tempdir(), "GLM_Models"),
+          create_plot = TRUE, plot_palette = "Dark 2", overwrite = FALSE,
+          time_cols = NULL, verbose = TRUE)
 ```
 
 ## Arguments

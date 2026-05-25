@@ -11,16 +11,9 @@ be classified as suitable in the output binary rasters.
 
 ## Usage
 
-``` r
-summarize_raster_outputs(
-  predictions_dir,
-  output_dir = NULL,
-  consensus = 1,
-  file_pattern = "Prediction_.*\\.tif$",
-  overwrite = FALSE,
-  verbose = TRUE
-)
-```
+    summarize_raster_outputs(predictions_dir, output_dir = NULL,
+                             consensus = 1, file_pattern = "Prediction_.*\.tif$",
+                             overwrite = FALSE, verbose = TRUE)
 
 ## Arguments
 

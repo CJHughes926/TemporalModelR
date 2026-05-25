@@ -16,19 +16,11 @@ fold. The returned object follows the same structure as
 ## Usage
 
 ``` r
-build_temporal_rf(
-  partition_result,
-  pseudoabsence_result,
-  model_vars,
-  rf_params = list(),
-  threshold_method = "tss",
-  output_dir = file.path(tempdir(), "RF_Models"),
-  create_plot = TRUE,
-  plot_palette = "Dark 2",
-  overwrite = FALSE,
-  time_cols = NULL,
-  verbose = TRUE
-)
+build_temporal_rf(partition_result, pseudoabsence_result, model_vars,
+                  rf_params = list(), threshold_method = "tss",
+                  output_dir = file.path(tempdir(), "RF_Models"),
+                  create_plot = TRUE, plot_palette = "Dark 2",
+                  overwrite = FALSE, time_cols = NULL, verbose = TRUE)
 ```
 
 ## Arguments

@@ -8,17 +8,10 @@ datasets.
 ## Usage
 
 ``` r
-spatiotemporal_rarefaction(
-  points_sp,
-  output_dir,
-  reference_raster,
-  time_cols = NULL,
-  xcol = NULL,
-  ycol = NULL,
-  points_crs = NULL,
-  output_prefix = "Pts_Database",
-  verbose = TRUE
-)
+spatiotemporal_rarefaction(points_sp, output_dir, reference_raster,
+                           time_cols = NULL, xcol = NULL, ycol = NULL,
+                           points_crs = NULL, output_prefix = "Pts_Database",
+                           verbose = TRUE)
 ```
 
 ## Arguments

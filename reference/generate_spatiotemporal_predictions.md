@@ -9,18 +9,12 @@ predictions and test point coverage vary over time.
 ## Usage
 
 ``` r
-generate_spatiotemporal_predictions(
-  partition_result,
-  model_result,
-  pseudoabsence_result = NULL,
-  raster_dir,
-  variable_patterns,
-  time_cols,
-  time_steps,
-  output_dir = file.path(tempdir(), "Predictions"),
-  overwrite = FALSE,
-  verbose = TRUE
-)
+generate_spatiotemporal_predictions(partition_result, model_result,
+                                    pseudoabsence_result = NULL, raster_dir,
+                                    variable_patterns, time_cols, time_steps,
+                                    output_dir = file.path(tempdir(), "Predictions"),
+                                    overwrite = FALSE,
+                                    verbose = TRUE)
 ```
 
 ## Arguments

@@ -8,21 +8,13 @@ standardization.
 ## Usage
 
 ``` r
-temporally_explicit_extraction(
-  points_sp,
-  raster_dir,
-  variable_patterns,
-  time_cols,
-  xcol = NULL,
-  ycol = NULL,
-  points_crs = NULL,
-  output_dir,
-  output_prefix = "temp_explicit_df",
-  save_raw = TRUE,
-  save_scaled = TRUE,
-  save_scaling_params = TRUE,
-  verbose = TRUE
-)
+temporally_explicit_extraction(points_sp, raster_dir, variable_patterns,
+                               time_cols, xcol = NULL, ycol = NULL,
+                               points_crs = NULL, output_dir,
+                               output_prefix = "temp_explicit_df",
+                               save_raw = TRUE, save_scaled = TRUE,
+                               save_scaling_params = TRUE,
+                               verbose = TRUE)
 ```
 
 ## Arguments

@@ -12,17 +12,11 @@ the same structure as [`build_temporal_glm`](build_temporal_glm.md),
 ## Usage
 
 ``` r
-build_temporal_hv(
-  partition_result,
-  model_vars,
-  method,
-  hypervolume_params = list(),
-  output_dir = file.path(tempdir(), "Hypervolume_Models"),
-  create_plot = TRUE,
-  overwrite = FALSE,
-  plot_palette = "Dark 2",
-  verbose = TRUE
-)
+build_temporal_hv(partition_result, model_vars, method,
+                  hypervolume_params = list(),
+                  output_dir = file.path(tempdir(), "Hypervolume_Models"),
+                  create_plot = TRUE, overwrite = FALSE,
+                  plot_palette = "Dark 2", verbose = TRUE)
 ```
 
 ## Arguments

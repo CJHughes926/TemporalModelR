@@ -3,8 +3,10 @@
 ## Authors
 
 - **Connor Hughes**. Author, maintainer.
+  [](https://orcid.org/0000-0002-3720-0837)
 
 - **Mariana Castaneda-Guzman**. Author.
+  [](https://orcid.org/0000-0001-6106-4284)
 
 - **Luis E. Escobar**. Author.
 

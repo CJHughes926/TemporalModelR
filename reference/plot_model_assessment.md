@@ -9,15 +9,10 @@ object.
 ## Usage
 
 ``` r
-plot_model_assessment(
-  predictions,
-  time_column,
-  secondary_time_mode = "combine",
-  model_result = NULL,
-  cbp_threshold = 0.05,
-  plot_palette = "Dark 2",
-  verbose = TRUE
-)
+plot_model_assessment(predictions, time_column,
+                      secondary_time_mode = "combine", model_result = NULL,
+                      cbp_threshold = 0.05, plot_palette = "Dark 2",
+                      verbose = TRUE)
 ```
 
 ## Arguments

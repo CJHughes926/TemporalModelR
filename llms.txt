@@ -396,16 +396,16 @@ discuss it with the maintainers.
   : Generate Spatiotemporal Predictions from Temporal Models
 - [`plot_model_assessment()`](plot_model_assessment.md) : Visualize
   Model Assessment Metrics Across Time
-- [`raster_align()`](raster_align.md) : Align and Standardize Raster
-  Files to a Reference Raster
+- [`raster_align`](raster_align.md) : Align and Standardize Raster Files
+  to a Reference Raster
 - [`scale_rasters()`](scale_rasters.md) : Scale Environmental Rasters
   Using Species Occurrence Data
 - [`spatiotemporal_partition()`](spatiotemporal_partition.md) :
   Spatiotemporal Cross-Validation Partitioning
 - [`spatiotemporal_rarefaction()`](spatiotemporal_rarefaction.md) :
   Spatiotemporal Rarefaction of Species Occurrence Data
-- [`summarize_raster_outputs()`](summarize_raster_outputs.md) :
-  Summarize Prediction Rasters into Consensus Outputs
+- [`summarize_raster_outputs`](summarize_raster_outputs.md) : Summarize
+  Prediction Rasters into Consensus Outputs
 - [`temporally_explicit_extraction()`](temporally_explicit_extraction.md)
   : Extract Time-Aligned Environmental Values at Species Occurrences
 - [`tmr_absences`](tmr_absences.md) : Pre-built pseudoabsence result
