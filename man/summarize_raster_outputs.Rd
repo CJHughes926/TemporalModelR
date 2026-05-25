@@ -5,7 +5,7 @@
 \title{Summarize Prediction Rasters into Consensus Outputs}
 \usage{
 summarize_raster_outputs(predictions_dir, output_dir = NULL,
-                         consensus = 1, file_pattern = "Prediction_.*\\.tif$",
+                         consensus = 1, file_pattern = "Prediction_.*\\\.tif$",
                          overwrite = FALSE, verbose = TRUE)
 }
 \arguments{

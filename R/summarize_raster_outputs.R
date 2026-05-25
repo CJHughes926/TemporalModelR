@@ -10,7 +10,7 @@
 #'
 #' @usage
 #' summarize_raster_outputs(predictions_dir, output_dir = NULL,
-#'                          consensus = 1, file_pattern = "Prediction_.*\\.tif$",
+#'                          consensus = 1, file_pattern = "Prediction_.*\\\.tif$",
 #'                          overwrite = FALSE, verbose = TRUE)
 #'
 #' @param predictions_dir Character. Directory containing prediction raster
