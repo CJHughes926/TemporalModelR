@@ -31,8 +31,8 @@ typically run in order:
     time.
 4.  [`scale_rasters()`](../reference/scale_rasters.md) - z-score rasters
     using the per-variable means and SDs from extraction. This step is
-    optional, but should be applied for models sensitive to consistant
-    scaling in predictor variabeles. If not, raw values and aligned
+    optional, but should be applied for models sensitive to consistent
+    scaling in predictor variables. If not, raw values and aligned
     rasters may be used.
 5.  [`spatiotemporal_partition()`](../reference/spatiotemporal_partition.md) -
     assign points to single fold, spatial, temporal, spatiotemporal, or
@@ -71,7 +71,7 @@ study_crs <- sf::st_crs(terra::rast(ref_file))
 
 ## Aligning rasters
 
-[`raster_align()`](../reference/raster_align.md) standardises every
+[`raster_align()`](../reference/raster_align.md) standardizes every
 raster in a directory to a single reference grid by reprojecting,
 resampling, and masking. This is essential because downstream functions
 assume all environmental layers share identical CRS, resolution, and
@@ -171,14 +171,14 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/Rtmpbc93oA/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/RtmptQiYe8/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/Rtmpbc93oA/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/RtmptQiYe8/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
-seasonal variaiotn, we could isntead run this focusion only ‘year’ as
+seasonal variation, we could instead run this focusing only ‘year’ as
 our time_col of interest. This would instead save all unique pixel-year
 combinations, but assume locations from the same year and location but
 different seasons share no new data.
@@ -278,20 +278,20 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/Rtmpbc93oA/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/RtmptQiYe8/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/Rtmpbc93oA/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/RtmptQiYe8/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/Rtmpbc93oA/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/RtmptQiYe8/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
 The scaled file applies a z-score per variable using the means and SDs
 computed across all records. The scaling parameters file records those
 means and SDs so the same transformation can be applied to the
-prediction rasters, if nessisary.
+prediction rasters, if necessary.
 
 ``` r
 
@@ -366,7 +366,7 @@ temporally explicit models. The function supports five modes:
 
 - **Single fold.** All points used for both training and testing. No
   held-out validation. Useful for a final production model after cross
-  validatied quality has been established, or when sample sizes are too
+  validated quality has been established, or when sample sizes are too
   small for splitting.
 - **Random.** Folds are random shuffles with no spatial or temporal
   structure. Useful as a naive baseline.
@@ -443,7 +443,7 @@ partition$summary
 
 The returned `points_sf` carries a `fold` column alongside the original
 predictor columns. Two of the four folds are geographically restricted
-but span the full time series; the other two overalap spatially and span
+but span the full time series; the other two overlap spatially and span
 the remainder of the study area but are restricted to a distinct time
 slice each.
 
@@ -464,8 +464,8 @@ of seasonal environmental values.
 
 [`generate_absences()`](../reference/generate_absences.md) produces
 fold-stratified pseudoabsence/background points for presence/absence
-modeling. Pseudoabsences measure the environmental charactersitics of
-locations not otherwise characterized by species occcurances and are
+modeling. Pseudoabsences measure the environmental characteristics of
+locations not otherwise characterized by species occurrences and are
 essential for GLMs, GAMs, and random forests when no ‘true absence’
 points exist. The hypervolume method is presence-only and does not need
 them.
@@ -545,7 +545,7 @@ At this point the three key downstream inputs are in hand:
 - `scaled_dir` - the directory of scaled (or aligned in
   `rasters_aligned`, if scaling was skipped) rasters from which
   environmental conditions will be projected across space and time.
-- `partition` - the rarified, fold-assigned, time explicit environment
+- `partition` - the rarefied, fold-assigned, time explicit environment
   data from species occurrence points.
 - `absences` - the fold-stratified pseudoabsences with matching
   environmental attributes.
@@ -561,5 +561,5 @@ the following parallel vignettes:
 Once a model is fitted, predictions are projected through space and time
 using
 [`generate_spatiotemporal_predictions()`](../reference/generate_spatiotemporal_predictions.md),
-and the resulting prediction stack is summarised in the [Postprocessing
-predictions](postprocessing.md) vignette.
+and the resulting prediction stack is summarized in the [Post-processing
+predictions](post-processing.md) vignette.

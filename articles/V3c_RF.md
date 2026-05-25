@@ -60,7 +60,7 @@ automatically capture nonlinearities and interactions without needing
 them to be specified. A threshold is selected on the training data and
 applied to the continuous probability predictions (the per-tree vote
 fraction for the presence class) to produce binary suitability output
-for downstream summarisation.
+for downstream summarization.
 
 Random forests are an ensemble of decision trees, each grown on a
 bootstrap sample of the training data and split using a random subset of
@@ -164,7 +164,7 @@ following objects:
   [`randomForest::importance()`](https://rdrr.io/pkg/randomForest/man/importance.html)
   calls.
 - `$thresholds` - named numeric vector of probability thresholds used to
-  binarise predictions for each fold.
+  binarize predictions for each fold.
 - `$threshold_method` - character or numeric value recording how the
   thresholds were chosen (`"tss"`, `"prevalence"`, or a fixed numeric
   value).
@@ -212,7 +212,7 @@ of the TemporalModelR pipeline operates on binary suitability rasters,
 so a probability threshold must be chosen to convert probabilities into
 0/1 predictions. `threshold_method` supports three options:
 
-- `"tss"` (default) - selects the threshold that maximises True Skill
+- `"tss"` (default) - selects the threshold that maximizes True Skill
   Statistic (sensitivity + specificity − 1) on the training data. See
   [E-space performance](#sec-espace). This balances commission and
   omission.
@@ -295,7 +295,7 @@ Columns:
 
 - `Fold` - fold identifier matching the folds in
   `tmr_partition$points_sf$fold`.
-- `Threshold` - the per-fold probability threshold used to binarise
+- `Threshold` - the per-fold probability threshold used to binarize
   predictions.
 - `Testing_TP` - count of test-set presence points correctly classified
   as suitable (true positives).
@@ -318,8 +318,8 @@ Columns:
   accuracy for the accuracy expected by chance. Ranges from -1 to 1 with
   similar interpretation to TSS.
 - `AUC` - area under the ROC curve, computed on continuous probabilities
-  rather than binarised predictions, so it is threshold-independent.
-  Useful for comparing the models overall preformance independent of
+  rather than binarized predictions, so it is threshold-independent.
+  Useful for comparing the models overall performance independent of
   threshold.
 
 The full ROC curve and each above metric are also graphed as an output
@@ -333,7 +333,7 @@ GLM or GAM AUC on the same data, which can be a sign of genuinely better
 performance or of overfitting. Compare against the G-space metrics
 computed during projection to distinguish the two. Time-specific
 (G-space) metrics can also be assessed later when we project the model
-to spesific G-space and time combinations.
+to specific G-space and time combinations.
 
   
 
@@ -441,15 +441,15 @@ terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
 
 These rasters represent consensus votes among each of our four folds,
 with yellow pixels having strong positive consensus among all folds (all
-four identify the pixel as suitbale) and blue pixels having low
+four identify the pixel as suitable) and blue pixels having low
 consensus among folds (few to no folds identify the given pixel as
 suitable). We also see that the models correctly visually show one of
 the main temporal trends in the data: loss of habitat through
 deforestation starting around year 6.
 
 Visualizing our predictions across each season and year, we see more
-inconsistant agreement among models than in other model methods
-presented in the modeling vingettes. RF models have an ability to fit
+inconsistent agreement among models than in other model methods
+presented in the modeling vignettes. RF models have an ability to fit
 much more complex relationships to variables compared to GLM and GAM,
 but lack an ability to extrapolate which both of those models have. As a
 result, RF may be prone to overfitting and this should be watched for.
@@ -479,11 +479,11 @@ long as their temporal scales are nested. For example here “elevation”
 has no temporal value and is considered to be static across all time
 steps. “forest_cover” is measured annually, but is considered to be
 static across all seasons within a year for the purposes of predictions.
-“prseason” is measured both by year and season, so resulting seasonal
+“preseason” is measured both by year and season, so resulting seasonal
 predictions reflect that. However if precipitation was only measured
-based on aggregate seasons but had no associated year, predictios would
+based on aggregate seasons but had no associated year, predictions would
 fail. Predictions can also be made where all variables share the same
-time step- for example annuual forest cover, annual temprerature, and
+time step- for example annual forest cover, annual temperature, and
 annual precipitation.
 
 Additionally, a plain vector like `time_steps = 1:15` produces one
@@ -610,9 +610,9 @@ year and season), you must choose how they are visualized. Choosing
 `secondary_time_mode = "combine"` will roll them into one continuous x
 axis. `secondary_time_mode = "facet"` produces stacked plots as seen
 below, where the first `time_col` is displayed as the x axis, and a
-differnt plot is made for each secondary variable (`season` here). By
-default, the threshold for which CBP is identified as signifcant is
-0.05, but this may also be adjusted mannually.
+different plot is made for each secondary variable (`season` here). By
+default, the threshold for which CBP is identified as significant is
+0.05, but this may also be adjusted manually.
 
 ``` r
 
@@ -636,10 +636,10 @@ plot_model_assessment(
 
 Now that predictions have been generated, you can assess the model and
 see if it is preforming satisfactory enough for what your goals are. If
-this is the case, you can preform postprocessing analyses to try to gain
-additional inference about the spatiotemporal patterns of change in the
-study region See the [Postprocessing predictions](postprocessing.md)
-vignette.
+this is the case, you can preform post-processing analyses to try to
+gain additional inference about the spatiotemporal patterns of change in
+the study region See the [Post-processing
+predictions](post-processing.md) vignette.
 
 For comparison with other algorithms applied to the same dataset:
 

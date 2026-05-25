@@ -1,11 +1,11 @@
-# 4. Postprocessing predictions
+# 4. Post-processing predictions
 
 ------------------------------------------------------------------------
 
 ## Summary
 
 - [Overview](#sec-overview)
-- [Consensus and frequency summarisation](#sec-consensus)
+- [Consensus and frequency summarization](#sec-consensus)
 - [Detecting temporal patterns](#sec-patterns)
 - [Aggregating by spatial unit](#sec-zones)
 - [Summary](#sec-next)
@@ -18,7 +18,7 @@ The modeling phase described in the previous four vignettes each
 produces per-fold consensus prediction rasters across time steps. These
 are useful, but will often result in stacks of individual predictions
 (10s to sometimes 100s of rasters) that may be difficult to make
-straightforward sense of. The goal of the postprocessing phase is to
+straightforward sense of. The goal of the post-processing phase is to
 take this abundance of data and summarize it in interpretable ways,
 mainly focused on understanding the overarching temporal dynamics of
 each pixel, and summarizing these change patterns regionally for
@@ -39,7 +39,7 @@ Three functions cover this phase, run in order:
     either ‘stable suitable’, ‘stable unsuitable’, ‘increasing in
     suitability’, ‘decreasing in suitability’, ‘fluctuating’, or ‘no
     pattern’. It also produces a ‘time of first change’ raster
-    indicating when those increases or decreases occured.
+    indicating when those increases or decreases occurred.
 3.  [`analyze_trends_by_spatial_unit()`](../reference/analyze_trends_by_spatial_unit.md) -
     aggregates pixel-level patterns across user-defined polygons. This
     takes potentially complicated rasters with many pixels and gives
@@ -80,14 +80,14 @@ suitable).
 
   
 
-## Consensus and frequency summarisation
+## Consensus and frequency summarization
 
 [`summarize_raster_outputs()`](../reference/summarize_raster_outputs.md)
 applies a consensus threshold to convert the fold-count rasters into
-binary suitability rasters, which are needed for all postprocessing
+binary suitability rasters, which are needed for all post-processing
 analyses. These simplify the fold count rasters by setting a threshold
 of how many folds must agree for the pixel to be considered suitable in
-the postprocessing analyses. A very conservative modeling process may
+the post-processing analyses. A very conservative modeling process may
 want all folds to agree for a pixel to be considered suitable (in that
 case, we would indicate a threshold of 4). A more relaxed modeling
 process may only require half of the folds to agree for a pixel to be
@@ -95,7 +95,7 @@ considered suitable (threshold here of 2). The choice depends on the
 cost of false positives versus false negatives in the given application.
 Higher consensus is more conservative; lower consensus is more
 sensitive. Lower consensus thresholds may also introduce additional
-noise into the postprocessing results, which should be considered for
+noise into the post-processing results, which should be considered for
 this process.
 
 In either case, all pixels which meet or exceed the user set threshold
@@ -159,7 +159,7 @@ purple. The reduction in suitable area starting around year 6 reflects
 the deforestation trend present in the underlying forest cover rasters,
 just as would be expected based on the changing landscape.
 
-The frequency raster is a single layer summarising all 15 panels into
+The frequency raster is a single layer summarizing all 15 panels into
 one:
 
 ``` r
@@ -203,7 +203,7 @@ Changepoint detection runs via
 with each pixel’s previous-time-step value included as a predictor to
 account for temporal autocorrelation. When
 `spatial_autocorrelation = TRUE`, the proportion of a pixel’s
-first-order neighbours classified as suitable in each time step is also
+first-order neighbors classified as suitable in each time step is also
 considered as an additional covariate to the changepoint detection
 model, accounting for spatial autocorrelation in the predictive surface.
 
@@ -432,9 +432,9 @@ head(zone_summary$change_by_timestep)
 
 - `$plots` - recorded plot objects produced when `create_plot = TRUE`.
 
-More robust plots can be mannually made from the output tables, but
-using `create_plot = TRUE` gives quick visual assessments of the
-summarized spatiotemporal dynamics of the landscape.
+More robust plots can be manually made from the output tables, but using
+`create_plot = TRUE` gives quick visual assessments of the summarized
+spatiotemporal dynamics of the landscape.
 
 ``` r
 
@@ -476,7 +476,7 @@ and the change by timestep table identifies when those changes happened.
 
 ## Summary
 
-The three postprocessing functions together convert the per-fold
+The three post-processing functions together convert the per-fold
 per-time-step prediction stack from the modeling phase into three
 interpretable pieces of information:
 

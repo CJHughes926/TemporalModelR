@@ -29,7 +29,7 @@ data that it may be useful for.
 
 This vignette describes the dataset in detail so that the workflow
 vignettes ([Preprocessing temporally explicit data](preprocessing.md),
-[Modeling](modeling_glm.md), [Postprocessing](postprocessing.md)) can
+[Modeling](modeling_glm.md), [Post-processing](post-processing.md)) can
 refer back to a single source for what’s in `inst/extdata/` and
 [`data()`](https://rdrr.io/r/utils/data.html) rather than explaining the
 dataset through each other vignette. If you’re working through the
@@ -46,7 +46,7 @@ temporal dimensions:
 1500 m study area in a custom synthetic local CRS (a Transverse Mercator
 projection anchored at the equator and prime meridian).
 
-**Temporal.** Fifteen years (labelled 1 through 15) and four seasons
+**Temporal.** Fifteen years (labeled 1 through 15) and four seasons
 (Spring, Summer, Autumn, Winter).
 
 The example landscape has three primary environmental variables driving
@@ -156,8 +156,7 @@ The left column shows forest cover thinning in two locations: a gradual
 loss on the northeast hill starting around year 4 and a faster loss in a
 southwest-central patch starting around year 7. The right column shows
 annual precipitation with a slight overall decline plus the wet (year 3
-and year 9) and dry (year 11) years that stand out from their
-neighbours.
+and year 9) and dry (year 11) years that stand out from their neighbors.
 
 ### Seasonal precipitation within a year
 
@@ -292,8 +291,8 @@ for (yr in 1:15) {
 ![](V1_dataset_files/figure-html/unnamed-chunk-6-1.png)
 
 Together, this points dataset and the rasters above make up the
-landscape and species occurance data for all of the example applications
-presented in this package’s vignettes.
+landscape and species occurrence data for all of the example
+applications presented in this package’s vignettes.
 
   
 

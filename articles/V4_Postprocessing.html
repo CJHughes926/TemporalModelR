@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>4. Postprocessing predictions • TemporalModelR</title>
+<title>4. Post-processing predictions • TemporalModelR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="4. Postprocessing predictions">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="4. Post-processing predictions">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -39,7 +39,7 @@
     <li><a class="dropdown-item" href="../articles/V3b_GAM.html">3b. Modeling with a GAM</a></li>
     <li><a class="dropdown-item" href="../articles/V3c_RF.html">3c. Modeling with a Random Forest</a></li>
     <li><a class="dropdown-item" href="../articles/V3d_HV.html">3d. Modeling with a Hypervolume</a></li>
-    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Postprocessing predictions</a></li>
+    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Post-processing predictions</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -62,7 +62,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>4. Postprocessing predictions</h1>
+      <h1>4. Post-processing predictions</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/CJHughes926/TemporalModelR/blob/main/vignettes/V4_Postprocessing.Rmd" class="external-link"><code>vignettes/V4_Postprocessing.Rmd</code></a></small>
@@ -78,7 +78,7 @@
 <ul>
 <li><a href="#sec-overview">Overview</a></li>
 <li><a href="#sec-consensus">Consensus and frequency
-summarisation</a></li>
+summarization</a></li>
 <li><a href="#sec-patterns">Detecting temporal patterns</a></li>
 <li><a href="#sec-zones">Aggregating by spatial unit</a></li>
 <li><a href="#sec-next">Summary</a></li>
@@ -92,7 +92,7 @@ summarisation</a></li>
 produces per-fold consensus prediction rasters across time steps. These
 are useful, but will often result in stacks of individual predictions
 (10s to sometimes 100s of rasters) that may be difficult to make
-straightforward sense of. The goal of the postprocessing phase is to
+straightforward sense of. The goal of the post-processing phase is to
 take this abundance of data and summarize it in interpretable ways,
 mainly focused on understanding the overarching temporal dynamics of
 each pixel, and summarizing these change patterns regionally for
@@ -113,7 +113,7 @@ raster classifying each pixel as either ‘stable suitable’, ‘stable
 unsuitable’, ‘increasing in suitability’, ‘decreasing in suitability’,
 ‘fluctuating’, or ‘no pattern’. It also produces a ‘time of first
 change’ raster indicating when those increases or decreases
-occured.</li>
+occurred.</li>
 <li>
 <code><a href="../reference/analyze_trends_by_spatial_unit.html">analyze_trends_by_spatial_unit()</a></code> - aggregates
 pixel-level patterns across user-defined polygons. This takes
@@ -149,13 +149,13 @@ suitable).</p>
 <p><br></p>
 </div>
 <div class="section level2">
-<h2 id="sec-consensus">Consensus and frequency summarisation<a class="anchor" aria-label="anchor" href="#sec-consensus"></a>
+<h2 id="sec-consensus">Consensus and frequency summarization<a class="anchor" aria-label="anchor" href="#sec-consensus"></a>
 </h2>
 <p><code><a href="../reference/summarize_raster_outputs.html">summarize_raster_outputs()</a></code> applies a consensus threshold
 to convert the fold-count rasters into binary suitability rasters, which
-are needed for all postprocessing analyses. These simplify the fold
+are needed for all post-processing analyses. These simplify the fold
 count rasters by setting a threshold of how many folds must agree for
-the pixel to be considered suitable in the postprocessing analyses. A
+the pixel to be considered suitable in the post-processing analyses. A
 very conservative modeling process may want all folds to agree for a
 pixel to be considered suitable (in that case, we would indicate a
 threshold of 4). A more relaxed modeling process may only require half
@@ -163,7 +163,7 @@ of the folds to agree for a pixel to be considered suitable (threshold
 here of 2). The choice depends on the cost of false positives versus
 false negatives in the given application. Higher consensus is more
 conservative; lower consensus is more sensitive. Lower consensus
-thresholds may also introduce additional noise into the postprocessing
+thresholds may also introduce additional noise into the post-processing
 results, which should be considered for this process.</p>
 <p>In either case, all pixels which meet or exceed the user set
 threshold become a binary ‘1’ for suitable, and all others become a
@@ -223,7 +223,7 @@ year-to-year breakdown of projected suitability.</p>
 purple. The reduction in suitable area starting around year 6 reflects
 the deforestation trend present in the underlying forest cover rasters,
 just as would be expected based on the changing landscape.</p>
-<p>The frequency raster is a single layer summarising all 15 panels into
+<p>The frequency raster is a single layer summarizing all 15 panels into
 one:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">frequency_rast</span>,</span>
@@ -269,7 +269,7 @@ changes through time.</li>
 <code><a href="https://fastcpd.xingchi.li/reference/fastcpd_binomial.html" class="external-link">fastcpd::fastcpd_binomial()</a></code> with each pixel’s
 previous-time-step value included as a predictor to account for temporal
 autocorrelation. When <code>spatial_autocorrelation = TRUE</code>, the
-proportion of a pixel’s first-order neighbours classified as suitable in
+proportion of a pixel’s first-order neighbors classified as suitable in
 each time step is also considered as an additional covariate to the
 changepoint detection model, accounting for spatial autocorrelation in
 the predictive surface.</p>
@@ -478,7 +478,7 @@ both change rasters are supplied.</li>
 <code>$plots</code> - recorded plot objects produced when
 <code>create_plot = TRUE</code>.</li>
 </ul>
-<p>More robust plots can be mannually made from the output tables, but
+<p>More robust plots can be manually made from the output tables, but
 using <code>create_plot = TRUE</code> gives quick visual assessments of
 the summarized spatiotemporal dynamics of the landscape.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -517,7 +517,7 @@ happened.</p>
 <div class="section level2">
 <h2 id="sec-next">Summary<a class="anchor" aria-label="anchor" href="#sec-next"></a>
 </h2>
-<p>The three postprocessing functions together convert the per-fold
+<p>The three post-processing functions together convert the per-fold
 per-time-step prediction stack from the modeling phase into three
 interpretable pieces of information:</p>
 <ul>

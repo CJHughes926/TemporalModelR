@@ -39,7 +39,7 @@
     <li><a class="dropdown-item" href="../articles/V3b_GAM.html">3b. Modeling with a GAM</a></li>
     <li><a class="dropdown-item" href="../articles/V3c_RF.html">3c. Modeling with a Random Forest</a></li>
     <li><a class="dropdown-item" href="../articles/V3d_HV.html">3d. Modeling with a Hypervolume</a></li>
-    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Postprocessing predictions</a></li>
+    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Post-processing predictions</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -107,8 +107,8 @@ environmental values matched to each point’s observation time.</li>
 <li>
 <code><a href="../reference/scale_rasters.html">scale_rasters()</a></code> - z-score rasters using the
 per-variable means and SDs from extraction. This step is optional, but
-should be applied for models sensitive to consistant scaling in
-predictor variabeles. If not, raw values and aligned rasters may be
+should be applied for models sensitive to consistent scaling in
+predictor variables. If not, raw values and aligned rasters may be
 used.</li>
 <li>
 <code><a href="../reference/spatiotemporal_partition.html">spatiotemporal_partition()</a></code> - assign points to single
@@ -147,7 +147,7 @@ as predictors. The annual workflow is identical apart from substituting
 <div class="section level2">
 <h2 id="sec-align">Aligning rasters<a class="anchor" aria-label="anchor" href="#sec-align"></a>
 </h2>
-<p><code><a href="../reference/raster_align.html">raster_align()</a></code> standardises every raster in a directory
+<p><code><a href="../reference/raster_align.html">raster_align()</a></code> standardizes every raster in a directory
 to a single reference grid by reprojecting, resampling, and masking.
 This is essential because downstream functions assume all environmental
 layers share identical CRS, resolution, and extent. Even small
@@ -232,12 +232,12 @@ reference and for users who want a static comparison:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rare_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $spatiotemporal</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpbc93oA/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmptQiYe8/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $spatial</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpbc93oA/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/RtmptQiYe8/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
 <p>If we wanted to focus on annual variation rather than both annual and
-seasonal variaiotn, we could isntead run this focusion only ‘year’ as
+seasonal variation, we could instead run this focusing only ‘year’ as
 our time_col of interest. This would instead save all unique pixel-year
 combinations, but assume locations from the same year and location but
 different seasons share no new data.</p>
@@ -333,18 +333,18 @@ with annual measures of precipitation.</li>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ext_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $raw</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpbc93oA/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmptQiYe8/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaled</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpbc93oA/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmptQiYe8/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaling_params</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpbc93oA/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/RtmptQiYe8/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
 <p>The raw values file is what models that don’t need scaling will
 consume. The scaled file applies a z-score per variable using the means
 and SDs computed across all records. The scaling parameters file records
 those means and SDs so the same transformation can be applied to the
-prediction rasters, if nessisary.</p>
+prediction rasters, if necessary.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ext_out</span><span class="op">$</span><span class="va">scaling_params</span></span>
 <span><span class="co">#&gt;       variable         mean           sd</span></span>
@@ -408,8 +408,8 @@ The function supports five modes:</p>
 <li>
 <strong>Single fold.</strong> All points used for both training and
 testing. No held-out validation. Useful for a final production model
-after cross validatied quality has been established, or when sample
-sizes are too small for splitting.</li>
+after cross validated quality has been established, or when sample sizes
+are too small for splitting.</li>
 <li>
 <strong>Random.</strong> Folds are random shuffles with no spatial
 or temporal structure. Useful as a naive baseline.</li>
@@ -480,7 +480,7 @@ column (unlike the multi-column placeholders elsewhere; see
 <p>The returned <code>points_sf</code> carries a <code>fold</code>
 column alongside the original predictor columns. Two of the four folds
 are geographically restricted but span the full time series; the other
-two overalap spatially and span the remainder of the study area but are
+two overlap spatially and span the remainder of the study area but are
 restricted to a distinct time slice each.</p>
 <p>For partitioning purposes, time information must be encoded in a
 single column based on what temporal scale is relevant for the desired
@@ -499,8 +499,8 @@ transferability of seasonal environmental values.</p>
 </h2>
 <p><code><a href="../reference/generate_absences.html">generate_absences()</a></code> produces fold-stratified
 pseudoabsence/background points for presence/absence modeling.
-Pseudoabsences measure the environmental charactersitics of locations
-not otherwise characterized by species occcurances and are essential for
+Pseudoabsences measure the environmental characteristics of locations
+not otherwise characterized by species occurrences and are essential for
 GLMs, GAMs, and random forests when no ‘true absence’ points exist. The
 hypervolume method is presence-only and does not need them.</p>
 <p>Three generation methods are supported:</p>
@@ -575,7 +575,7 @@ temporally explicit workflow intact through the model fitting step.</p>
 <code>rasters_aligned</code>, if scaling was skipped) rasters from which
 environmental conditions will be projected across space and time.</li>
 <li>
-<code>partition</code> - the rarified, fold-assigned, time explicit
+<code>partition</code> - the rarefied, fold-assigned, time explicit
 environment data from species occurrence points.</li>
 <li>
 <code>absences</code> - the fold-stratified pseudoabsences with
@@ -591,7 +591,8 @@ in the following parallel vignettes:</p>
 </ul>
 <p>Once a model is fitted, predictions are projected through space and
 time using <code><a href="../reference/generate_spatiotemporal_predictions.html">generate_spatiotemporal_predictions()</a></code>, and the
-resulting prediction stack is summarised in the <a href="postprocessing.html">Postprocessing predictions</a> vignette.</p>
+resulting prediction stack is summarized in the <a href="post-processing.html">Post-processing predictions</a>
+vignette.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

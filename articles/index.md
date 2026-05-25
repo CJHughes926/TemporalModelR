@@ -8,4 +8,4 @@
 - [3b. Modeling with a GAM](V3b_GAM.md):
 - [3c. Modeling with a Random Forest](V3c_RF.md):
 - [3d. Modeling with a Hypervolume](V3d_HV.md):
-- [4. Postprocessing predictions](V4_Postprocessing.md):
+- [4. Post-processing predictions](V4_Postprocessing.md):

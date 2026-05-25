@@ -302,7 +302,7 @@ containing the following objects:
   [`hypervolume::hypervolume_project()`](https://rdrr.io/pkg/hypervolume/man/hypervolume_project.html)
   calls.
 - `$volumes` - named numeric vector of hypervolume sizes (in units of
-  the standardised predictor space), one per fold. See [Volume and
+  the standardized predictor space), one per fold. See [Volume and
   overlap diagnostics](#sec-volume).
 - `$overlaps` - named list of pairwise percent volume overlap statistics
   between fold hypervolumes.
@@ -387,7 +387,7 @@ Columns:
 - `Fold` - fold identifier matching the folds in
   `tmr_partition$points_sf$fold`.
 - `N_Test` - number of held-out presence test points for that fold.
-- `E_Volume` - size of the fitted hypervolume in standardised E-space
+- `E_Volume` - size of the fitted hypervolume in standardized E-space
   units. See [Volume and overlap diagnostics](#sec-volume).
 - `Testing_TP` - count of test-set presence points correctly classified
   as inside the envelope (true positives).
@@ -397,7 +397,7 @@ Columns:
   `Testing_TP / (Testing_TP + Testing_FN)`. Values close to 1 mean the
   model rarely misses presences.
 - `volumes` - reports the size of each fold’s hypervolume in
-  standardised E-space units.
+  standardized E-space units.
 - `overlaps` - reports pairwise percent volume overlap between fold
   hypervolumes. High pairwise overlap means the niche estimate is stable
   across spatially or temporally distinct training subsets.
@@ -406,14 +406,14 @@ Sensitivity alone is a one-sided picture of performance: a hypervolume
 that covers the entire study area would have sensitivity 1 but would be
 ecologically meaningless. Its usually best to examine sensitivity as it
 relates to the proportion of the study are being predicted as suitable
-or the cummulative biniomial probability of that sensitivity given the
-cummulative area predicted as suitable over time. See [G-space
-preformance](#sec-gspace).
+or the cumulative binomial probability of that sensitivity given the
+cumulative area predicted as suitable over time. See [G-space
+performance](#sec-gspace).
 
 E-space metrics are robust to imbalanced sample sizes across time,
 because they pool across the time series. They are a good metric for
 assessing overall model fit. Time-specific (G-space) metrics can also be
-assessed later when we project the model to spesific G-space and time
+assessed later when we project the model to specific G-space and time
 combinations. In the case of hypervolume modeling, G-space metrics must
 be used to get a complete picture of the model’s performance, in absence
 of specificity metrics.
@@ -557,9 +557,9 @@ long as their temporal scales are nested. For example here “elevation”
 has no temporal value and is considered to be static across all time
 steps. “forest_cover” is measured annually, but is considered to be
 static across all seasons within a year for the purposes of predictions.
-“prseason” is measured both by year and season, so resulting seasonal
+“preseason” is measured both by year and season, so resulting seasonal
 predictions reflect that. However if precipitation was only measured
-based on aggregate seasons but had no associated year, predictios would
+based on aggregate seasons but had no associated year, predictions would
 fail. Predictions can also be made where all variables share the same
 time step- for example annual forest cover, annual temperature, and
 annual precipitation.
@@ -681,9 +681,9 @@ steps are used (such as year and season), you must choose how they are
 visualized. Choosing `secondary_time_mode = "combine"` will roll them
 into one continuous x axis. `secondary_time_mode = "facet"` produces
 stacked plots as seen below, where the first `time_col` is displayed as
-the x axis, and a differnt plot is made for each secondary variable
+the x axis, and a different plot is made for each secondary variable
 (`season` here). By default, the threshold for which CBP is identified
-as signifcant is 0.05, but this may also be adjusted mannually.
+as significant is 0.05, but this may also be adjusted manually.
 
 ``` r
 
@@ -710,10 +710,10 @@ area during the summer in the G-space predictions per time step graphs.
 
 Now that predictions have been generated, you can assess the model and
 see if it is preforming satisfactory enough for what your goals are. If
-this is the case, you can preform postprocessing analyses to try to gain
-additional inference about the spatiotemporal patterns of change in the
-study region See the [Postprocessing predictions](postprocessing.md)
-vignette.
+this is the case, you can preform post-processing analyses to try to
+gain additional inference about the spatiotemporal patterns of change in
+the study region See the [Post-processing
+predictions](post-processing.md) vignette.
 
 For comparison with other algorithms applied to the same dataset:
 

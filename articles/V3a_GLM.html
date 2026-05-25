@@ -39,7 +39,7 @@
     <li><a class="dropdown-item" href="../articles/V3b_GAM.html">3b. Modeling with a GAM</a></li>
     <li><a class="dropdown-item" href="../articles/V3c_RF.html">3c. Modeling with a Random Forest</a></li>
     <li><a class="dropdown-item" href="../articles/V3d_HV.html">3d. Modeling with a Hypervolume</a></li>
-    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Postprocessing predictions</a></li>
+    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Post-processing predictions</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -134,7 +134,7 @@ supporting linear, polynomial, and interactive terms. See <a href="#sec-formula"
 logit but can be set to probit, complementary log-log, or cauchit. A
 threshold is selected on the training data and applied to the continuous
 predictions to produce binary suitability output for downstream
-summarisation.</p>
+summarization.</p>
 <p>GLMs are fast to fit, transparent to interpret, and tolerant of the
 kind of small datasets that occurrence records often provide. The
 trade-off is that nonlinear environmental responses must be specified
@@ -187,7 +187,7 @@ is indicated with a horizontal dashed line.</p>
 <p><img src="V3a_GLM_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="95%"><img src="V3a_GLM_files/figure-html/unnamed-chunk-2-2.png" class="r-plt" alt="" width="95%"><img src="V3a_GLM_files/figure-html/unnamed-chunk-2-3.png" class="r-plt" alt="" width="95%"><img src="V3a_GLM_files/figure-html/unnamed-chunk-2-4.png" class="r-plt" alt="" width="95%"><img src="V3a_GLM_files/figure-html/unnamed-chunk-2-5.png" class="r-plt" alt="" width="95%"><img src="V3a_GLM_files/figure-html/unnamed-chunk-2-6.png" class="r-plt" alt="" width="95%"></p>
 <p>We see that our model correctly identifies a strong positive
 relationship between both elevation and forest cover and species
-occurance. The same <code>create_plot = TRUE</code> function also
+occurrence. The same <code>create_plot = TRUE</code> function also
 visualizes time independent model assessment metrics relevant to the GLM
 (above). See <a href="#sec-espace">E-space performance</a>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -209,7 +209,7 @@ per fold (<code>fold1</code>, <code>fold2</code>, …). Each is a standard
 <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, and <code><a href="https://rspatial.github.io/terra/reference/predict.html" class="external-link">predict()</a></code> calls.</li>
 <li>
 <code>$thresholds</code> - named numeric vector of probability
-thresholds used to binarise predictions for each fold.</li>
+thresholds used to binarize predictions for each fold.</li>
 <li>
 <code>$threshold_method</code> - character or numeric value
 recording how the thresholds were chosen (<code>"tss"</code>,
@@ -283,7 +283,7 @@ probability threshold must be chosen to convert probabilities into 0/1
 predictions. <code>threshold_method</code> supports three options:</p>
 <ul>
 <li>
-<code>"tss"</code> (default) - selects the threshold that maximises
+<code>"tss"</code> (default) - selects the threshold that maximizes
 True Skill Statistic (sensitivity + specificity − 1) on the training
 data. See <a href="#sec-espace">E-space performance</a>. This balances
 commission and omission.</li>
@@ -335,7 +335,7 @@ preforming.</p>
 <code>tmr_partition$points_sf$fold</code>.</li>
 <li>
 <code>Threshold</code> - the per-fold probability threshold used to
-binarise predictions.</li>
+binarize predictions.</li>
 <li>
 <code>Testing_TP</code> - count of test-set presence points
 correctly classified as suitable (true positives).</li>
@@ -369,9 +369,9 @@ classification accuracy for the accuracy expected by chance. Ranges from
 -1 to 1 with similar interpretation to TSS.</li>
 <li>
 <code>AUC</code> - area under the ROC curve, computed on continuous
-probabilities rather than binarised predictions, so it is
+probabilities rather than binarized predictions, so it is
 threshold-independent. Useful for comparing the models overall
-preformance independent of threshold.</li>
+performance independent of threshold.</li>
 </ul>
 <p>The full ROC curve and each above metric are also graphed as an
 output of <code>create_plot = T</code> in the <a href="#sec-fit">Fitting
@@ -379,7 +379,7 @@ a temporal GLM</a> section.</p>
 <p>E-space metrics are robust to imbalanced sample sizes across time,
 because they pool across the time series. They are a good metric for
 assessing overall model fit. Time-specific (G-space) metrics can also be
-assessed later when we project the model to spesific G-space and time
+assessed later when we project the model to specific G-space and time
 combinations.</p>
 <p><br></p>
 </div>
@@ -463,7 +463,7 @@ render the stack in four blocks of four years each.</p>
 there is generally high agreement among models. These rasters represent
 consensus votes among each of our four folds, with yellow pixels having
 strong positive consensus among all folds (all four identify the pixel
-as suitbale) and blue pixels having low consensus among folds (few to no
+as suitable) and blue pixels having low consensus among folds (few to no
 folds identify the given pixel as suitable). We also see that the models
 correctly visually show one of the main temporal trends in the data:
 loss of habitat through deforestation starting around year 6.</p>
@@ -483,12 +483,12 @@ scales so long as their temporal scales are nested. For example here
 “elevation” has no temporal value and is considered to be static across
 all time steps. “forest_cover” is measured annually, but is considered
 to be static across all seasons within a year for the purposes of
-predictions. “prseason” is measured both by year and season, so
+predictions. “preseason” is measured both by year and season, so
 resulting seasonal predictions reflect that. However if precipitation
 was only measured based on aggregate seasons but had no associated year,
-predictios would fail. Predictions can also be made where all variables
-share the same time step- for example annuual forest cover, annual
-temprerature, and annual precipitation.</p>
+predictions would fail. Predictions can also be made where all variables
+share the same time step- for example annual forest cover, annual
+temperature, and annual precipitation.</p>
 <p>Additionally, a plain vector like <code>time_steps = 1:15</code>
 produces one prediction per value of the first time column; the other
 time columns are filled in with every unique value present in the
@@ -622,10 +622,10 @@ how they are visualized. Choosing
 <code>secondary_time_mode = "combine"</code> will roll them into one
 continuous x axis. <code>secondary_time_mode = "facet"</code> produces
 stacked plots as seen below, where the first <code>time_col</code> is
-displayed as the x axis, and a differnt plot is made for each secondary
+displayed as the x axis, and a different plot is made for each secondary
 variable (<code>season</code> here). By default, the threshold for which
-CBP is identified as signifcant is 0.05, but this may also be adjusted
-mannually.</p>
+CBP is identified as significant is 0.05, but this may also be adjusted
+manually.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_model_assessment.html">plot_model_assessment</a></span><span class="op">(</span></span>
 <span>  predictions         <span class="op">=</span> <span class="va">preds</span>,</span>
@@ -644,9 +644,9 @@ mannually.</p>
 </h2>
 <p>Now that predictions have been generated, you can assess the model
 and see if it is preforming satisfactory enough for what your goals are.
-If this is the case, you can preform postprocessing analyses to try to
+If this is the case, you can preform post-processing analyses to try to
 gain additional inference about the spatiotemporal patterns of change in
-the study region See the <a href="postprocessing.html">Postprocessing
+the study region See the <a href="post-processing.html">Post-processing
 predictions</a> vignette.</p>
 <p>For comparison with other algorithms applied to the same dataset:</p>
 <ul>

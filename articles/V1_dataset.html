@@ -39,7 +39,7 @@
     <li><a class="dropdown-item" href="../articles/V3b_GAM.html">3b. Modeling with a GAM</a></li>
     <li><a class="dropdown-item" href="../articles/V3c_RF.html">3c. Modeling with a Random Forest</a></li>
     <li><a class="dropdown-item" href="../articles/V3d_HV.html">3d. Modeling with a Hypervolume</a></li>
-    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Postprocessing predictions</a></li>
+    <li><a class="dropdown-item" href="../articles/V4_Postprocessing.html">4. Post-processing predictions</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -107,7 +107,7 @@ to visualize the utility of this package and the variety of the types of
 data that it may be useful for.</p>
 <p>This vignette describes the dataset in detail so that the workflow
 vignettes (<a href="preprocessing.html">Preprocessing temporally
-explicit data</a>, <a href="modeling_glm.html">Modeling</a>, <a href="postprocessing.html">Postprocessing</a>) can refer back to a
+explicit data</a>, <a href="modeling_glm.html">Modeling</a>, <a href="post-processing.html">Post-processing</a>) can refer back to a
 single source for what’s in <code>inst/extdata/</code> and
 <code><a href="https://rdrr.io/r/utils/data.html" class="external-link">data()</a></code> rather than explaining the dataset through each
 other vignette. If you’re working through the package for the first
@@ -123,7 +123,7 @@ temporal dimensions:</p>
 giving a 3000 m × 1500 m study area in a custom synthetic local CRS (a
 Transverse Mercator projection anchored at the equator and prime
 meridian).</p>
-<p><strong>Temporal.</strong> Fifteen years (labelled 1 through 15) and
+<p><strong>Temporal.</strong> Fifteen years (labeled 1 through 15) and
 four seasons (Spring, Summer, Autumn, Winter).</p>
 <p>The example landscape has three primary environmental variables
 driving suitability for our example species: Elevation, Forest Cover,
@@ -227,7 +227,7 @@ gradual loss on the northeast hill starting around year 4 and a faster
 loss in a southwest-central patch starting around year 7. The right
 column shows annual precipitation with a slight overall decline plus the
 wet (year 3 and year 9) and dry (year 11) years that stand out from
-their neighbours.</p>
+their neighbors.</p>
 </div>
 <div class="section level3">
 <h3 id="sec-tour-prseas-within">Seasonal precipitation within a year<a class="anchor" aria-label="anchor" href="#sec-tour-prseas-within"></a>
@@ -348,8 +348,8 @@ indicate year-season combinations with no points:</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="V1_dataset_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="95%"></p>
 <p>Together, this points dataset and the rasters above make up the
-landscape and species occurance data for all of the example applications
-presented in this package’s vignettes.</p>
+landscape and species occurrence data for all of the example
+applications presented in this package’s vignettes.</p>
 <p><br></p>
 </div>
 <div class="section level2">
