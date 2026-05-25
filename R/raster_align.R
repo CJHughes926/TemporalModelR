@@ -7,7 +7,7 @@
 #'
 #' @usage
 #' raster_align(input_dir, output_dir, reference_raster,
-#'              output_suffix = "_Masked_Updated", pattern = ".*\\.tif$",
+#'              output_suffix = "_Masked_Updated", pattern = ".*\\\\.tif$",
 #'              resample_method = "bilinear",
 #'              overwrite = FALSE, verbose = TRUE)
 #'
