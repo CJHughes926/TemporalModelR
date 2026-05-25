@@ -4,20 +4,11 @@
 \alias{analyze_temporal_patterns}
 \title{Analyze Temporal Patterns in Binary Raster Time Series}
 \usage{
-analyze_temporal_patterns(
-  binary_stack,
-  summary_raster,
-  time_steps,
-  fastcpd_params = list(),
-  output_dir = NULL,
-  n_tiles_x = 1,
-  n_tiles_y = 1,
-  alpha = 0.05,
-  spatial_autocorrelation = TRUE,
-  verbose = TRUE,
-  estimate_time = TRUE,
-  overwrite = FALSE
-)
+analyze_temporal_patterns(binary_stack, summary_raster, time_steps,
+                          fastcpd_params = list(), output_dir = NULL,
+                          n_tiles_x = 1, n_tiles_y = 1, alpha = 0.05,
+                          spatial_autocorrelation = TRUE, verbose = TRUE,
+                          estimate_time = TRUE, overwrite = FALSE)
 }
 \arguments{
 \item{binary_stack}{RasterStack, RasterBrick, or character. Stack of binary
@@ -99,30 +90,30 @@ shorter than ~15 time steps may be too short to classify increases or decreases.
 \examples{
 \donttest{
   con_file <- system.file("extdata/binary/consensus_stack.tif",
-                          package = "TemporalModelR")
+        package = "TemporalModelR")
 
   frq_file <- system.file("extdata/binary/frequency_raster.tif",
-                          package = "TemporalModelR")
+        package = "TemporalModelR")
 
   binary_stack   <- terra::rast(con_file)
 
   summary_raster <- terra::rast(frq_file)
 
   time_steps <- expand.grid(
-    year             = 1:15,
-    season           = "Spring",
+    year    = 1:15,
+    season  = "Spring",
     stringsAsFactors = FALSE
   )
 
   analyze_temporal_patterns(
-    binary_stack            = binary_stack,
-    summary_raster          = summary_raster,
-    time_steps              = time_steps,
-    output_dir              = tempdir(),
+    binary_stack   = binary_stack,
+    summary_raster = summary_raster,
+    time_steps     = time_steps,
+    output_dir     = tempdir(),
     spatial_autocorrelation = FALSE,
-    overwrite               = TRUE,
-    estimate_time           = FALSE,
-    verbose                 = FALSE
+    overwrite      = TRUE,
+    estimate_time  = FALSE,
+    verbose        = FALSE
   )
 }
 }

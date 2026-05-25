@@ -4,24 +4,13 @@
 \alias{generate_absences}
 \title{Generate Temporally Explicit Pseudoabsence Points}
 \usage{
-generate_absences(
-  partition_result,
-  reference_shapefile_path,
-  raster_dir,
-  variable_patterns,
-  method = "random",
-  ratio = 1,
-  buffer_distance = NULL,
-  env_percentile = 0.05,
-  time_cols = NULL,
-  pseudoabsence_times = NULL,
-  min_points_per_timestep = 1,
-  create_plot = TRUE,
-  plot_by_fold = FALSE,
-  plot_palette = "Dark 2",
-  output_file = NULL,
-  verbose = TRUE
-)
+generate_absences(partition_result, reference_shapefile_path, raster_dir,
+                  variable_patterns, method = "random", ratio = 1,
+                  buffer_distance = NULL, env_percentile = 0.05,
+                  time_cols = NULL, pseudoabsence_times = NULL,
+                  min_points_per_timestep = 1, create_plot = TRUE,
+                  plot_by_fold = FALSE, plot_palette = "Dark 2",
+                  output_file = NULL, verbose = TRUE)
 }
 \arguments{
 \item{partition_result}{List or character. Output from

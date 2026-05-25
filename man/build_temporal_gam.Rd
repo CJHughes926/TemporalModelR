@@ -4,20 +4,12 @@
 \alias{build_temporal_gam}
 \title{Build Temporal GAM Models Across Cross-Validation Folds}
 \usage{
-build_temporal_gam(
-  partition_result,
-  pseudoabsence_result,
-  model_formula,
-  link = "logit",
-  gam_params = list(method = "REML"),
-  threshold_method = "tss",
-  output_dir = file.path(tempdir(), "GAM_Models"),
-  create_plot = TRUE,
-  plot_palette = "Dark 2",
-  overwrite = FALSE,
-  time_cols = NULL,
-  verbose = TRUE
-)
+build_temporal_gam(partition_result, pseudoabsence_result, model_formula,
+                   link = "logit", gam_params = list(method = "REML"),
+                   threshold_method  = "tss",
+                   output_dir = file.path(tempdir(), "GAM_Models"),
+                   create_plot = TRUE, plot_palette = "Dark 2",
+                   overwrite = FALSE, time_cols = NULL, verbose = TRUE)
 }
 \arguments{
 \item{partition_result}{List or character. Output from

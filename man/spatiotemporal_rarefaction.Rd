@@ -4,17 +4,10 @@
 \alias{spatiotemporal_rarefaction}
 \title{Spatiotemporal Rarefaction of Species Occurrence Data}
 \usage{
-spatiotemporal_rarefaction(
-  points_sp,
-  output_dir,
-  reference_raster,
-  time_cols = NULL,
-  xcol = NULL,
-  ycol = NULL,
-  points_crs = NULL,
-  output_prefix = "Pts_Database",
-  verbose = TRUE
-)
+spatiotemporal_rarefaction(points_sp, output_dir, reference_raster,
+                           time_cols = NULL, xcol = NULL, ycol = NULL,
+                           points_crs = NULL, output_prefix = "Pts_Database",
+                           verbose = TRUE)
 }
 \arguments{
 \item{points_sp}{Input point data. Accepts an sf object, data frame,

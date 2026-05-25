@@ -4,25 +4,14 @@
 \alias{spatiotemporal_partition}
 \title{Spatiotemporal Cross-Validation Partitioning}
 \usage{
-spatiotemporal_partition(
-  reference_shapefile_path,
-  points_file_path,
-  time_cols = NULL,
-  xcol = NULL,
-  ycol = NULL,
-  points_crs = NULL,
-  n_spatial_folds = 0,
-  n_temporal_folds = 0,
-  n_balanced_folds = 0,
-  n_random_folds = 0,
-  single_fold = FALSE,
-  max_imbalance = 0.05,
-  max_attempts = 10,
-  create_plot = TRUE,
-  plot_palette = "Dark 2",
-  output_file = NULL,
-  verbose = TRUE
-)
+spatiotemporal_partition(reference_shapefile_path, points_file_path,
+                         time_cols = NULL, xcol = NULL, ycol = NULL,
+                         points_crs = NULL, n_spatial_folds = 0,
+                         n_temporal_folds = 0, n_balanced_folds = 0,
+                         n_random_folds = 0, single_fold= FALSE,
+                         max_imbalance = 0.05, max_attempts = 10,
+                         create_plot = TRUE, plot_palette = "Dark 2",
+                         output_file= NULL, verbose    = TRUE)
 }
 \arguments{
 \item{reference_shapefile_path}{Character or sf object. Path to a polygon

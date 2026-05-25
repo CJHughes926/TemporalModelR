@@ -4,6 +4,15 @@
 #' records based on temporal components. Matches environmental layers to
 #' occurrence timestamps and optionally computes scaling parameters for standardization.
 #'
+#' @usage
+#' temporally_explicit_extraction(points_sp, raster_dir, variable_patterns,
+#'                                time_cols, xcol = NULL, ycol = NULL,
+#'                                points_crs = NULL, output_dir,
+#'                                output_prefix = "temp_explicit_df",
+#'                                save_raw = TRUE, save_scaled = TRUE,
+#'                                save_scaling_params = TRUE,
+#'                                verbose = TRUE)
+#'
 #' @param points_sp sf object, SpatialPointsDataFrame, file path to
 #'   .csv/.shp/.geojson/.gpkg, or data frame with coordinate columns.
 #' @param raster_dir Character. Directory containing environmental raster

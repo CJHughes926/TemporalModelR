@@ -6,6 +6,15 @@
 #' Produces per-time-step assessment metrics showing how predictions and
 #' test point coverage vary over time.
 #'
+#'
+#' @usage
+#' generate_spatiotemporal_predictions(partition_result, model_result,
+#'                                     pseudoabsence_result = NULL, raster_dir,
+#'                                     variable_patterns, time_cols, time_steps,
+#'                                     output_dir = file.path(tempdir(), "Predictions"),
+#'                                     overwrite = FALSE,
+#'                                     verbose = TRUE)
+#'
 #' @param partition_result List or character. Output from
 #'   \code{\link{spatiotemporal_partition}} or path to an \code{.rds}
 #'   file containing that output.

@@ -6,19 +6,21 @@ Authors@R: c(
     person(
       "Connor", "Hughes",
       email = "connorhughes926@gmail.com",
-      role  = c("aut", "cre")
+      role  = c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-3720-0837")
     ),
     person(
       "Mariana", "Castaneda-Guzman",
       email = "mcguzman1997@gmail.com",
-      role  = c("aut")
+      role  = c("aut"), 
+      comment = c(ORCID = "0000-0001-6106-4284")
     ),
     person(
       "Luis", "E. Escobar",
       role  = c("aut")
     )
   )
-Description: TemporalModelR is an R package built with the goal of increasing
+Description: 'TemporalModelR' is an R package built with the goal of increasing
     the ease of implementing a temporally-explicit modeling methodology when
     building ecological niche and species distribution models. It provides
     functions to assist with three major steps of temporally-explicit

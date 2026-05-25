@@ -4,18 +4,12 @@
 \alias{generate_spatiotemporal_predictions}
 \title{Generate Spatiotemporal Predictions from Temporal Models}
 \usage{
-generate_spatiotemporal_predictions(
-  partition_result,
-  model_result,
-  pseudoabsence_result = NULL,
-  raster_dir,
-  variable_patterns,
-  time_cols,
-  time_steps,
-  output_dir = file.path(tempdir(), "Predictions"),
-  overwrite = FALSE,
-  verbose = TRUE
-)
+generate_spatiotemporal_predictions(partition_result, model_result,
+                                    pseudoabsence_result = NULL, raster_dir,
+                                    variable_patterns, time_cols, time_steps,
+                                    output_dir = file.path(tempdir(), "Predictions"),
+                                    overwrite = FALSE,
+                                    verbose = TRUE)
 }
 \arguments{
 \item{partition_result}{List or character. Output from

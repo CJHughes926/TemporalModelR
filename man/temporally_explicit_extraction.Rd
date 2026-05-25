@@ -4,21 +4,13 @@
 \alias{temporally_explicit_extraction}
 \title{Extract Time-Aligned Environmental Values at Species Occurrences}
 \usage{
-temporally_explicit_extraction(
-  points_sp,
-  raster_dir,
-  variable_patterns,
-  time_cols,
-  xcol = NULL,
-  ycol = NULL,
-  points_crs = NULL,
-  output_dir,
-  output_prefix = "temp_explicit_df",
-  save_raw = TRUE,
-  save_scaled = TRUE,
-  save_scaling_params = TRUE,
-  verbose = TRUE
-)
+temporally_explicit_extraction(points_sp, raster_dir, variable_patterns,
+                               time_cols, xcol = NULL, ycol = NULL,
+                               points_crs = NULL, output_dir,
+                               output_prefix = "temp_explicit_df",
+                               save_raw = TRUE, save_scaled = TRUE,
+                               save_scaling_params = TRUE,
+                               verbose = TRUE)
 }
 \arguments{
 \item{points_sp}{sf object, SpatialPointsDataFrame, file path to

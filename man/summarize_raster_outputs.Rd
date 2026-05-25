@@ -4,14 +4,9 @@
 \alias{summarize_raster_outputs}
 \title{Summarize Prediction Rasters into Consensus Outputs}
 \usage{
-summarize_raster_outputs(
-  predictions_dir,
-  output_dir = NULL,
-  consensus = 1,
-  file_pattern = "Prediction_.*\\\\.tif$",
-  overwrite = FALSE,
-  verbose = TRUE
-)
+summarize_raster_outputs(predictions_dir, output_dir = NULL,
+                         consensus = 1, file_pattern = "Prediction_.*\\.tif$",
+                         overwrite = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{predictions_dir}{Character. Directory containing prediction raster

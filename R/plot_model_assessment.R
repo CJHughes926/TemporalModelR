@@ -4,6 +4,12 @@
 #' by \code{\link{generate_spatiotemporal_predictions}}, optionally overlaying
 #' overall reference values from the model result object.
 #'
+#' @usage
+#' plot_model_assessment(predictions, time_column,
+#'                       secondary_time_mode = "combine", model_result = NULL,
+#'                       cbp_threshold = 0.05, plot_palette = "Dark 2",
+#'                       verbose = TRUE)
+#'
 #' @param predictions List returned by
 #'   \code{\link{generate_spatiotemporal_predictions}}, or a named list with
 #'   at least a \code{timestep_metrics} element. The \code{timestep_metrics}

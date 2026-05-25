@@ -5,6 +5,12 @@
 #' operations. Ensures all rasters share identical CRS, resolution, and spatial
 #' extent for later analyses.
 #'
+#' @usage
+#' raster_align(input_dir, output_dir, reference_raster,
+#'              output_suffix = "_Masked_Updated", pattern = ".*\\.tif$",
+#'              resample_method = "bilinear",
+#'              overwrite = FALSE, verbose = TRUE)
+#'
 #' @param input_dir Character. Directory containing the input raster files.
 #' @param output_dir Character. Directory where processed rasters will be saved.
 #' @param reference_raster Character, SpatRaster, or RasterLayer. File path or

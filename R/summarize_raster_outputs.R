@@ -8,6 +8,11 @@
 #' controls how many folds must agree for a pixel to be classified as suitable
 #' in the output binary rasters.
 #'
+#' @usage
+#' summarize_raster_outputs(predictions_dir, output_dir = NULL,
+#'                          consensus = 1, file_pattern = "Prediction_.*\\.tif$",
+#'                          overwrite = FALSE, verbose = TRUE)
+#'
 #' @param predictions_dir Character. Directory containing prediction raster
 #'   files, typically the \code{output_dir} used in
 #'   \code{\link{generate_spatiotemporal_predictions}}.

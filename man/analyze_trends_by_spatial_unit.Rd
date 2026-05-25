@@ -4,20 +4,12 @@
 \alias{analyze_trends_by_spatial_unit}
 \title{Summarize Temporal Patterns and Trends by Spatial Unit}
 \usage{
-analyze_trends_by_spatial_unit(
-  shapefile_path,
-  name_field,
-  binary_stack = NULL,
-  pattern_raster = NULL,
-  time_decrease_raster = NULL,
-  time_increase_raster = NULL,
-  time_steps = NULL,
-  output_dir = NULL,
-  overwrite = FALSE,
-  create_plot = TRUE,
-  pie_scale = 0.15,
-  verbose = TRUE
-)
+analyze_trends_by_spatial_unit(shapefile_path, name_field, binary_stack = NULL,
+                               pattern_raster = NULL, time_decrease_raster = NULL,
+                               time_increase_raster = NULL, time_steps = NULL,
+                               output_dir = NULL, overwrite = FALSE,
+                               create_plot = TRUE, pie_scale = 0.15,
+                               verbose = TRUE)
 }
 \arguments{
 \item{shapefile_path}{Character, sf object, or sfc object. Path to a

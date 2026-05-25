@@ -4,17 +4,11 @@
 \alias{build_temporal_hv}
 \title{Build Temporal Hypervolume Models Across Cross-Validation Folds}
 \usage{
-build_temporal_hv(
-  partition_result,
-  model_vars,
-  method,
-  hypervolume_params = list(),
-  output_dir = file.path(tempdir(), "Hypervolume_Models"),
-  create_plot = TRUE,
-  overwrite = FALSE,
-  plot_palette = "Dark 2",
-  verbose = TRUE
-)
+build_temporal_hv(partition_result, model_vars, method,
+                  hypervolume_params = list(),
+                  output_dir = file.path(tempdir(), "Hypervolume_Models"),
+                  create_plot = TRUE, overwrite = FALSE,
+                  plot_palette = "Dark 2", verbose = TRUE)
 }
 \arguments{
 \item{partition_result}{List or character. Output from

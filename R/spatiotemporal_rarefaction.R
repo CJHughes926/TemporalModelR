@@ -4,6 +4,12 @@
 #' raster pixel, optionally accounting for temporal components. Reduces sampling
 #' bias and spatial autocorrelation in occurrence datasets.
 #'
+#' @usage
+#' spatiotemporal_rarefaction(points_sp, output_dir, reference_raster,
+#'                            time_cols = NULL, xcol = NULL, ycol = NULL,
+#'                            points_crs = NULL, output_prefix = "Pts_Database",
+#'                            verbose = TRUE)
+#'
 #' @param points_sp Input point data. Accepts an sf object, data frame,
 #'   SpatialPointsDataFrame, or file path to a \code{.csv}, \code{.shp},
 #'   \code{.geojson}, or \code{.gpkg} file.

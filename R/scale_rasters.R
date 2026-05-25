@@ -4,6 +4,11 @@
 #' and standard deviation values from species occurrence data. Supports both
 #' temporally static and dynamic rasters.
 #'
+#' @usage
+#' scale_rasters(input_dir, output_dir, scaling_params_file,
+#'               variable_patterns, time_cols = NULL, output_suffix = "_Scaled",
+#'               overwrite = FALSE, verbose = TRUE)
+#'
 #' @param input_dir Character. Directory containing aligned input .tif raster files,
 #' typically the output of \code{\link{raster_align}}.
 #' @param output_dir Character. Directory where scaled rasters will be saved.

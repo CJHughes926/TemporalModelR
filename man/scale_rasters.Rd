@@ -4,16 +4,9 @@
 \alias{scale_rasters}
 \title{Scale Environmental Rasters Using Species Occurrence Data}
 \usage{
-scale_rasters(
-  input_dir,
-  output_dir,
-  scaling_params_file,
-  variable_patterns,
-  time_cols = NULL,
-  output_suffix = "_Scaled",
-  overwrite = FALSE,
-  verbose = TRUE
-)
+scale_rasters(input_dir, output_dir, scaling_params_file,
+              variable_patterns, time_cols = NULL, output_suffix = "_Scaled",
+              overwrite = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{input_dir}{Character. Directory containing aligned input .tif raster files,
