@@ -15,6 +15,7 @@ Connor Hughes, Mariana Castaneda-Guzman, Luis E. Escobar
 - [Getting help](#getting-help)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml)
@@ -25,7 +26,7 @@ Connor Hughes, Mariana Castaneda-Guzman, Luis E. Escobar
 Ecological niche modeling (ENM) and species distribution modeling (SDM)
 are widely used to reconstruct and predict species environmental
 tolerances and geographic distributions, expanding ecological and
-biogeographic theory. Despite their widesptead use, one aspect that has
+biogeographic theory. Despite their widespread use, one aspect that has
 received relatively little attention is the temporally dynamic
 environment.
 
@@ -42,13 +43,13 @@ carries three costs when they aren’t:
 1.  **Temporal mismatch.** Pairing each occurrence with long-term
     average conditions can misrepresent the environment the species
     actually experienced at the moment it was recorded, leading to
-    over-generalised niche estimates and higher rates of both
+    over-generalized niche estimates and higher rates of both
     extrapolation and omission.
 2.  **Lost training data.** Standard spatial rarefaction retains one
     point per pixel, discarding temporally independent observations from
     the same location. When environments at a location have changed over
     time, those repeat observations carry unique information about the
-    species’ niche.
+    species niche.
 3.  **No temporal dynamics in the output.** Static models produce a
     single predictive surface and cannot directly answer questions about
     how suitable conditions for a species have changed over time, or
@@ -76,7 +77,7 @@ temporally explicit ENM.
 support temporally explicit modeling:
 
 - **E-space (Environmental Space)** represents a location in terms of
-  its environmental conditions, independent of geography. A species’
+  its environmental conditions, independent of geography. A species
   niche in E-space is its tolerance for a given set of environmental
   variables.
 - **G-space (Geographic Space)** represents a location in terms of where
@@ -87,7 +88,7 @@ Because environmental conditions change over time, the same point in
 G-space may move through E-space across years, decades, or seasons.
 Traditional, temporally-static workflows assume both G-space and E-space
 to be stable in time. TemporalModelR assumes only that the *niche*
-(i.e., the species’ tolerance in E-space) is stable across the study
+(i.e., the species tolerance in E-space) is stable across the study
 period, while the E-space coordinates of any G-space location may change
 over time. Species observations are therefore matched to E-space data
 correct in both space and time, the niche is modeled in time-independent
@@ -99,7 +100,7 @@ The package structures the SDM workflow around three phases:
 
 - **Preprocessing**: aligning environmental rasters to a common grid,
   rarefying occurrence data in space and time, extracting environmental
-  values matched to observation time, scaling rasters to a standardised
+  values matched to observation time, scaling rasters to a standardized
   range, partitioning into spatially and/or temporally independent
   cross-validation folds, and generating fold-stratified pseudoabsences
   for presence/absence models.
@@ -111,7 +112,7 @@ The package structures the SDM workflow around three phases:
   binary stack for more straightforward assessments, classifying each
   pixel’s temporal trajectory via changepoint detection into
   never-suitable, always-suitable, no pattern, increasing, decreasing,
-  or fluctuating in suitablity, and aggregating patterns across
+  or fluctuating in suitability, and aggregating patterns across
   user-defined spatial units like administrative regions or watersheds.
 
 Every function in the package is built around the concept of **time
@@ -119,7 +120,7 @@ placeholders** in raster filenames (`forest_cover_2005.tif`,
 `pr_seas_2003_Spring.tif`). Patterns map clean predictor names to
 filenames; `time_cols` defines which columns in your occurrence data
 correspond to those placeholders. For example, a column in species
-occurance data which labeled `year` with subsequent values `2001`,
+occurrence data which labeled `year` with subsequent values `2001`,
 `2002`, `2005`, and a user defined variable name as `forest_cover_year`,
 would match to rasters `forest_cover_2001`, `forest_cover_2002`, and
 `forest_cover_2005`. Likewise, a databse with both columns `year` and
@@ -160,12 +161,12 @@ A typical TemporalModelR workflow follows these steps:
     generate pseudoabsences (if needed)
 2.  **Model** — fit a GLM, GAM, random forest, or hypervolume model,
     assess time-independent model performance. Project the fitted model
-    across space and time, assess temporally-explciit model performance
-3.  **Postprocess** — summarise predictions to consensus surfaces,
+    across space and time, assess temporally-explicit model performance
+3.  **Postprocess** — summarize predictions to consensus surfaces,
     identify temporal patterns, and aggregate by spatial unit
 
 A brief description of each step is presented below. For full
-walkthroughs of each phase, see the vignettes hosted on the
+walkthrough of each phase, see the vignettes hosted on the
 [TemporalModelR site](https://CJHughes926.github.io/TemporalModelR/)
 under the *Articles* menu, also linked inline throughout this README.
 
@@ -174,7 +175,7 @@ against, so the full workflow can be reproduced end-to-end without
 downloading any external data. The dataset includes raw and aligned
 environmental rasters, an occurrence point database, intermediate point
 files, and pre-computed `data()` objects from each phase of the
-workflow. Reading the dataset vignette first is recommended, as it
+workflow. Reading the data set vignette first is recommended, as it
 provides the shared context every other vignette refers back to.
 
 > For a description of the synthetic data and the bundled `data()`
@@ -188,19 +189,19 @@ provides the shared context every other vignette refers back to.
 
 The preprocessing pipeline transforms raw occurrence records and
 environmental rasters into the structured inputs that downstream models
-expect. Six functions cover this phase. `raster_align()` standardises
+expect. Six functions cover this phase. `raster_align()` standardizes
 rasters to a common projection, extent, and resolution to prevent
 misalignment in future analyses. `spatiotemporal_rarefaction()` subsets
 data to one point per pixel per time step, reducing pseudoreplication
-from your data but preserving trully unique temporally independent
+from your data but preserving truly unique temporally independent
 observations from the same location. `temporally_explicit_extraction()`
 extracts environmental values from the raster that matches each point’s
 observation time step, producing a table of observations with their
 relevant E-space conditions correct in both space and time, along with
-the means and standard deviations of each variable across the dataset.
+the means and standard deviations of each variable across the data set.
 `scale_rasters()` optionally uses those scaling parameters to z-score
 every raster, ensuring variables share a comparable range and contribute
-evenly to subsequent modeling algorythums sensitive to that.
+evenly to subsequent modeling algorithms sensitive to that.
 `spatiotemporal_partition()` builds cross-validation folds via one of
 four methods: purely spatial, purely temporal, spatiotemporal (combining
 both), or random as a baseline. Finally, `generate_absences()` produces
@@ -216,16 +217,16 @@ fold-stratified pseudoabsences relevant for presence/absence models.
 ### Modeling
 
 TemporalModelR supports four modeling algorithms, all of which share the
-same data requirments (`partition_result`, `pseudoabsence_result` for
+same data requirements (`partition_result`, `pseudoabsence_result` for
 presnce/absence models, a `model_formula` or `model_vars`). One model is
 fit per cross-validation fold; each is evaluated on its held-out test
 set, and for any continuous models a threshold is selected and applied
 to produce only binary results.
 
-- **`build_temporal_glm()`** fits one generalised linear model per fold
+- **`build_temporal_glm()`** fits one generalized linear model per fold
   with a binomial link function. Supports any combination of linear,
   polynomial, and interactive terms via standard R formula syntax.
-- **`build_temporal_gam()`** fits one generalised additive model per
+- **`build_temporal_gam()`** fits one generalized additive model per
   fold via `mgcv::gam()`. Allows for complex nonlinear relationships
   between environmental gradients and species presence.
 - **`build_temporal_rf()`** fits one random forest classifier per fold
@@ -282,7 +283,7 @@ interpretable summaries. `summarize_raster_outputs()` collapses
 fold-level predictions into a binary consensus stack (where a
 user-specified number of folds agree on suitability) and a frequency
 raster (proportion of time steps each pixel was suitable) which explored
-the stability of G-space suitablity projectiosn across time.
+the stability of G-space suitability projections across time.
 `analyze_temporal_patterns()` uses the `fastcpd` package to detect
 structured changes in each pixel’s suitability across the time series,
 classifying trajectories as never-suitable, always-suitable, no pattern,
@@ -290,12 +291,12 @@ increasing, decreasing, or fluctuating. The changepoint analysis
 accounts for temporal autocorrelation by including each pixel’s
 previous-time-step value as a predictor in the change point detection
 model; users can optionally enable spatial autocorrelation, which adds
-the proportion of a pixel’s first-order (queen’s case) neighbours
+the proportion of a pixel’s first-order (queen’s case) neighbors
 predicted as suitable as an additional covariate.
 `analyze_trends_by_spatial_unit()` aggregates pixel-level patterns
 across user-defined polygons (administrative units, watersheds,
 ecoregions), producing useful tables summarizing losses and gains in
-suitbailty over time across a these regions, and is useful for
+suitability over time across a these regions, and is useful for
 identifying regional variation in suitability trends.
 
 > For the full postprocessing workflow including consensus threshold
@@ -321,7 +322,7 @@ distribution modeling.* \[Journal information to be added\]
 To maintain high standards of code quality and documentation, we have
 used AI LLM tools while constructing code for this package. We used
 these tools for grammatical polishing and exploring technical
-implementation strategies for specialised functions. We manually checked
+implementation strategies for specialized functions. We manually checked
 and tested all code and documentation refined with these tools.
 
 <br>
@@ -332,7 +333,7 @@ We welcome contributions to improve `TemporalModelR`. To maintain the
 integrity and performance of the package, we follow a few core
 principles:
 
-- **Quality over quantity**: we prioritise well-thought-out, stable
+- **Quality over quantity**: we prioritize well-thought-out, stable
   improvements over frequent, minor changes. Please ensure your code is
   well-documented and follows the existing style of the package.
 - **Minimal dependencies**: one of the goals of TemporalModelR is to

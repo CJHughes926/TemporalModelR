@@ -6,6 +6,14 @@ utils::globalVariables(c("x", "y", "radius"))
 #' across user-defined spatial units (e.g., states, counties, watersheds).
 #' Returns summary tables and optionally generates simple visualizations.
 #'
+#' @usage
+#' analyze_trends_by_spatial_unit(shapefile_path, name_field, binary_stack = NULL,
+#'                                pattern_raster = NULL, time_decrease_raster = NULL,
+#'                                time_increase_raster = NULL, time_steps = NULL,
+#'                                output_dir = NULL, overwrite = FALSE,
+#'                                create_plot = TRUE, pie_scale = 0.15,
+#'                                verbose = TRUE)
+#'
 #' @param shapefile_path Character, sf object, or sfc object. Path to a
 #'   shapefile or directory containing one, an sf object, or an sfc geometry.
 #'   Shapefiles spatial units will be used as the units for the data summary.

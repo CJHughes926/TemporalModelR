@@ -13,6 +13,13 @@
 #' and \code{\link{build_temporal_rf}}, and is accepted directly by
 #' \code{\link{generate_spatiotemporal_predictions}}.
 #'
+#' @usage
+#' build_temporal_glm(partition_result, pseudoabsence_result, model_formula,
+#'           link = "logit", threshold_method = "tss",
+#'           output_dir = file.path(tempdir(), "GLM_Models"),
+#'           create_plot = TRUE, plot_palette = "Dark 2", overwrite = FALSE,
+#'           time_cols = NULL, verbose = TRUE)
+#'
 #' @param partition_result List or character. Output from
 #'   \code{\link{spatiotemporal_partition}} or path to an \code{.rds}
 #'   file containing that output.

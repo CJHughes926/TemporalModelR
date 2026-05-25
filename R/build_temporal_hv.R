@@ -8,6 +8,12 @@
 #' and \code{\link{build_temporal_rf}}, and is accepted directly by
 #' \code{\link{generate_spatiotemporal_predictions}}.
 #'
+#' @usage
+#' build_temporal_hv(partition_result, model_vars, method,
+#'                   hypervolume_params = list(),
+#'                   output_dir = file.path(tempdir(), "Hypervolume_Models"),
+#'                   create_plot = TRUE, overwrite = FALSE,
+#'                   plot_palette = "Dark 2", verbose = TRUE)
 #'
 #' @param partition_result List or character. Output from
 #'   \code{\link{spatiotemporal_partition}} or path to an \code{.rds}

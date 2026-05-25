@@ -12,6 +12,14 @@
 #' and \code{\link{build_temporal_rf}}, and is accepted directly by
 #' \code{\link{generate_spatiotemporal_predictions}}.
 #'
+#' @usage
+#' build_temporal_gam(partition_result, pseudoabsence_result, model_formula,
+#'                    link = "logit", gam_params = list(method = "REML"),
+#'                    threshold_method  = "tss",
+#'                    output_dir = file.path(tempdir(), "GAM_Models"),
+#'                    create_plot = TRUE, plot_palette = "Dark 2",
+#'                    overwrite = FALSE, time_cols = NULL, verbose = TRUE)
+#'
 #' @param partition_result List or character. Output from
 #'   \code{\link{spatiotemporal_partition}} or path to an \code{.rds}
 #'   file containing that output.
