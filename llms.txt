@@ -396,8 +396,8 @@ discuss it with the maintainers.
   : Generate Spatiotemporal Predictions from Temporal Models
 - [`plot_model_assessment()`](plot_model_assessment.md) : Visualize
   Model Assessment Metrics Across Time
-- [`raster_align`](raster_align.md) : Align and Standardize Raster Files
-  to a Reference Raster
+- [`raster_align()`](raster_align.md) : Align and Standardize Raster
+  Files to a Reference Raster
 - [`scale_rasters()`](scale_rasters.md) : Scale Environmental Rasters
   Using Species Occurrence Data
 - [`spatiotemporal_partition()`](spatiotemporal_partition.md) :
