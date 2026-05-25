@@ -404,8 +404,8 @@ discuss it with the maintainers.
   Spatiotemporal Cross-Validation Partitioning
 - [`spatiotemporal_rarefaction()`](spatiotemporal_rarefaction.md) :
   Spatiotemporal Rarefaction of Species Occurrence Data
-- [`summarize_raster_outputs`](summarize_raster_outputs.md) : Summarize
-  Prediction Rasters into Consensus Outputs
+- [`summarize_raster_outputs()`](summarize_raster_outputs.md) :
+  Summarize Prediction Rasters into Consensus Outputs
 - [`temporally_explicit_extraction()`](temporally_explicit_extraction.md)
   : Extract Time-Aligned Environmental Values at Species Occurrences
 - [`tmr_absences`](tmr_absences.md) : Pre-built pseudoabsence result
