@@ -76,7 +76,7 @@ analyze_trends_by_spatial_unit(shapefile_path, name_field, binary_stack = NULL,
   roughly 30% of the smaller map dimension (radius = 15%, so diameter =
   30%). Smaller pies scale so their area is proportional to the unit's
   pixel count. The fraction is converted internally to coordinate units,
-  so this argument works identically across CRSes (degrees, metres,
+  so this argument works identically across CRSes (degrees, meters,
   etc.) without manual rescaling.
 
 - verbose:
@@ -103,13 +103,13 @@ Invisibly returns a list containing:
 
 ## Details
 
-Summarizes results from modeling and postprocessing at the scale of
+Summarizes results from modeling and post-processing at the scale of
 specific spatial blocks to allow for a nuanced look at spatiotemporal
 patterns.
 
 ## See also
 
-Postprocessing:
+Post-processing:
 [`summarize_raster_outputs`](summarize_raster_outputs.md),
 [`analyze_temporal_patterns`](analyze_temporal_patterns.md)
 

@@ -1,13 +1,13 @@
 # Build Temporal GAM Models Across Cross-Validation Folds
 
-Modeling function that constructs binomial generalised additive models
+Modeling function that constructs binomial generalized additive models
 (GAMs) for each cross-validation fold using presence and pseudoabsence
 data. Each model reserves one fold as testing data and uses the
 remaining folds as training data. The user supplies the model formula
 directly using standard mgcv formula syntax, including smooth terms such
 as `s()`, `te()`, and `ti()`. Supports automatic or manual probability
 thresholding for converting continuous predictions to binary suitability
-classifications nessisary for downstream analyses. The returned object
+classifications necessary for downstream analyses. The returned object
 follows the same structure as
 [`build_temporal_glm`](build_temporal_glm.md),
 [`build_temporal_hv`](build_temporal_hv.md), and
@@ -82,7 +82,7 @@ build_temporal_gam(partition_result, pseudoabsence_result, model_formula,
   - `"prevalence"`: Sets threshold equal to the prevalence (proportion
     of presences) in the training data for that fold.
 
-  - `"tss"`: Selects the threshold that maximises the True Skill
+  - `"tss"`: Selects the threshold that maximizes the True Skill
     Statistic (sensitivity + specificity - 1) on the training data.
     Default.
 
@@ -170,7 +170,7 @@ default to thin plate regression splines (`bs = "tp"`) with the basis
 dimension `k` chosen automatically by mgcv unless specified in the
 formula. Smoothing parameters are estimated by REML by default.
 
-The returned object is recognised by
+The returned object is recognized by
 [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 which uses the `model_type` field to use the correct prediction and
 evaluation logic.

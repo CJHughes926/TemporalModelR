@@ -104,7 +104,7 @@ Plots per-fold and per-timestep diagnostic plots for data produced by
 [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md).
 These quick visuals can be used by users to assess model performance and
 significance and decide if the model's performance warrants further
-interpretation of the results through postprocessing analyses.
+interpretation of the results through post-processing analyses.
 
 ## See also
 
@@ -117,7 +117,7 @@ Modeling: [`build_temporal_glm`](build_temporal_glm.md),
 [`build_temporal_rf`](build_temporal_rf.md),
 [`build_temporal_hv`](build_temporal_hv.md),
 
-Postprocessing:
+Post-processing:
 [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 [`summarize_raster_outputs`](summarize_raster_outputs.md)
 

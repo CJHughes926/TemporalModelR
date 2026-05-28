@@ -138,7 +138,7 @@ Modeling: [`build_temporal_hv`](build_temporal_hv.md),
 [`build_temporal_gam`](build_temporal_gam.md),
 [`build_temporal_rf`](build_temporal_rf.md)
 
-Postprocessing:
+Post-processing:
 [`summarize_raster_outputs`](summarize_raster_outputs.md),
 [`plot_model_assessment`](plot_model_assessment.md)
 

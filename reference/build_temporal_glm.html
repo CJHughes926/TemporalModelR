@@ -131,7 +131,7 @@ link function.</p></dd>
 <dd><p>Character or numeric. Method used to convert
 continuous predicted probabilities to binary suitability. Accepted values:</p><ul><li><p><code>"prevalence"</code>: Sets threshold equal to the prevalence
     (proportion of presences) in the training data for that fold.</p></li>
-<li><p><code>"tss"</code>: Selects the threshold that maximises the True Skill
+<li><p><code>"tss"</code>: Selects the threshold that maximizes the True Skill
     Statistic (sensitivity + specificity - 1) on the training data.
     Default.</p></li>
 <li><p>A numeric value between 0 and 1 (e.g. <code>0.4</code>): Uses that
@@ -212,7 +212,7 @@ plots are extracted via <code><a href="https://rdrr.io/r/base/allnames.html" cla
 such as <code>I(Var1^2)</code> to the base variable <code>Var1</code>.</p>
 <p>All models are fit as <code>stats::glm(..., family = binomial(link = link))</code>.
 Predicted values are always probabilities on the 0-1 scale.</p>
-<p>The returned object is recognised by
+<p>The returned object is recognized by
 <code><a href="generate_spatiotemporal_predictions.html">generate_spatiotemporal_predictions</a></code>, which uses the
 <code>model_type</code> field to use the correct prediction and evaluation
 logic.</p>

@@ -1,7 +1,7 @@
 # Summarize Prediction Rasters into Consensus Outputs
 
-Postprocessing function that synthesizes per-time-step fold-vote rasters
-(output from
+Post-processing function that synthesizes per-time-step fold-vote
+rasters (output from
 [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md))
 into binary consensus predictions and a temporal frequency summary. Each
 input raster contains integer vote counts per pixel the number of

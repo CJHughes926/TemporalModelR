@@ -67,7 +67,7 @@ generate_absences(partition_result, reference_shapefile_path, raster_dir,
 
 - buffer_distance:
 
-  Numeric. Distance in the units of the CRS (typically metres for
+  Numeric. Distance in the units of the CRS (typically meters for
   projected CRS) within which pseudoabsence points are sampled. Required
   when `method = "buffer"`. When `method = "environmental"`, supplying a
   value automatically applies a spatial buffer constraint before
@@ -180,8 +180,8 @@ defined:
 ## References
 
 Senay SD, Worner SP, Ikeda T (2013) Novel Three-Step Pseudo-Absence
-Selection Technique for Improved Species Distribution Modelling. PLoS
-ONE 8(8): e71218.
+Selection Technique for Improved Species Distribution Modeling. PLoS ONE
+8(8): e71218.
 
 ## See also
 

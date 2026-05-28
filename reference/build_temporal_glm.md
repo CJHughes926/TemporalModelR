@@ -76,7 +76,7 @@ build_temporal_glm(partition_result, pseudoabsence_result, model_formula,
   - `"prevalence"`: Sets threshold equal to the prevalence (proportion
     of presences) in the training data for that fold.
 
-  - `"tss"`: Selects the threshold that maximises the True Skill
+  - `"tss"`: Selects the threshold that maximizes the True Skill
     Statistic (sensitivity + specificity - 1) on the training data.
     Default.
 
@@ -173,7 +173,7 @@ unwraps terms such as `I(Var1^2)` to the base variable `Var1`.
 All models are fit as `stats::glm(..., family = binomial(link = link))`.
 Predicted values are always probabilities on the 0-1 scale.
 
-The returned object is recognised by
+The returned object is recognized by
 [`generate_spatiotemporal_predictions`](generate_spatiotemporal_predictions.md),
 which uses the `model_type` field to use the correct prediction and
 evaluation logic.

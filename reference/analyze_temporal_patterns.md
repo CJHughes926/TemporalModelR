@@ -1,6 +1,6 @@
 # Analyze Temporal Patterns in Binary Raster Time Series
 
-Postprocessing function that applies changepoint detection methods to
+Post-processing function that applies changepoint detection methods to
 identify temporal trends in habitat suitability across consecutive
 predictions. Classifies pixels as stable, increasing in quality, or
 decreasing in quality, and identifies time periods of significant
@@ -116,7 +116,7 @@ Classification assumes consecutive rasters. Time periods shorter than
 
 ## See also
 
-Postprocessing:
+Post-processing:
 [`summarize_raster_outputs`](summarize_raster_outputs.md)
 
 External: [`fastcpd`](https://fastcpd.xingchi.li/reference/fastcpd.html)
