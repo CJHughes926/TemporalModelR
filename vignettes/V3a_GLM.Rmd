@@ -43,7 +43,7 @@ TemporalModelR operates across two complementary dimensions to support temporall
 -   `E-space` - (Environmental Space) represents a location in terms of its environmental conditions, independent of geography. A species' niche in E-space is its tolerance for a given set of environmental variables.
 -   `G-space` - (Geographic Space) represents a location in terms of where it physically sits on the landscape. Every point in G-space has a corresponding location in E-space.
 
-Because environmental conditions change over time, the same point in G-space may move through E-space across years, decades, or seasons. Traditional, temporally-static workflows assume both G-space and E-space to be stable in time. TemporalModelR assumes only that the niche (i.e., the species' tolerance in E-space) is stable across the study period, while the E-space coordinates of any G-space location may change over time. Species observations are therefore matched to E-space data correct in both space and time, the niche is modeled in time-independent E-space. This is done in the [Preprocessing temporally explicit data](preprocessing.html) vignette.
+Because environmental conditions change over time, the same point in G-space may move through E-space across years, decades, or seasons. Traditional, temporally-static workflows assume both G-space and E-space to be stable in time. TemporalModelR assumes only that the niche (i.e., the species' tolerance in E-space) is stable across the study period, while the E-space coordinates of any G-space location may change over time. Species observations are therefore matched to E-space data correct in both space and time, the niche is modeled in time-independent E-space. This is done in the [Preprocessing temporally explicit data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html) vignette.
 
 By modeling the niche in time-independent E-space using time-independent training data, we can generate a static prediction of a species' environmental tolerances. We can then project these static E-space predictions back onto G-space at explicit time periods, resulting in dynamic, temporally-explicit ENM predictions of species distributions.
 
@@ -55,7 +55,7 @@ By modeling the niche in time-independent E-space using time-independent trainin
 
 GLMs are fast to fit, transparent to interpret, and tolerant of the kind of small datasets that occurrence records often provide. The trade-off is that nonlinear environmental responses must be specified manually with polynomial terms or transformations. If you want a more flexible response shape, use `build_temporal_gam()` instead.
 
-This vignette runs the seasonal workflow using the bundled `tmr_partition` and `tmr_absences` objects, which are pre-built outputs of the partitioning and pseudoabsence steps produced by the [Preprocessing temporally explicit data](preprocessing.html) vignette using the same call patterns shown there. The dataset itself is described in [About the Example Dataset](dataset.html). This is the same dataset as is used in each modeling vignette [GLM](modeling_glm.html), [GAM](modeling_gam.html), [Random Forest](modeling_rf.html) or [Hypervolume](modeling_hv.html).
+This vignette runs the seasonal workflow using the bundled `tmr_partition` and `tmr_absences` objects, which are pre-built outputs of the partitioning and pseudoabsence steps produced by the [Preprocessing temporally explicit data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html) vignette using the same call patterns shown there. The dataset itself is described in [About the Example Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html). This is the same dataset as is used in each modeling vignette [GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html), [GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html), [Random Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html) or [Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
 
 
 ```{r}
@@ -155,7 +155,7 @@ These are per-fold values because each fold trains on a different subset of data
 
 # E-space performance {#sec-espace}
 
-Each fold's held-out test set provides a set of presence and pseudoabsence points the model has never seen based on the folds defined in the [Preprocessing temporally explicit data](preprocessing.html) vignette. We compare predicted vs observed at those points and compute confusion-matrix metrics. Because these are evaluated in E-space (the species' environmental tolerance, independent of geography or time), they give a stable picture of how well the model is preforming.
+Each fold's held-out test set provides a set of presence and pseudoabsence points the model has never seen based on the folds defined in the [Preprocessing temporally explicit data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html) vignette. We compare predicted vs observed at those points and compute confusion-matrix metrics. Because these are evaluated in E-space (the species' environmental tolerance, independent of geography or time), they give a stable picture of how well the model is preforming.
 
 ```{r}
 glm_out$fold_test_metrics
@@ -261,7 +261,7 @@ terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
 
 Visualizing our predictions across each season and year, we see that there is generally high agreement among models. These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitable) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
 
-The GLM here does not pick up on the seasonal variability in precipitation patterns driving activity patterns for this hypothetical species, partially because the model itself is missing the relationship between precipitation and occupancy. This is in part due to the lack of low precipitation value background points in our dataset which would correctly identify the gap here and this methods reliance on that background data to make inference. We can explore if other modeling methods are able to fix this hurdle in other vignettes. Alternatively, we could use an alternative method for generating absence points which we describe more in the the [Preprocessing](preprocessing.html) vignette.
+The GLM here does not pick up on the seasonal variability in precipitation patterns driving activity patterns for this hypothetical species, partially because the model itself is missing the relationship between precipitation and occupancy. This is in part due to the lack of low precipitation value background points in our dataset which would correctly identify the gap here and this methods reliance on that background data to make inference. We can explore if other modeling methods are able to fix this hurdle in other vignettes. Alternatively, we could use an alternative method for generating absence points which we describe more in the the [Preprocessing](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html) vignette.
 
 Note that here we show that `time_steps` can handle making predictions from compound variables or variables at different temporal scales so long as their temporal scales are nested. For example here "elevation" has no temporal value and is considered to be static across all time steps. "forest_cover" is measured annually, but is considered to be static across all seasons within a year for the purposes of predictions. "preseason" is measured both by year and season, so resulting seasonal predictions reflect that. However if precipitation was only measured based on aggregate seasons but had no associated year, predictions would fail. Predictions can also be made where all variables share the same time step- for example annual forest cover, annual temperature, and annual precipitation.
 
@@ -328,10 +328,10 @@ plot_model_assessment(
 
 # Next steps {#sec-next}
 
-Now that predictions have been generated, you can assess the model and see if it is preforming satisfactory enough for what your goals are. If this is the case, you can preform post-processing analyses to try to gain additional inference about the spatiotemporal patterns of change in the study region See the [Post-processing predictions](post-processing.html) vignette.
+Now that predictions have been generated, you can assess the model and see if it is preforming satisfactory enough for what your goals are. If this is the case, you can preform post-processing analyses to try to gain additional inference about the spatiotemporal patterns of change in the study region See the [Post-processing predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html) vignette.
 
 For comparison with other algorithms applied to the same dataset:
 
--   [Modeling with a GAM](modeling_gam.html) - smooth nonlinear responses.
--   [Modeling with a Random Forest](modeling_rf.html) - flexible ensemble of decision trees for complicated relationships to variables.
--   [Modeling with a Hypervolume](modeling_hv.html) - presence-only modeling using n-dimensional kernel density or one-class SVM.
+-   [Modeling with a GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html) - smooth nonlinear responses.
+-   [Modeling with a Random Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html) - flexible ensemble of decision trees for complicated relationships to variables.
+-   [Modeling with a Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html) - presence-only modeling using n-dimensional kernel density or one-class SVM.

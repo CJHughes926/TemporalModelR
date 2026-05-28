@@ -180,7 +180,7 @@ provides the shared context every other vignette refers back to.
 
 > For a description of the synthetic data and the bundled `data()`
 > objects used in the workflow vignettes, see the [About the Example
-> Dataset](https://CJHughes926.github.io/TemporalModelR/articles/dataset.html)
+> Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html)
 > vignette.
 
 <br>
@@ -209,7 +209,7 @@ fold-stratified pseudoabsences relevant for presence/absence models.
 
 > For a detailed workflow showcasing each preprocessing function, see
 > the [Preprocessing temporally explicit
-> data](https://CJHughes926.github.io/TemporalModelR/articles/preprocessing.html)
+> data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
 > vignette.
 
 <br>
@@ -265,14 +265,14 @@ Reporting both gives the most complete view of model performance.
 
 > For a full walkthrough of each modeling algorithm, including formula
 > syntax, parameter choices, G-space projection, and diagnostic
-> interpretation, see the four modeling vignettes: [Modeling with a
-> GLM](https://CJHughes926.github.io/TemporalModelR/articles/modeling_glm.html),
+> interpretation, see the four modeling vignettes: \[Modeling with a
+> GLM\](<https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html>,
 > [Modeling with a
-> GAM](https://CJHughes926.github.io/TemporalModelR/articles/modeling_gam.html),
+> GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html),
 > [Modeling with a Random
-> Forest](https://CJHughes926.github.io/TemporalModelR/articles/modeling_rf.html),
+> Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html),
 > and [Modeling with a
-> Hypervolume](https://CJHughes926.github.io/TemporalModelR/articles/modeling_hv.html).
+> Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
 
 <br>
 
@@ -302,7 +302,7 @@ identifying regional variation in suitability trends.
 > For the full postprocessing workflow including consensus threshold
 > selection, changepoint diagnostics, and zone aggregation, see the
 > [Postprocessing
-> predictions](https://CJHughes926.github.io/TemporalModelR/articles/postprocessing.html)
+> predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html)
 > vignette.
 
 <br>

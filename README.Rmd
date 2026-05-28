@@ -85,7 +85,7 @@ A brief description of each step is presented below. For full walkthrough of eac
 
 The package ships a small synthetic dataset that every vignette runs against, so the full workflow can be reproduced end-to-end without downloading any external data. The dataset includes raw and aligned environmental rasters, an occurrence point database, intermediate point files, and pre-computed `data()` objects from each phase of the workflow. Reading the data set vignette first is recommended, as it provides the shared context every other vignette refers back to.
 
-> For a description of the synthetic data and the bundled `data()` objects used in the workflow vignettes, see the [About the Example Dataset](https://CJHughes926.github.io/TemporalModelR/articles/dataset.html) vignette.
+> For a description of the synthetic data and the bundled `data()` objects used in the workflow vignettes, see the [About the Example Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html) vignette.
 
 <br>
 
@@ -93,7 +93,7 @@ The package ships a small synthetic dataset that every vignette runs against, so
 
 The preprocessing pipeline transforms raw occurrence records and environmental rasters into the structured inputs that downstream models expect. Six functions cover this phase. `raster_align()` standardizes rasters to a common projection, extent, and resolution to prevent misalignment in future analyses. `spatiotemporal_rarefaction()` subsets data to one point per pixel per time step, reducing pseudoreplication from your data but preserving truly unique temporally independent observations from the same location. `temporally_explicit_extraction()` extracts environmental values from the raster that matches each point's observation time step, producing a table of observations with their relevant E-space conditions correct in both space and time, along with the means and standard deviations of each variable across the data set. `scale_rasters()` optionally uses those scaling parameters to z-score every raster, ensuring variables share a comparable range and contribute evenly to subsequent modeling algorithms sensitive to that. `spatiotemporal_partition()` builds cross-validation folds via one of four methods: purely spatial, purely temporal, spatiotemporal (combining both), or random as a baseline. Finally, `generate_absences()` produces fold-stratified pseudoabsences relevant for presence/absence models.
 
-> For a detailed workflow showcasing each preprocessing function, see the [Preprocessing temporally explicit data](https://CJHughes926.github.io/TemporalModelR/articles/preprocessing.html) vignette.
+> For a detailed workflow showcasing each preprocessing function, see the [Preprocessing temporally explicit data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html) vignette.
 
 <br>
 
@@ -113,7 +113,7 @@ Once a model is fit, `generate_spatiotemporal_predictions()` projects it across 
 Once predictions are projected into G-space, time-specific assessment metrics become available, including cumulative binomial probability (CBP) tests assessing whether predictions in a given time step are better than random. G-space evaluation complements the E-space metrics from model fitting and both may be considered in model evaluation: G-space is robust and specific in years with substantial sample sizes but loses meaning when few records exist for a given time step, while E-space gives a more stable overall picture independent of time. Reporting both gives the most complete view of model performance.
 
 
-> For a full walkthrough of each modeling algorithm, including formula syntax, parameter choices, G-space projection, and diagnostic interpretation, see the four modeling vignettes: [Modeling with a GLM](https://CJHughes926.github.io/TemporalModelR/articles/modeling_glm.html), [Modeling with a GAM](https://CJHughes926.github.io/TemporalModelR/articles/modeling_gam.html), [Modeling with a Random Forest](https://CJHughes926.github.io/TemporalModelR/articles/modeling_rf.html), and [Modeling with a Hypervolume](https://CJHughes926.github.io/TemporalModelR/articles/modeling_hv.html).
+> For a full walkthrough of each modeling algorithm, including formula syntax, parameter choices, G-space projection, and diagnostic interpretation, see the four modeling vignettes: [Modeling with a GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html, [Modeling with a GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html), [Modeling with a Random Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html), and [Modeling with a Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
 
 <br>
 
@@ -121,7 +121,7 @@ Once predictions are projected into G-space, time-specific assessment metrics be
 
 The postprocessing phase converts the per-fold prediction rasters into interpretable summaries. `summarize_raster_outputs()` collapses fold-level predictions into a binary consensus stack (where a user-specified number of folds agree on suitability) and a frequency raster (proportion of time steps each pixel was suitable) which explored the stability of G-space suitability projections across time. `analyze_temporal_patterns()` uses the `fastcpd` package to detect structured changes in each pixel's suitability across the time series, classifying trajectories as never-suitable, always-suitable, no pattern, increasing, decreasing, or fluctuating. The changepoint analysis accounts for temporal autocorrelation by including each pixel's previous-time-step value as a predictor in the change point detection model; users can optionally enable spatial autocorrelation, which adds the proportion of a pixel's first-order (queen's case) neighbors predicted as suitable as an additional covariate. `analyze_trends_by_spatial_unit()` aggregates pixel-level patterns across user-defined polygons (administrative units, watersheds, ecoregions), producing useful tables summarizing losses and gains in suitability over time across a these regions, and is useful for identifying regional variation in suitability trends.
 
-> For the full postprocessing workflow including consensus threshold selection, changepoint diagnostics, and zone aggregation, see the [Postprocessing predictions](https://CJHughes926.github.io/TemporalModelR/articles/postprocessing.html) vignette.
+> For the full postprocessing workflow including consensus threshold selection, changepoint diagnostics, and zone aggregation, see the [Postprocessing predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html) vignette.
 
 <br>
 

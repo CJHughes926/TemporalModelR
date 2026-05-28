@@ -46,7 +46,7 @@ The preprocessing phase of TemporalModelR takes raw occurrence records and envir
 5.  `spatiotemporal_partition()` - assign points to single fold, spatial, temporal, spatiotemporal, or random cross-validation folds.
 6.  `generate_absences()` - produce fold-stratified pseudoabsences for presence/absence models.
 
-This vignette walks through each step using the bundled synthetic dataset described in the [About the Example Dataset](dataset.html) vignette. Read that vignette first if you have not already, as it explains the structure of the raw rasters and occurrence points used here. We use the **seasonal (compound time-step) workflow** throughout, with `forest_cover` (annual), `prseas` (year-season), and `elevation` (static) as predictors. The annual workflow is identical apart from substituting `pr_ann` for `prseas` and dropping `season` from the time columns.
+This vignette walks through each step using the bundled synthetic dataset described in the [About the Example Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html) vignette. Read that vignette first if you have not already, as it explains the structure of the raw rasters and occurrence points used here. We use the **seasonal (compound time-step) workflow** throughout, with `forest_cover` (annual), `prseas` (year-season), and `elevation` (static) as predictors. The annual workflow is identical apart from substituting `pr_ann` for `prseas` and dropping `season` from the time columns.
 
 ```{r}
 library(TemporalModelR)
@@ -342,9 +342,9 @@ At this point the three key downstream inputs are in hand:
 
 These are passed directly to any of the four model builders covered in the following parallel vignettes:
 
--   [Modeling with a GLM](modeling_glm.html)
--   [Modeling with a GAM](modeling_gam.html)
--   [Modeling with a Random Forest](modeling_rf.html)
--   [Modeling with a Hypervolume](modeling_hv.html)
+-   [Modeling with a GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html)
+-   [Modeling with a GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html)
+-   [Modeling with a Random Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html)
+-   [Modeling with a Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html)
 
-Once a model is fitted, predictions are projected through space and time using `generate_spatiotemporal_predictions()`, and the resulting prediction stack is summarized in the [Post-processing predictions](post-processing.html) vignette.
+Once a model is fitted, predictions are projected through space and time using `generate_spatiotemporal_predictions()`, and the resulting prediction stack is summarized in the [Post-processing predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html) vignette.
