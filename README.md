@@ -265,8 +265,8 @@ Reporting both gives the most complete view of model performance.
 
 > For a full walkthrough of each modeling algorithm, including formula
 > syntax, parameter choices, G-space projection, and diagnostic
-> interpretation, see the four modeling vignettes: \[Modeling with a
-> GLM\](<https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html>,
+> interpretation, see the four modeling vignettes: [Modeling with a
+> GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html),
 > [Modeling with a
 > GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html),
 > [Modeling with a Random
