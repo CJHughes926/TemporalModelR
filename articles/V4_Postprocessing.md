@@ -490,5 +490,10 @@ that is changing and where those changes are occurring, and have many
 practical applications.
 
 The above workflow can be applied to any of the previously described
-model outputs: [GLM](modeling_glm.md), [GAM](modeling_gam.md), [Random
-Forest](modeling_rf.md) or [Hypervolume](modeling_hv.md).
+model outputs:
+[GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html),
+[GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html),
+[Random
+Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html)
+or
+[Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
