@@ -38,7 +38,8 @@ while the E-space coordinates of any G-space location may change over
 time. Species observations are therefore matched to E-space data correct
 in both space and time, the niche is modeled in time-independent
 E-space. This is done in the [Preprocessing temporally explicit
-data](preprocessing.md) vignette.
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette.
 
 By modeling the niche in time-independent E-space using time-independent
 training data, we can generate a static prediction of a species’
@@ -72,12 +73,18 @@ response shape, use
 This vignette runs the seasonal workflow using the bundled
 `tmr_partition` and `tmr_absences` objects, which are pre-built outputs
 of the partitioning and pseudoabsence steps produced by the
-[Preprocessing temporally explicit data](preprocessing.md) vignette
-using the same call patterns shown there. The dataset itself is
-described in [About the Example Dataset](dataset.md). This is the same
-dataset as is used in each modeling vignette [GLM](modeling_glm.md),
-[GAM](modeling_gam.md), [Random Forest](modeling_rf.md) or
-[Hypervolume](modeling_hv.md).
+[Preprocessing temporally explicit
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette using the same call patterns shown there. The dataset itself is
+described in [About the Example
+Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html).
+This is the same dataset as is used in each modeling vignette
+[GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html),
+[GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html),
+[Random
+Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html)
+or
+[Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
 
 ``` r
 
@@ -245,7 +252,8 @@ in some folds.
 
 Each fold’s held-out test set provides a set of presence and
 pseudoabsence points the model has never seen based on the folds defined
-in the [Preprocessing temporally explicit data](preprocessing.md)
+in the [Preprocessing temporally explicit
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
 vignette. We compare predicted vs observed at those points and compute
 confusion-matrix metrics. Because these are evaluated in E-space (the
 species’ environmental tolerance, independent of geography or time),
@@ -428,7 +436,9 @@ correctly identify the gap here and this methods reliance on that
 background data to make inference. We can explore if other modeling
 methods are able to fix this hurdle in other vignettes. Alternatively,
 we could use an alternative method for generating absence points which
-we describe more in the the [Preprocessing](preprocessing.md) vignette.
+we describe more in the the
+[Preprocessing](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette.
 
 Note that here we show that `time_steps` can handle making predictions
 from compound variables or variables at different temporal scales so
@@ -596,12 +606,19 @@ see if it is preforming satisfactory enough for what your goals are. If
 this is the case, you can preform post-processing analyses to try to
 gain additional inference about the spatiotemporal patterns of change in
 the study region See the [Post-processing
-predictions](post-processing.md) vignette.
+predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html)
+vignette.
 
 For comparison with other algorithms applied to the same dataset:
 
-- [Modeling with a GAM](modeling_gam.md) - smooth nonlinear responses.
-- [Modeling with a Random Forest](modeling_rf.md) - flexible ensemble of
-  decision trees for complicated relationships to variables.
-- [Modeling with a Hypervolume](modeling_hv.md) - presence-only modeling
-  using n-dimensional kernel density or one-class SVM.
+- [Modeling with a
+  GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html) -
+  smooth nonlinear responses.
+- [Modeling with a Random
+  Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html) -
+  flexible ensemble of decision trees for complicated relationships to
+  variables.
+- [Modeling with a
+  Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html) -
+  presence-only modeling using n-dimensional kernel density or one-class
+  SVM.

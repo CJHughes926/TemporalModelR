@@ -113,7 +113,7 @@ the species’ tolerance in E-space) is stable across the study period,
 while the E-space coordinates of any G-space location may change over
 time. Species observations are therefore matched to E-space data correct
 in both space and time, the niche is modeled in time-independent
-E-space. This is done in the <a href="preprocessing.html">Preprocessing
+E-space. This is done in the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
 temporally explicit data</a> vignette.</p>
 <p>By modeling the niche in time-independent E-space using
 time-independent training data, we can generate a static prediction of a
@@ -127,15 +127,16 @@ distributions.</p>
 <h2 id="sec-overview">Overview<a class="anchor" aria-label="anchor" href="#sec-overview"></a>
 </h2>
 <p><code><a href="../reference/build_temporal_gam.html">build_temporal_gam()</a></code> fits one binomial generalized
-additive model per cross-validation fold as was created during the <a href="preprocessing.html">Preprocessing temporally explicit data</a>
-vignette. Each fold’s model is trained on all data outside the fold and
-evaluated on the held-out fold. The user supplies the right-hand side of
-the model formula directly with smooth terms via <code>s()</code>,
-<code>te()</code>, or <code>ti()</code>. See <a href="#sec-formula">Smooth term syntax</a>. The link function defaults
-to logit but can be set to probit, complementary log-log, or cauchit. A
-threshold is selected on the training data and applied to the continuous
-predictions to produce binary suitability output for downstream
-summarization.</p>
+additive model per cross-validation fold as was created during the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette. Each fold’s model is trained on
+all data outside the fold and evaluated on the held-out fold. The user
+supplies the right-hand side of the model formula directly with smooth
+terms via <code>s()</code>, <code>te()</code>, or <code>ti()</code>. See
+<a href="#sec-formula">Smooth term syntax</a>. The link function
+defaults to logit but can be set to probit, complementary log-log, or
+cauchit. A threshold is selected on the training data and applied to the
+continuous predictions to produce binary suitability output for
+downstream summarization.</p>
 <p>Unlike GLMs, GAMs let environmental responses take flexible,
 data-driven shapes through smooth terms while still producing
 interpretable per-variable effect curves. This is useful when the
@@ -145,12 +146,14 @@ complex relationships (contrasting random forests).</p>
 <p>This vignette runs the seasonal workflow using the bundled
 <code>tmr_partition</code> and <code>tmr_absences</code> objects, which
 are pre-built outputs of the partitioning and pseudoabsence steps
-produced by the <a href="preprocessing.html">Preprocessing temporally
-explicit data</a> vignette using the same call patterns shown there. The
-dataset itself is described in <a href="dataset.html">About the Example
-Dataset</a>. This is the same dataset as is used in each modeling
-vignette <a href="modeling_glm.html">GLM</a>, <a href="modeling_gam.html">GAM</a>, <a href="modeling_rf.html">Random
-Forest</a> or <a href="modeling_hv.html">Hypervolume</a>.</p>
+produced by the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette using the same call patterns shown
+there. The dataset itself is described in <a href="https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html" class="external-link">About
+the Example Dataset</a>. This is the same dataset as is used in each
+modeling vignette <a href="https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html" class="external-link">GLM</a>,
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html" class="external-link">GAM</a>,
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html" class="external-link">Random
+Forest</a> or <a href="https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html" class="external-link">Hypervolume</a>.</p>
 <p>The <code>mgcv</code> package is a hard dependency of
 <code><a href="../reference/build_temporal_gam.html">build_temporal_gam()</a></code> and must be installed before
 running:</p>
@@ -347,12 +350,12 @@ suitability in some folds.</p>
 </h2>
 <p>Each fold’s held-out test set provides a set of presence and
 pseudoabsence points the model has never seen based on the folds defined
-in the <a href="preprocessing.html">Preprocessing temporally explicit
-data</a> vignette. We compare predicted vs observed at those points and
-compute confusion-matrix metrics. Because these are evaluated in E-space
-(the species’ environmental tolerance, independent of geography or
-time), they give a stable picture of how well the model is
-preforming.</p>
+in the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette. We compare predicted vs observed
+at those points and compute confusion-matrix metrics. Because these are
+evaluated in E-space (the species’ environmental tolerance, independent
+of geography or time), they give a stable picture of how well the model
+is preforming.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gam_out</span><span class="op">$</span><span class="va">fold_test_metrics</span></span>
 <span><span class="co">#&gt;   Fold Threshold Testing_TP Testing_FN Testing_TN Testing_FP Sensitivity</span></span>
@@ -510,14 +513,15 @@ occupancy based on precipitation variability for this example species,
 and are correctly predicting constrained suitability during the summer.
 Others (like fold 2) see no substantial influence of precipitation on
 occupancy and therefor predict similar pixels as suitable across all
-years. Similarly to the <a href="modeling_glm.html">GLM</a> method in
-the previous vignette, this is in part due to the lack of low
+years. Similarly to the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html" class="external-link">GLM</a>
+method in the previous vignette, this is in part due to the lack of low
 precipitation value background points in our dataset which would
 correctly identify the gap here and this methods reliance on that
 background data to make inference. We can explore if other modeling
 methods are able to fix this hurdle in other vignettes. Alternatively,
 we could use an alternative method for generating absence points which
-we describe more in the the <a href="preprocessing.html">Preprocessing</a> vignette.</p>
+we describe more in the the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing</a>
+vignette.</p>
 <p>Note that here we show that <code>time_steps</code> can handle making
 predictions from compound variables or variables at different temporal
 scales so long as their temporal scales are nested. For example here
@@ -690,19 +694,20 @@ graphs.</p>
 and see if it is preforming satisfactory enough for what your goals are.
 If this is the case, you can preform post-processing analyses to try to
 gain additional inference about the spatiotemporal patterns of change in
-the study region See the <a href="post-processing.html">Post-processing
+the study region See the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html" class="external-link">Post-processing
 predictions</a> vignette.</p>
 <p>For comparison with other algorithms applied to the same dataset:</p>
 <ul>
 <li>
-<a href="modeling_glm.html">Modeling with a GLM</a> - linear and
-polynomial responses.</li>
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html" class="external-link">Modeling
+with a GLM</a> - linear and polynomial responses.</li>
 <li>
-<a href="modeling_rf.html">Modeling with a Random Forest</a> -
-flexible ensemble of decision trees.</li>
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html" class="external-link">Modeling
+with a Random Forest</a> - flexible ensemble of decision trees.</li>
 <li>
-<a href="modeling_hv.html">Modeling with a Hypervolume</a> -
-presence-only n-dimensional kernel density or one-class SVM.</li>
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html" class="external-link">Modeling
+with a Hypervolume</a> - presence-only n-dimensional kernel density or
+one-class SVM.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

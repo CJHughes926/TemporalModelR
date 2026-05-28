@@ -28,9 +28,11 @@ to visualize the utility of this package and the variety of the types of
 data that it may be useful for.
 
 This vignette describes the dataset in detail so that the workflow
-vignettes ([Preprocessing temporally explicit data](preprocessing.md),
-[Modeling](modeling_glm.md), [Post-processing](post-processing.md)) can
-refer back to a single source for what’s in `inst/extdata/` and
+vignettes ([Preprocessing temporally explicit
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html),
+[Modeling](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html),
+[Post-processing](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html))
+can refer back to a single source for what’s in `inst/extdata/` and
 [`data()`](https://rdrr.io/r/utils/data.html) rather than explaining the
 dataset through each other vignette. If you’re working through the
 package for the first time, read this first.

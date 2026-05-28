@@ -39,7 +39,8 @@ while the E-space coordinates of any G-space location may change over
 time. Species observations are therefore matched to E-space data correct
 in both space and time, the niche is modeled in time-independent
 E-space. This is done in the [Preprocessing temporally explicit
-data](preprocessing.md) vignette.
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette.
 
 By modeling the niche in time-independent E-space using time-independent
 training data, we can generate a static prediction of a species’
@@ -53,7 +54,8 @@ dynamic, temporally-explicit ENM predictions of species distributions.
 
 [`build_temporal_hv()`](../reference/build_temporal_hv.md) constructs
 one n-dimensional hypervolume per cross-validation fold as was created
-during the [Preprocessing temporally explicit data](preprocessing.md)
+during the [Preprocessing temporally explicit
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
 vignette. Each fold’s hypervolume is built from all data outside the
 fold and evaluated on the held-out fold. A hypervolume is a geometric
 envelope drawn around the presence points in E-space, and a new point
@@ -76,13 +78,19 @@ metrics are reported. See [E-space performance](#sec-espace).
 This vignette runs the seasonal workflow using the bundled
 `tmr_partition` object, which is the pre-built output of the
 partitioning step produced by the [Preprocessing temporally explicit
-data](preprocessing.md) vignette using the same call patterns shown
-there. The dataset itself is described in [About the Example
-Dataset](dataset.md). Note that no `tmr_absences` object is loaded; the
-hypervolume builder does not accept a `pseudoabsence_result` argument.
-Otherwise, this is the same dataset as is used in each modeling vignette
-[GLM](modeling_glm.md), [GAM](modeling_gam.md), [Random
-Forest](modeling_rf.md) or [Hypervolume](modeling_hv.md).
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette using the same call patterns shown there. The dataset itself is
+described in [About the Example
+Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html).
+Note that no `tmr_absences` object is loaded; the hypervolume builder
+does not accept a `pseudoabsence_result` argument. Otherwise, this is
+the same dataset as is used in each modeling vignette
+[GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html),
+[GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html),
+[Random
+Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html)
+or
+[Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
 
 The `hypervolume` package is a hard dependency of
 [`build_temporal_hv()`](../reference/build_temporal_hv.md) and must be
@@ -366,11 +374,12 @@ for the full list.
 
 Each fold’s held-out test set provides a set of presence points the
 model has never seen based on the folds defined in the [Preprocessing
-temporally explicit data](preprocessing.md) vignette. We check whether
-each test point falls inside the fold’s hypervolume envelope and count
-correct vs incorrect classifications. Because the hypervolume is
-presence-only, only sensitivity-based metrics can be computed, not
-specificity, AUC, or TSS.
+temporally explicit
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette. We check whether each test point falls inside the fold’s
+hypervolume envelope and count correct vs incorrect classifications.
+Because the hypervolume is presence-only, only sensitivity-based metrics
+can be computed, not specificity, AUC, or TSS.
 
 ``` r
 
@@ -713,12 +722,17 @@ see if it is preforming satisfactory enough for what your goals are. If
 this is the case, you can preform post-processing analyses to try to
 gain additional inference about the spatiotemporal patterns of change in
 the study region See the [Post-processing
-predictions](post-processing.md) vignette.
+predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html)
+vignette.
 
 For comparison with other algorithms applied to the same dataset:
 
-- [Modeling with a GLM](modeling_glm.md) - linear and polynomial
-  responses.
-- [Modeling with a GAM](modeling_gam.md) - smooth nonlinear responses.
-- [Modeling with a Random Forest](modeling_rf.md) - flexible ensemble of
-  decision trees.
+- [Modeling with a
+  GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html) -
+  linear and polynomial responses.
+- [Modeling with a
+  GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html) -
+  smooth nonlinear responses.
+- [Modeling with a Random
+  Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html) -
+  flexible ensemble of decision trees.

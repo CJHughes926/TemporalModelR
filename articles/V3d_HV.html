@@ -113,7 +113,7 @@ the species’ tolerance in E-space) is stable across the study period,
 while the E-space coordinates of any G-space location may change over
 time. Species observations are therefore matched to E-space data correct
 in both space and time, the niche is modeled in time-independent
-E-space. This is done in the <a href="preprocessing.html">Preprocessing
+E-space. This is done in the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
 temporally explicit data</a> vignette.</p>
 <p>By modeling the niche in time-independent E-space using
 time-independent training data, we can generate a static prediction of a
@@ -127,14 +127,15 @@ distributions.</p>
 <h2 id="sec-overview">Overview<a class="anchor" aria-label="anchor" href="#sec-overview"></a>
 </h2>
 <p><code><a href="../reference/build_temporal_hv.html">build_temporal_hv()</a></code> constructs one n-dimensional
-hypervolume per cross-validation fold as was created during the <a href="preprocessing.html">Preprocessing temporally explicit data</a>
-vignette. Each fold’s hypervolume is built from all data outside the
-fold and evaluated on the held-out fold. A hypervolume is a geometric
-envelope drawn around the presence points in E-space, and a new point
-falls inside the envelope (predicted suitable) or outside it (predicted
-unsuitable). Projecting the hypervolume onto a stack of environmental
-rasters produces a binary suitability surface for each fold and time
-step, with no need for a separate thresholding step.</p>
+hypervolume per cross-validation fold as was created during the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette. Each fold’s hypervolume is built
+from all data outside the fold and evaluated on the held-out fold. A
+hypervolume is a geometric envelope drawn around the presence points in
+E-space, and a new point falls inside the envelope (predicted suitable)
+or outside it (predicted unsuitable). Projecting the hypervolume onto a
+stack of environmental rasters produces a binary suitability surface for
+each fold and time step, with no need for a separate thresholding
+step.</p>
 <p>The hypervolume is the only presence-only model in TemporalModelR. It
 does not need pseudoabsences or background points, which makes it a good
 choice when reliable absence data is hard to define or when the species’
@@ -148,14 +149,16 @@ metrics are reported. See <a href="#sec-espace">E-space
 performance</a>.</p>
 <p>This vignette runs the seasonal workflow using the bundled
 <code>tmr_partition</code> object, which is the pre-built output of the
-partitioning step produced by the <a href="preprocessing.html">Preprocessing temporally explicit data</a>
-vignette using the same call patterns shown there. The dataset itself is
-described in <a href="dataset.html">About the Example Dataset</a>. Note
-that no <code>tmr_absences</code> object is loaded; the hypervolume
-builder does not accept a <code>pseudoabsence_result</code> argument.
-Otherwise, this is the same dataset as is used in each modeling vignette
-<a href="modeling_glm.html">GLM</a>, <a href="modeling_gam.html">GAM</a>, <a href="modeling_rf.html">Random
-Forest</a> or <a href="modeling_hv.html">Hypervolume</a>.</p>
+partitioning step produced by the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette using the same call patterns shown
+there. The dataset itself is described in <a href="https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html" class="external-link">About
+the Example Dataset</a>. Note that no <code>tmr_absences</code> object
+is loaded; the hypervolume builder does not accept a
+<code>pseudoabsence_result</code> argument. Otherwise, this is the same
+dataset as is used in each modeling vignette <a href="https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html" class="external-link">GLM</a>,
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html" class="external-link">GAM</a>,
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html" class="external-link">Random
+Forest</a> or <a href="https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html" class="external-link">Hypervolume</a>.</p>
 <p>The <code>hypervolume</code> package is a hard dependency of
 <code><a href="../reference/build_temporal_hv.html">build_temporal_hv()</a></code> and must be installed before
 running:</p>
@@ -426,11 +429,12 @@ function can go in <code>hypervolume_params</code>. See
 <h2 id="sec-espace">E-space performance<a class="anchor" aria-label="anchor" href="#sec-espace"></a>
 </h2>
 <p>Each fold’s held-out test set provides a set of presence points the
-model has never seen based on the folds defined in the <a href="preprocessing.html">Preprocessing temporally explicit data</a>
-vignette. We check whether each test point falls inside the fold’s
-hypervolume envelope and count correct vs incorrect classifications.
-Because the hypervolume is presence-only, only sensitivity-based metrics
-can be computed, not specificity, AUC, or TSS.</p>
+model has never seen based on the folds defined in the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette. We check whether each test point
+falls inside the fold’s hypervolume envelope and count correct vs
+incorrect classifications. Because the hypervolume is presence-only,
+only sensitivity-based metrics can be computed, not specificity, AUC, or
+TSS.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hv_out</span><span class="op">$</span><span class="va">fold_test_metrics</span></span>
 <span><span class="co">#&gt;   Fold N_Test E_Volume Testing_TP Testing_FN Sensitivity</span></span>
@@ -745,19 +749,19 @@ graphs.</p>
 and see if it is preforming satisfactory enough for what your goals are.
 If this is the case, you can preform post-processing analyses to try to
 gain additional inference about the spatiotemporal patterns of change in
-the study region See the <a href="post-processing.html">Post-processing
+the study region See the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html" class="external-link">Post-processing
 predictions</a> vignette.</p>
 <p>For comparison with other algorithms applied to the same dataset:</p>
 <ul>
 <li>
-<a href="modeling_glm.html">Modeling with a GLM</a> - linear and
-polynomial responses.</li>
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html" class="external-link">Modeling
+with a GLM</a> - linear and polynomial responses.</li>
 <li>
-<a href="modeling_gam.html">Modeling with a GAM</a> - smooth
-nonlinear responses.</li>
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html" class="external-link">Modeling
+with a GAM</a> - smooth nonlinear responses.</li>
 <li>
-<a href="modeling_rf.html">Modeling with a Random Forest</a> -
-flexible ensemble of decision trees.</li>
+<a href="https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html" class="external-link">Modeling
+with a Random Forest</a> - flexible ensemble of decision trees.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -41,7 +41,8 @@ typically run in order:
     fold-stratified pseudoabsences for presence/absence models.
 
 This vignette walks through each step using the bundled synthetic
-dataset described in the [About the Example Dataset](dataset.md)
+dataset described in the [About the Example
+Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html)
 vignette. Read that vignette first if you have not already, as it
 explains the structure of the raw rasters and occurrence points used
 here. We use the **seasonal (compound time-step) workflow** throughout,
@@ -171,10 +172,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/RtmpUfbS7i/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/Rtmp29lmgK/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/RtmpUfbS7i/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/Rtmp29lmgK/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -278,13 +279,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/RtmpUfbS7i/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/Rtmp29lmgK/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/RtmpUfbS7i/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/Rtmp29lmgK/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/RtmpUfbS7i/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/Rtmp29lmgK/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
@@ -553,13 +554,18 @@ At this point the three key downstream inputs are in hand:
 These are passed directly to any of the four model builders covered in
 the following parallel vignettes:
 
-- [Modeling with a GLM](modeling_glm.md)
-- [Modeling with a GAM](modeling_gam.md)
-- [Modeling with a Random Forest](modeling_rf.md)
-- [Modeling with a Hypervolume](modeling_hv.md)
+- [Modeling with a
+  GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html)
+- [Modeling with a
+  GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html)
+- [Modeling with a Random
+  Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html)
+- [Modeling with a
+  Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html)
 
 Once a model is fitted, predictions are projected through space and time
 using
 [`generate_spatiotemporal_predictions()`](../reference/generate_spatiotemporal_predictions.md),
 and the resulting prediction stack is summarized in the [Post-processing
-predictions](post-processing.md) vignette.
+predictions](https://cjhughes926.github.io/TemporalModelR/articles/V4_Postprocessing.html)
+vignette.
