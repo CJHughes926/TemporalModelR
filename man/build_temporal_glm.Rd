@@ -45,7 +45,7 @@ continuous predicted probabilities to binary suitability. Accepted values:
 \itemize{
   \item \code{"prevalence"}: Sets threshold equal to the prevalence
     (proportion of presences) in the training data for that fold.
-  \item \code{"tss"}: Selects the threshold that maximises the True Skill
+  \item \code{"tss"}: Selects the threshold that maximizes the True Skill
     Statistic (sensitivity + specificity - 1) on the training data.
     Default.
   \item A numeric value between 0 and 1 (e.g. \code{0.4}): Uses that
@@ -130,7 +130,7 @@ such as \code{I(Var1^2)} to the base variable \code{Var1}.
 All models are fit as \code{stats::glm(..., family = binomial(link = link))}.
 Predicted values are always probabilities on the 0-1 scale.
 
-The returned object is recognised by
+The returned object is recognized by
 \code{\link{generate_spatiotemporal_predictions}}, which uses the
 \code{model_type} field to use the correct prediction and evaluation
 logic.

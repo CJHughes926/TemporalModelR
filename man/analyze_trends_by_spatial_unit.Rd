@@ -51,7 +51,7 @@ pie spans roughly 30\% of the smaller map dimension (radius = 15\%, so
 diameter = 30\%). Smaller pies scale so their area is proportional to
 the unit's pixel count. The fraction is converted internally to
 coordinate units, so this argument works identically across CRSes
-(degrees, metres, etc.) without manual rescaling.}
+(degrees, meters, etc.) without manual rescaling.}
 
 \item{verbose}{Logical. If \code{TRUE} (default), prints progress
 messages during processing. Includes details on raster extraction and
@@ -76,7 +76,7 @@ across user-defined spatial units (e.g., states, counties, watersheds).
 Returns summary tables and optionally generates simple visualizations.
 }
 \details{
-Summarizes results from modeling and postprocessing at the scale of specific
+Summarizes results from modeling and post-processing at the scale of specific
 spatial blocks to allow for a nuanced look at spatiotemporal patterns.
 }
 \examples{
@@ -118,6 +118,6 @@ spatial blocks to allow for a nuanced look at spatiotemporal patterns.
 }
 }
 \seealso{
-Postprocessing: \code{\link{summarize_raster_outputs}},
+Post-processing: \code{\link{summarize_raster_outputs}},
   \code{\link[TemporalModelR]{analyze_temporal_patterns}}
 }

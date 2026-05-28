@@ -20,15 +20,7 @@ Authors@R: c(
       role  = c("aut")
     )
   )
-Description: 'TemporalModelR' is an R package built with the goal of increasing
-    the ease of implementing a temporally-explicit modeling methodology when
-    building ecological niche and species distribution models. It provides
-    functions to assist with three major steps of temporally-explicit
-    models: (i) preprocessing species and environmental data and generating
-    suitable background or pseudoabsence data, (ii) building a niche model
-    and generating temporally-explicit predictions from that model, and
-    (iii) model postprocessing to explore spatiotemporal trends in model
-    predictions.
+Description: Increases the ease of implementing a temporally-explicit modeling methodology when building ecological niche and species distribution models. Provides functions to assist with three major steps of temporally-explicit models: (i) preprocessing species and environmental data and generating suitable background or pseudoabsence data, (ii) building a niche model and generating temporally-explicit predictions from that model, and (iii) model postprocessing to explore spatiotemporal trends in model predictions.
 URL: https://github.com/CJHughes926/TemporalModelR, https://cjhughes926.github.io/TemporalModelR/
 BugReports: https://github.com/CJHughes926/TemporalModelR/issues
 License: MIT + file LICENSE

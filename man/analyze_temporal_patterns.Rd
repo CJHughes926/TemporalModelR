@@ -68,7 +68,7 @@ Invisibly returns a list containing:
 }
 }
 \description{
-Postprocessing function that applies changepoint detection methods to
+Post-processing function that applies changepoint detection methods to
 identify temporal trends in habitat suitability across consecutive
 predictions. Classifies pixels as stable, increasing in quality, or
 decreasing in quality, and identifies time periods of significant change.
@@ -118,7 +118,7 @@ shorter than ~15 time steps may be too short to classify increases or decreases.
 }
 }
 \seealso{
-Postprocessing: \code{\link{summarize_raster_outputs}}
+Post-processing: \code{\link{summarize_raster_outputs}}
 
 External: \code{\link[fastcpd]{fastcpd}}
 }

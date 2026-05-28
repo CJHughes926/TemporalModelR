@@ -148,6 +148,6 @@ Modeling: \code{\link{build_temporal_hv}},
   \code{\link{build_temporal_glm}}, \code{\link{build_temporal_gam}},
   \code{\link{build_temporal_rf}}
 
-Postprocessing: \code{\link{summarize_raster_outputs}},
+Post-processing: \code{\link{summarize_raster_outputs}},
   \code{\link{plot_model_assessment}}
 }
