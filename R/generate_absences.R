@@ -44,7 +44,7 @@
 #'   \code{min_points_per_timestep} must be greater than 0. \code{ratio} and
 #'   \code{min_points_per_timestep} cannot both be 0.
 #' @param buffer_distance Numeric. Distance in the units of the CRS (typically
-#'   metres for projected CRS) within which pseudoabsence points are sampled.
+#'   meters for projected CRS) within which pseudoabsence points are sampled.
 #'   Required when \code{method = "buffer"}. When \code{method =
 #'   "environmental"}, supplying a value automatically applies a spatial buffer
 #'   constraint before environmental profiling, following the three-step approach
@@ -123,7 +123,7 @@
 #'
 #' @references
 #' Senay SD, Worner SP, Ikeda T (2013) Novel Three-Step Pseudo-Absence
-#' Selection Technique for Improved Species Distribution Modelling.
+#' Selection Technique for Improved Species Distribution Modeling.
 #' PLoS ONE 8(8): e71218.
 #'
 #' @seealso

@@ -202,7 +202,7 @@ build_temporal_hv <- function(partition_result,
     invalid        <- setdiff(names(hypervolume_params), valid_params)
     if (length(invalid) > 0) {
       warning(paste0(
-        "Unrecognised hypervolume_params for method '", method, "': ",
+        "Unrecognized hypervolume_params for method '", method, "': ",
         paste(invalid, collapse = ", "),
         ". Valid keys: ", paste(valid_params, collapse = ", ")
       ))

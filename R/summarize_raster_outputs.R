@@ -1,6 +1,6 @@
 #' Summarize Prediction Rasters into Consensus Outputs
 #'
-#' Postprocessing function that synthesizes per-time-step fold-vote rasters
+#' Post-processing function that synthesizes per-time-step fold-vote rasters
 #' (output from \code{\link{generate_spatiotemporal_predictions}}) into binary
 #' consensus predictions and a temporal frequency summary. Each input raster
 #' contains integer vote counts per pixel the number of cross-validation

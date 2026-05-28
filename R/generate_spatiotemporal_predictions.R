@@ -99,7 +99,7 @@
 #'   \code{\link{build_temporal_glm}}, \code{\link{build_temporal_gam}},
 #'   \code{\link{build_temporal_rf}}
 #'
-#' Postprocessing: \code{\link{summarize_raster_outputs}},
+#' Post-processing: \code{\link{summarize_raster_outputs}},
 #'   \code{\link{plot_model_assessment}}
 #'
 #' @examples
@@ -200,7 +200,7 @@ generate_spatiotemporal_predictions <- function(partition_result,
 
   model_type <- model_result$model_type
   if (!model_type %in% c("hypervolume", "glm", "gam", "rf")) {
-    stop(paste0("ERROR: Unrecognised model_type '", model_type, "'."))
+    stop(paste0("ERROR: Unrecognized model_type '", model_type, "'."))
   }
   if (verbose) message(paste("Model type:", model_type))
 

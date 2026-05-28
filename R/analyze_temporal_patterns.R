@@ -1,6 +1,6 @@
 #' Analyze Temporal Patterns in Binary Raster Time Series
 #'
-#' Postprocessing function that applies changepoint detection methods to
+#' Post-processing function that applies changepoint detection methods to
 #' identify temporal trends in habitat suitability across consecutive
 #' predictions. Classifies pixels as stable, increasing in quality, or
 #' decreasing in quality, and identifies time periods of significant change.
@@ -71,7 +71,7 @@
 #' shorter than ~15 time steps may be too short to classify increases or decreases.
 #'
 #' @seealso
-#' Postprocessing: \code{\link{summarize_raster_outputs}}
+#' Post-processing: \code{\link{summarize_raster_outputs}}
 #'
 #' External: \code{\link[fastcpd]{fastcpd}}
 #'
@@ -112,17 +112,17 @@
 #' @importFrom utils head setTxtProgressBar txtProgressBar
 #' @importFrom tools file_path_sans_ext
 analyze_temporal_patterns <- function(binary_stack,
-           summary_raster,
-           time_steps,
-           fastcpd_params = list(),
-           output_dir     = NULL,
-           n_tiles_x      = 1,
-           n_tiles_y      = 1,
-           alpha          = 0.05,
-           spatial_autocorrelation = TRUE,
-           verbose        = TRUE,
-           estimate_time  = TRUE,
-           overwrite      = FALSE) {
+                                      summary_raster,
+                                      time_steps,
+                                      fastcpd_params = list(),
+                                      output_dir     = NULL,
+                                      n_tiles_x      = 1,
+                                      n_tiles_y      = 1,
+                                      alpha          = 0.05,
+                                      spatial_autocorrelation = TRUE,
+                                      verbose        = TRUE,
+                                      estimate_time  = TRUE,
+                                      overwrite      = FALSE) {
 
 
   if (!requireNamespace("fastcpd", quietly = TRUE)) {
@@ -178,7 +178,7 @@ analyze_temporal_patterns <- function(binary_stack,
       stop(paste0(
         "ERROR: No binary raster layers matched the secondary filter(s): ",
         paste(mapply(function(k, v) paste0(k, "=", v),
-   names(secondary_filters), secondary_filters), collapse = ", "),
+                     names(secondary_filters), secondary_filters), collapse = ", "),
         ". Layer names in binary_stack: ",
         paste(head(lyr_names, 5), collapse = ", "),
         if (length(lyr_names) > 5) paste0(" ... (", length(lyr_names), " total)") else ""
@@ -195,7 +195,7 @@ analyze_temporal_patterns <- function(binary_stack,
     if (verbose) message(paste0(
       "Filtered binary_stack to ", terra::nlyr(binary_stack), " layer(s) matching: ",
       paste(mapply(function(k, v) paste0(k, "=", v),
-          names(secondary_filters), secondary_filters), collapse = ", ")
+                   names(secondary_filters), secondary_filters), collapse = ", ")
     ))
   } else {
     lyr_names <- names(binary_stack)
@@ -206,14 +206,14 @@ analyze_temporal_patterns <- function(binary_stack,
       ambiguous <- time_steps[match_counts > 1]
       if (length(ambiguous) > 0) {
         stop(paste0(
- "ERROR: The binary stack has ", terra::nlyr(binary_stack),
- " layers but time_steps only has ", length(time_steps), " value(s). ",
- "Time step value(s) ", paste(ambiguous, collapse = ", "),
- " each match more than one raster layer, suggesting the stack contains ",
- "predictions for multiple secondary time values (e.g. seasons). ",
- "Supply time_steps as a multi-column data frame specifying the secondary ",
- "column value to use. For example: ",
- "time_steps <- expand.grid(time_step = 1:15, season = \"Spring\", stringsAsFactors = FALSE)"
+          "ERROR: The binary stack has ", terra::nlyr(binary_stack),
+          " layers but time_steps only has ", length(time_steps), " value(s). ",
+          "Time step value(s) ", paste(ambiguous, collapse = ", "),
+          " each match more than one raster layer, suggesting the stack contains ",
+          "predictions for multiple secondary time values (e.g. seasons). ",
+          "Supply time_steps as a multi-column data frame specifying the secondary ",
+          "column value to use. For example: ",
+          "time_steps <- expand.grid(time_step = 1:15, season = \"Spring\", stringsAsFactors = FALSE)"
         ))
       }
     }
@@ -228,11 +228,11 @@ analyze_temporal_patterns <- function(binary_stack,
 
   ts_range      <- paste0(min(time_steps), "_", max(time_steps))
   pattern_file  <- if (save_output) file.path(output_dir,
-          paste0("pattern_raster_",     ts_range, ".tif")) else tempfile(fileext = ".tif")
+                                              paste0("pattern_raster_",     ts_range, ".tif")) else tempfile(fileext = ".tif")
   decrease_file <- if (save_output) file.path(output_dir,
-          paste0("time_first_decrease_", ts_range, ".tif")) else tempfile(fileext = ".tif")
+                                              paste0("time_first_decrease_", ts_range, ".tif")) else tempfile(fileext = ".tif")
   increase_file <- if (save_output) file.path(output_dir,
-          paste0("time_first_increase_", ts_range, ".tif")) else tempfile(fileext = ".tif")
+                                              paste0("time_first_increase_", ts_range, ".tif")) else tempfile(fileext = ".tif")
 
   if (file.exists(pattern_file) && file.exists(decrease_file) && file.exists(increase_file) && !overwrite) {
     if (verbose) message("Output rasters exist. Set overwrite = TRUE to rerun.")
@@ -272,57 +272,57 @@ analyze_temporal_patterns <- function(binary_stack,
         if (verbose) message(paste0("Complex pixels (changepoint analysis): ", format(n_complex, big.mark = ",")))
 
         if (n_complex > 0) {
- if (verbose) message("Timing sample pixels...")
+          if (verbose) message("Timing sample pixels...")
 
- middle_times <- binary_stack[[2:(n_times - 1)]]
- lag_stack <- binary_stack[[1:(n_times - 2)]]
+          middle_times <- binary_stack[[2:(n_times - 1)]]
+          lag_stack <- binary_stack[[1:(n_times - 2)]]
 
- if (spatial_autocorrelation) {
-   middle_neighbor <- terra::rast(lapply(seq_len(terra::nlyr(middle_times)), function(i) {
-     terra::focal(middle_times[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
-   }))
-   predictor_stack <- c(middle_times, lag_stack, middle_neighbor, summary_raster)
- } else {
-   predictor_stack <- c(middle_times, lag_stack, summary_raster)
- }
+          if (spatial_autocorrelation) {
+            middle_neighbor <- terra::rast(lapply(seq_len(terra::nlyr(middle_times)), function(i) {
+              terra::focal(middle_times[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+            }))
+            predictor_stack <- c(middle_times, lag_stack, middle_neighbor, summary_raster)
+          } else {
+            predictor_stack <- c(middle_times, lag_stack, summary_raster)
+          }
 
- pred_vals_all <- terra::values(predictor_stack, mat = TRUE)
- valid_pred <- which(!is.na(pred_vals_all[, 1]))
+          pred_vals_all <- terra::values(predictor_stack, mat = TRUE)
+          valid_pred <- which(!is.na(pred_vals_all[, 1]))
 
- if (spatial_autocorrelation) {
-   mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
- } else {
-   mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
- }
+          if (spatial_autocorrelation) {
+            mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
+          } else {
+            mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
+          }
 
- complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
+          complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
 
- sample_size <- min(100, length(complex_indices))
- sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
+          sample_size <- min(100, length(complex_indices))
+          sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
 
- start_time <- Sys.time()
- for (idx in sample_indices) {
-   result <- .classify_pixel_with_times(pred_vals_all[idx, ], n_middle,
-             time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
- }
- end_time <- Sys.time()
+          start_time <- Sys.time()
+          for (idx in sample_indices) {
+            result <- .classify_pixel_with_times(pred_vals_all[idx, ], n_middle,
+                                                 time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+          }
+          end_time <- Sys.time()
 
- time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
- if (verbose) message(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
+          time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
+          if (verbose) message(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
 
- base_seconds <- time_per_pixel * n_complex
- overhead <- 30
+          base_seconds <- time_per_pixel * n_complex
+          overhead <- 30
 
- lower_seconds <- (base_seconds * 0.8) + (overhead * 0.5)
- upper_seconds <- (base_seconds * 1.2) + (overhead * 1.5)
+          lower_seconds <- (base_seconds * 0.8) + (overhead * 0.5)
+          upper_seconds <- (base_seconds * 1.2) + (overhead * 1.5)
 
- if (verbose) message(paste("Estimated processing time:",
-          .format_time_estimate(lower_seconds), "to",
-          .format_time_estimate(upper_seconds)))
+          if (verbose) message(paste("Estimated processing time:",
+                                     .format_time_estimate(lower_seconds), "to",
+                                     .format_time_estimate(upper_seconds)))
 
- rm(middle_times, lag_stack, predictor_stack, pred_vals_all)
- if (spatial_autocorrelation) rm(middle_neighbor)
- gc(verbose = FALSE)
+          rm(middle_times, lag_stack, predictor_stack, pred_vals_all)
+          if (spatial_autocorrelation) rm(middle_neighbor)
+          gc(verbose = FALSE)
         }
       }
     }
@@ -355,15 +355,15 @@ analyze_temporal_patterns <- function(binary_stack,
 
       for (cell_i in seq_len(n_cells)) {
         if (!any(is.na(pred_vals[cell_i, ]))) {
- result <- .classify_pixel_with_times(pred_vals[cell_i, ], n_middle,
-           time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
- pattern_vals[cell_i] <- result[1]
- decrease_vals[cell_i] <- result[2]
- increase_vals[cell_i] <- result[3]
+          result <- .classify_pixel_with_times(pred_vals[cell_i, ], n_middle,
+                                               time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+          pattern_vals[cell_i] <- result[1]
+          decrease_vals[cell_i] <- result[2]
+          increase_vals[cell_i] <- result[3]
         } else {
- pattern_vals[cell_i] <- NA
- decrease_vals[cell_i] <- NA
- increase_vals[cell_i] <- NA
+          pattern_vals[cell_i] <- NA
+          decrease_vals[cell_i] <- NA
+          increase_vals[cell_i] <- NA
         }
         if (cell_i %% 10 == 0) utils::setTxtProgressBar(pb, cell_i)
       }
@@ -380,8 +380,8 @@ analyze_temporal_patterns <- function(binary_stack,
 
     } else {
       result_matrix <- terra::app(predictor_stack,
-       fun = function(x) .classify_pixel_with_times(x, n_middle, time_steps,
-                fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
+                                  fun = function(x) .classify_pixel_with_times(x, n_middle, time_steps,
+                                                                               fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
 
       pattern_raster <- result_matrix[[1]]
       decrease_raster <- result_matrix[[2]]
@@ -445,68 +445,68 @@ analyze_temporal_patterns <- function(binary_stack,
         tile_ext <- tile_extents[[tile_i]]
 
         tryCatch({
- suppressWarnings({
-   tile_binary <- terra::crop(binary_stack, tile_ext)
-   tile_summary <- terra::crop(summary_raster, tile_ext)
- })
+          suppressWarnings({
+            tile_binary <- terra::crop(binary_stack, tile_ext)
+            tile_summary <- terra::crop(summary_raster, tile_ext)
+          })
 
- summary_vals <- terra::values(tile_summary, mat = FALSE)
- valid_indices <- which(!is.na(summary_vals))
+          summary_vals <- terra::values(tile_summary, mat = FALSE)
+          valid_indices <- which(!is.na(summary_vals))
 
- if (length(valid_indices) > 0) {
-   mean_vals <- summary_vals[valid_indices]
-   n_quick <- sum(mean_vals < 0.01 | mean_vals > 0.99)
-   n_complex <- sum(mean_vals >= 0.01 & mean_vals <= 0.99)
+          if (length(valid_indices) > 0) {
+            mean_vals <- summary_vals[valid_indices]
+            n_quick <- sum(mean_vals < 0.01 | mean_vals > 0.99)
+            n_complex <- sum(mean_vals >= 0.01 & mean_vals <= 0.99)
 
-   total_quick <- total_quick + n_quick
-   total_complex <- total_complex + n_complex
+            total_quick <- total_quick + n_quick
+            total_complex <- total_complex + n_complex
 
-   if (is.null(time_per_pixel) && n_complex > 0) {
-     if (verbose) message("Timing sample pixels...")
+            if (is.null(time_per_pixel) && n_complex > 0) {
+              if (verbose) message("Timing sample pixels...")
 
-     middle_times <- tile_binary[[2:(n_times - 1)]]
-     lag_stack <- tile_binary[[1:(n_times - 2)]]
+              middle_times <- tile_binary[[2:(n_times - 1)]]
+              lag_stack <- tile_binary[[1:(n_times - 2)]]
 
-     if (spatial_autocorrelation) {
-       middle_neighbor <- terra::rast(lapply(seq_len(terra::nlyr(middle_times)), function(i) {
-         terra::focal(middle_times[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
-       }))
-       predictor_stack <- c(middle_times, lag_stack, middle_neighbor, tile_summary)
-     } else {
-       predictor_stack <- c(middle_times, lag_stack, tile_summary)
-     }
+              if (spatial_autocorrelation) {
+                middle_neighbor <- terra::rast(lapply(seq_len(terra::nlyr(middle_times)), function(i) {
+                  terra::focal(middle_times[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+                }))
+                predictor_stack <- c(middle_times, lag_stack, middle_neighbor, tile_summary)
+              } else {
+                predictor_stack <- c(middle_times, lag_stack, tile_summary)
+              }
 
-     pred_vals_all <- terra::values(predictor_stack, mat = TRUE)
-     valid_pred <- which(!is.na(pred_vals_all[, 1]))
+              pred_vals_all <- terra::values(predictor_stack, mat = TRUE)
+              valid_pred <- which(!is.na(pred_vals_all[, 1]))
 
-     if (spatial_autocorrelation) {
-       mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
-     } else {
-       mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
-     }
+              if (spatial_autocorrelation) {
+                mean_pred <- pred_vals_all[valid_pred, (3 * n_middle + 1)]
+              } else {
+                mean_pred <- pred_vals_all[valid_pred, (2 * n_middle + 1)]
+              }
 
-     complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
+              complex_indices <- valid_pred[mean_pred >= 0.01 & mean_pred <= 0.99]
 
-     sample_size <- min(100, length(complex_indices))
-     sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
+              sample_size <- min(100, length(complex_indices))
+              sample_indices <- sample(complex_indices, size = sample_size, replace = FALSE)
 
-     start_time <- Sys.time()
-     for (idx in sample_indices) {
-       result <- .classify_pixel_with_times(pred_vals_all[idx, ], n_middle,
-        time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
-     }
-     end_time <- Sys.time()
+              start_time <- Sys.time()
+              for (idx in sample_indices) {
+                result <- .classify_pixel_with_times(pred_vals_all[idx, ], n_middle,
+                                                     time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+              }
+              end_time <- Sys.time()
 
-     time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
-     if (verbose) message(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
-   }
- }
+              time_per_pixel <- as.numeric(difftime(end_time, start_time, units = "secs")) / sample_size
+              if (verbose) message(paste("Average time per complex pixel:", round(time_per_pixel, 4), "seconds"))
+            }
+          }
         }, error = function(e) {
- if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
-   stop("ERROR: Memory error. Increase n_tiles_x and n_tiles_y to use smaller tiles.")
- } else {
-   stop(e)
- }
+          if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
+            stop("ERROR: Memory error. Increase n_tiles_x and n_tiles_y to use smaller tiles.")
+          } else {
+            stop(e)
+          }
         })
       }
 
@@ -522,8 +522,8 @@ analyze_temporal_patterns <- function(binary_stack,
         upper_seconds <- (base_seconds * 1.2) + (total_overhead * 1.5)
 
         if (verbose) message(paste("Estimated processing time:",
-        .format_time_estimate(lower_seconds), "to",
-        .format_time_estimate(upper_seconds)))
+                                   .format_time_estimate(lower_seconds), "to",
+                                   .format_time_estimate(upper_seconds)))
       }
     }
 
@@ -548,8 +548,8 @@ analyze_temporal_patterns <- function(binary_stack,
 
       tryCatch({
         suppressWarnings({
- tile_binary <- terra::crop(binary_stack, tile_ext)
- tile_summary <- terra::crop(summary_raster, tile_ext)
+          tile_binary <- terra::crop(binary_stack, tile_ext)
+          tile_summary <- terra::crop(summary_raster, tile_ext)
         })
 
         n_times <- terra::nlyr(tile_binary)
@@ -559,76 +559,76 @@ analyze_temporal_patterns <- function(binary_stack,
         lag_stack <- tile_binary[[1:(n_times - 2)]]
 
         if (spatial_autocorrelation) {
- middle_neighbor <- terra::rast(lapply(seq_len(terra::nlyr(middle_times)), function(i) {
-   terra::focal(middle_times[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
- }))
- predictor_stack <- c(middle_times, lag_stack, middle_neighbor, tile_summary)
+          middle_neighbor <- terra::rast(lapply(seq_len(terra::nlyr(middle_times)), function(i) {
+            terra::focal(middle_times[[i]], w = matrix(1/9, 3, 3), fun = mean, na.rm = TRUE)
+          }))
+          predictor_stack <- c(middle_times, lag_stack, middle_neighbor, tile_summary)
         } else {
- predictor_stack <- c(middle_times, lag_stack, tile_summary)
+          predictor_stack <- c(middle_times, lag_stack, tile_summary)
         }
 
         if (verbose) {
- n_cells <- terra::ncell(predictor_stack)
- pb <- utils::txtProgressBar(min = 0, max = n_cells, style = 3, width = 50)
+          n_cells <- terra::ncell(predictor_stack)
+          pb <- utils::txtProgressBar(min = 0, max = n_cells, style = 3, width = 50)
 
- pred_vals <- terra::values(predictor_stack, mat = TRUE)
- pattern_vals <- numeric(n_cells)
- decrease_vals <- numeric(n_cells)
- increase_vals <- numeric(n_cells)
+          pred_vals <- terra::values(predictor_stack, mat = TRUE)
+          pattern_vals <- numeric(n_cells)
+          decrease_vals <- numeric(n_cells)
+          increase_vals <- numeric(n_cells)
 
- for (cell_i in seq_len(n_cells)) {
-   if (!any(is.na(pred_vals[cell_i, ]))) {
-     result <- .classify_pixel_with_times(pred_vals[cell_i, ], n_middle,
-      time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
-     pattern_vals[cell_i] <- result[1]
-     decrease_vals[cell_i] <- result[2]
-     increase_vals[cell_i] <- result[3]
-   } else {
-     pattern_vals[cell_i] <- NA
-     decrease_vals[cell_i] <- NA
-     increase_vals[cell_i] <- NA
-   }
-   if (cell_i %% 10 == 0) utils::setTxtProgressBar(pb, cell_i)
- }
- close(pb)
- if (verbose) message("")
+          for (cell_i in seq_len(n_cells)) {
+            if (!any(is.na(pred_vals[cell_i, ]))) {
+              result <- .classify_pixel_with_times(pred_vals[cell_i, ], n_middle,
+                                                   time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+              pattern_vals[cell_i] <- result[1]
+              decrease_vals[cell_i] <- result[2]
+              increase_vals[cell_i] <- result[3]
+            } else {
+              pattern_vals[cell_i] <- NA
+              decrease_vals[cell_i] <- NA
+              increase_vals[cell_i] <- NA
+            }
+            if (cell_i %% 10 == 0) utils::setTxtProgressBar(pb, cell_i)
+          }
+          close(pb)
+          if (verbose) message("")
 
- tile_pattern <- terra::rast(predictor_stack, nlyr = 1)
- tile_decrease <- terra::rast(predictor_stack, nlyr = 1)
- tile_increase <- terra::rast(predictor_stack, nlyr = 1)
+          tile_pattern <- terra::rast(predictor_stack, nlyr = 1)
+          tile_decrease <- terra::rast(predictor_stack, nlyr = 1)
+          tile_increase <- terra::rast(predictor_stack, nlyr = 1)
 
- terra::values(tile_pattern) <- pattern_vals
- terra::values(tile_decrease) <- decrease_vals
- terra::values(tile_increase) <- increase_vals
+          terra::values(tile_pattern) <- pattern_vals
+          terra::values(tile_decrease) <- decrease_vals
+          terra::values(tile_increase) <- increase_vals
 
         } else {
- result_matrix <- terra::app(predictor_stack,
-           fun = function(x) .classify_pixel_with_times(x, n_middle, time_steps,
-           fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
+          result_matrix <- terra::app(predictor_stack,
+                                      fun = function(x) .classify_pixel_with_times(x, n_middle, time_steps,
+                                                                                   fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
 
- tile_pattern <- result_matrix[[1]]
- tile_decrease <- result_matrix[[2]]
- tile_increase <- result_matrix[[3]]
+          tile_pattern <- result_matrix[[1]]
+          tile_decrease <- result_matrix[[2]]
+          tile_increase <- result_matrix[[3]]
         }
 
         terra::writeRaster(tile_pattern, tile_file_pattern, overwrite = TRUE,
-         datatype = "INT1U", gdal = c("COMPRESS=LZW"))
+                           datatype = "INT1U", gdal = c("COMPRESS=LZW"))
         terra::writeRaster(tile_decrease, tile_file_decrease, overwrite = TRUE,
-         datatype = "INT2S", gdal = c("COMPRESS=LZW"))
+                           datatype = "INT2S", gdal = c("COMPRESS=LZW"))
         terra::writeRaster(tile_increase, tile_file_increase, overwrite = TRUE,
-         datatype = "INT2S", gdal = c("COMPRESS=LZW"))
+                           datatype = "INT2S", gdal = c("COMPRESS=LZW"))
 
         rm(tile_binary, tile_summary, middle_times, lag_stack,
-  predictor_stack, tile_pattern, tile_decrease, tile_increase)
+           predictor_stack, tile_pattern, tile_decrease, tile_increase)
         if (spatial_autocorrelation) rm(middle_neighbor)
         if (exists("pred_vals")) rm(pred_vals, pattern_vals, decrease_vals, increase_vals)
         gc(verbose = FALSE)
 
       }, error = function(e) {
         if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
- stop(paste0("ERROR: Memory error on tile ", tile_i, ". Increase n_tiles_x and n_tiles_y."))
+          stop(paste0("ERROR: Memory error on tile ", tile_i, ". Increase n_tiles_x and n_tiles_y."))
         } else {
- stop(e)
+          stop(e)
         }
       })
     }
@@ -648,9 +648,9 @@ analyze_temporal_patterns <- function(binary_stack,
 
       }, error = function(e) {
         if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
- stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
+          stop("ERROR: Memory error merging tiles. Increase n_tiles_x and n_tiles_y.")
         } else {
- stop(e)
+          stop(e)
         }
       })
     } else {
@@ -668,25 +668,25 @@ analyze_temporal_patterns <- function(binary_stack,
 
   if (verbose) message("Saving results...")
   terra::writeRaster(pattern_raster, pattern_file, overwrite = TRUE,
-   datatype = "INT1U", gdal = c("COMPRESS=LZW"))
+                     datatype = "INT1U", gdal = c("COMPRESS=LZW"))
   terra::writeRaster(decrease_raster, decrease_file, overwrite = TRUE,
-   datatype = "INT2S", gdal = c("COMPRESS=LZW"))
+                     datatype = "INT2S", gdal = c("COMPRESS=LZW"))
   terra::writeRaster(increase_raster, increase_file, overwrite = TRUE,
-   datatype = "INT2S", gdal = c("COMPRESS=LZW"))
+                     datatype = "INT2S", gdal = c("COMPRESS=LZW"))
 
   if (verbose) message("Generating plots...")
 
   pat_cols   <- c("#730000", "#267300", "#B2B2B2", "#A3FF73", "#FF7F7F", "#A900E6", "#eed202")
   pat_labels <- c("Always Absent", "Always Present", "No Pattern",
-         "Increasing", "Decreasing", "Fluctuating", "Failed")
+                  "Increasing", "Decreasing", "Fluctuating", "Failed")
 
   opar1 <- graphics::par(no.readonly = TRUE)
   graphics::par(mar = c(6.5, 4, 3, 2))
   terra::plot(pattern_raster,
-     col    = pat_cols,
-     main   = paste("Pattern Classification\n", min(time_steps), "-", max(time_steps)),
-     breaks = c(0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5),
-     legend = FALSE)
+              col    = pat_cols,
+              main   = paste("Pattern Classification\n", min(time_steps), "-", max(time_steps)),
+              breaks = c(0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5),
+              legend = FALSE)
   graphics::legend(
     x      = "bottom",
     legend = pat_labels,
@@ -705,8 +705,8 @@ analyze_temporal_patterns <- function(binary_stack,
     opar2 <- graphics::par(no.readonly = TRUE)
     graphics::par(mar = c(4, 4, 3, 2))
     terra::plot(decrease_raster,
-       main = paste("Time of First Decrease\n", min(time_steps), "-", max(time_steps)),
-       col  = rev(heat.colors(50)))
+                main = paste("Time of First Decrease\n", min(time_steps), "-", max(time_steps)),
+                col  = rev(heat.colors(50)))
     graphics::par(opar2)
   } else {
     if (verbose) message("Skipping decrease raster plot: no pixels with a significant decrease detected.")
@@ -717,8 +717,8 @@ analyze_temporal_patterns <- function(binary_stack,
     opar3 <- graphics::par(no.readonly = TRUE)
     graphics::par(mar = c(4, 4, 3, 2))
     terra::plot(increase_raster,
-       main = paste("Time of First Increase\n", min(time_steps), "-", max(time_steps)),
-       col  = terrain.colors(50))
+                main = paste("Time of First Increase\n", min(time_steps), "-", max(time_steps)),
+                col  = terrain.colors(50))
     graphics::par(opar3)
   } else {
     if (verbose) message("Skipping increase raster plot: no pixels with a significant increase detected.")
@@ -736,7 +736,7 @@ analyze_temporal_patterns <- function(binary_stack,
     pattern_freq <- as.data.frame(pattern_freq)
     pattern_freq$proportion <- round(pattern_freq$count / sum(pattern_freq$count), 3)
     pattern_names <- c("Always Absent", "Always Present", "No Pattern",
-     "Increasing", "Decreasing", "Fluctuating", "Failed")
+                       "Increasing", "Decreasing", "Fluctuating", "Failed")
     pattern_freq$pattern <- pattern_names[pattern_freq$value]
 
     if (verbose) message("Pattern Classifications:")
@@ -750,7 +750,7 @@ analyze_temporal_patterns <- function(binary_stack,
     if (verbose) message(paste("Decreasing pixels:", format(n_decreasing, big.mark = ",")))
     if (verbose) message(paste("Time range:", min(dec_freq$value), "-", max(dec_freq$value)))
     if (verbose) message(paste("Most common:", dec_freq$value[which.max(dec_freq$count)],
-    paste0("(", format(max(dec_freq$count), big.mark = ","), " pixels)")))
+                               paste0("(", format(max(dec_freq$count), big.mark = ","), " pixels)")))
   }
 
   inc_freq <- as.data.frame(terra::freq(increase_raster))
@@ -760,7 +760,7 @@ analyze_temporal_patterns <- function(binary_stack,
     if (verbose) message(paste("Increasing pixels:", format(n_increasing, big.mark = ",")))
     if (verbose) message(paste("Time range:", min(inc_freq$value), "-", max(inc_freq$value)))
     if (verbose) message(paste("Most common:", inc_freq$value[which.max(inc_freq$count)],
-    paste0("(", format(max(inc_freq$count), big.mark = ","), " pixels)")))
+                               paste0("(", format(max(inc_freq$count), big.mark = ","), " pixels)")))
   }
 
   invisible(list(

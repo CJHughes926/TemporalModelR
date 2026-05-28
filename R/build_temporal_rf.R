@@ -39,7 +39,7 @@
 #'   \itemize{
 #'     \item \code{"prevalence"}: Sets threshold equal to the prevalence
 #'       (proportion of presences) in the training data for that fold.
-#'     \item \code{"tss"}: Selects the threshold that maximises the True Skill
+#'     \item \code{"tss"}: Selects the threshold that maximizes the True Skill
 #'       Statistic (sensitivity + specificity - 1) on the training data.
 #'       Default.
 #'     \item A numeric value between 0 and 1 (e.g. \code{0.4}): Uses that
@@ -107,7 +107,7 @@
 #' the marginal effect of each variable while averaging over all others (with
 #' rug marks for presences and pseudoabsences), and a combined ROC curve panel.
 #'
-#' The returned object is recognised by
+#' The returned object is recognized by
 #' \code{\link{generate_spatiotemporal_predictions}}, which uses the
 #' \code{model_type} field to use the correct prediction and evaluation
 #' logic.

@@ -1,13 +1,13 @@
 #' Build Temporal GAM Models Across Cross-Validation Folds
 #'
-#' Modeling function that constructs binomial generalised additive models (GAMs)
+#' Modeling function that constructs binomial generalized additive models (GAMs)
 #' for each cross-validation fold using presence and pseudoabsence data. Each
 #' model reserves one fold as testing data and uses the remaining folds as
 #' training data. The user supplies the model formula directly using standard
 #' \pkg{mgcv} formula syntax, including smooth terms such as \code{s()},
 #' \code{te()}, and \code{ti()}. Supports automatic or manual probability
 #' thresholding for converting continuous predictions to binary suitability
-#' classifications nessisary for downstream analyses. The returned object follows the same
+#' classifications necessary for downstream analyses. The returned object follows the same
 #' structure as \code{\link{build_temporal_glm}}, \code{\link{build_temporal_hv}},
 #' and \code{\link{build_temporal_rf}}, and is accepted directly by
 #' \code{\link{generate_spatiotemporal_predictions}}.
@@ -57,7 +57,7 @@
 #'   \itemize{
 #'     \item \code{"prevalence"}: Sets threshold equal to the prevalence
 #'       (proportion of presences) in the training data for that fold.
-#'     \item \code{"tss"}: Selects the threshold that maximises the True Skill
+#'     \item \code{"tss"}: Selects the threshold that maximizes the True Skill
 #'       Statistic (sensitivity + specificity - 1) on the training data.
 #'       Default.
 #'     \item A numeric value between 0 and 1 (e.g. \code{0.4}): Uses that
@@ -117,7 +117,7 @@
 #' chosen automatically by \pkg{mgcv} unless specified in the formula. Smoothing
 #' parameters are estimated by REML by default.
 #'
-#' The returned object is recognised by
+#' The returned object is recognized by
 #' \code{\link{generate_spatiotemporal_predictions}}, which uses the
 #' \code{model_type} field to use the correct prediction and evaluation
 #' logic.

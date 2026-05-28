@@ -42,7 +42,7 @@ The preprocessing phase of TemporalModelR takes raw occurrence records and envir
 1.  `raster_align()` - reproject and mask all rasters to a common reference grid.
 2.  `spatiotemporal_rarefaction()` - subset occurrence points to one per pixel per time step.
 3.  `temporally_explicit_extraction()` - extract environmental values matched to each point's observation time.
-4.  `scale_rasters()` - z-score rasters using the per-variable means and SDs from extraction. This step is optional, but should be applied for models sensitive to consistant scaling in predictor variabeles. If not, raw values and aligned rasters may be used. 
+4.  `scale_rasters()` - z-score rasters using the per-variable means and SDs from extraction. This step is optional, but should be applied for models sensitive to consistent scaling in predictor variables. If not, raw values and aligned rasters may be used. 
 5.  `spatiotemporal_partition()` - assign points to single fold, spatial, temporal, spatiotemporal, or random cross-validation folds.
 6.  `generate_absences()` - produce fold-stratified pseudoabsences for presence/absence models.
 
@@ -66,7 +66,7 @@ study_crs <- sf::st_crs(terra::rast(ref_file))
 
 # Aligning rasters {#sec-align}
 
-`raster_align()` standardises every raster in a directory to a single reference grid by reprojecting, resampling, and masking. This is essential because downstream functions assume all environmental layers share identical CRS, resolution, and extent. Even small differences are enough to misalign extraction at the pixel level. With the bundled dataset the raw rasters are already on the same grid, but we run the alignment step to show the call pattern.
+`raster_align()` standardizes every raster in a directory to a single reference grid by reprojecting, resampling, and masking. This is essential because downstream functions assume all environmental layers share identical CRS, resolution, and extent. Even small differences are enough to misalign extraction at the pixel level. With the bundled dataset the raw rasters are already on the same grid, but we run the alignment step to show the call pattern.
 
 ```{r, eval=FALSE}
 aligned_dir <- file.path(tempdir(), "rasters_aligned")
@@ -128,7 +128,7 @@ Two CSVs are written to `output_dir`. The spatiotemporal one is what we pass for
 rare_out$files_created
 ```
 
-If we wanted to focus on annual variation rather than both annual and seasonal variaiotn, we could isntead run this focusion only 'year' as our time_col of interest. This would instead save all unique pixel-year combinations, but assume locations from the same year and location but different seasons share no new data.
+If we wanted to focus on annual variation rather than both annual and seasonal variation, we could instead run this focusing only 'year' as our time_col of interest. This would instead save all unique pixel-year combinations, but assume locations from the same year and location but different seasons share no new data.
 
 ```{r}
 rare_dir <- file.path(tempdir(), "rarefied")
@@ -200,7 +200,7 @@ The same call generates three outputs:
 ext_out$files_created
 ```
 
-The raw values file is what models that don't need scaling will consume. The scaled file applies a z-score per variable using the means and SDs computed across all records. The scaling parameters file records those means and SDs so the same transformation can be applied to the prediction rasters, if nessisary. 
+The raw values file is what models that don't need scaling will consume. The scaled file applies a z-score per variable using the means and SDs computed across all records. The scaling parameters file records those means and SDs so the same transformation can be applied to the prediction rasters, if necessary. 
 
 ```{r}
 ext_out$scaling_params
@@ -248,7 +248,7 @@ We now have a directory of scaled rasters which we'll use for future analyses.
 
 `spatiotemporal_partition()` assigns each occurrence record to a cross-validation fold which will be used to create training and testing datasets to build and assess our temporally explicit models. The function supports five modes:
 
--   **Single fold.** All points used for both training and testing. No held-out validation. Useful for a final production model after cross validatied quality has been established, or when sample sizes are too small for splitting.
+-   **Single fold.** All points used for both training and testing. No held-out validation. Useful for a final production model after cross validated quality has been established, or when sample sizes are too small for splitting.
 -   **Random.** Folds are random shuffles with no spatial or temporal structure. Useful as a naive baseline.
 -   **Spatial-only.** Recursive k-d tree bisection produces geographically distinct contiguous regions, one per fold. Use when you want to test geographic transferability and don't have time structure to exploit.
 -   **Temporal-only.** Each fold spans the full study area but covers a distinct slice of the time series, defined by quantile-based breaks. Use to test temporal transferability.
@@ -285,7 +285,7 @@ partition <- spatiotemporal_partition(
 partition$summary
 ```
 
-The returned `points_sf` carries a `fold` column alongside the original predictor columns. Two of the four folds are geographically restricted but span the full time series; the other two overalap spatially and span the remainder of the study area but are restricted to a distinct time slice each.
+The returned `points_sf` carries a `fold` column alongside the original predictor columns. Two of the four folds are geographically restricted but span the full time series; the other two overlap spatially and span the remainder of the study area but are restricted to a distinct time slice each.
 
 For partitioning purposes, time information must be encoded in a single column based on what temporal scale is relevant for the desired partitioning. Both example workflows in this package use the coarsest time scale for partitioning `time_cols = "year"` at this step (the season is preserved in the point data for later modeling and prediction, just not used for fold construction). If both year and season are conceptually meaningful for fold breaks, encode them into a single ordered numeric column before partitioning. Alternatively, partitioning could be done across seasons to view the environmental transferability of seasonal environmental values. 
 
@@ -293,7 +293,7 @@ For partitioning purposes, time information must be encoded in a single column b
 
 # Generating pseudoabsences {#sec-absences}
 
-`generate_absences()` produces fold-stratified pseudoabsence/background points for presence/absence modeling. Pseudoabsences measure the environmental charactersitics of locations not otherwise characterized by species occcurances and are essential for GLMs, GAMs, and random forests when no 'true absence' points exist. The hypervolume method is presence-only and does not need them.
+`generate_absences()` produces fold-stratified pseudoabsence/background points for presence/absence modeling. Pseudoabsences measure the environmental characteristics of locations not otherwise characterized by species occurrences and are essential for GLMs, GAMs, and random forests when no 'true absence' points exist. The hypervolume method is presence-only and does not need them.
 
 Three generation methods are supported:
 
@@ -337,7 +337,7 @@ Note that `variable_patterns` and `time_cols` here use both `year` and `season`.
 At this point the three key downstream inputs are in hand:
 
 -   `scaled_dir` - the directory of scaled (or aligned in `rasters_aligned`, if scaling was skipped) rasters from which environmental conditions will be projected across space and time.
--   `partition` - the rarified, fold-assigned, time explicit environment data from species occurrence points.
+-   `partition` - the rarefied, fold-assigned, time explicit environment data from species occurrence points.
 -   `absences` - the fold-stratified pseudoabsences with matching environmental attributes.
 
 These are passed directly to any of the four model builders covered in the following parallel vignettes:
@@ -347,4 +347,4 @@ These are passed directly to any of the four model builders covered in the follo
 -   [Modeling with a Random Forest](modeling_rf.html)
 -   [Modeling with a Hypervolume](modeling_hv.html)
 
-Once a model is fitted, predictions are projected through space and time using `generate_spatiotemporal_predictions()`, and the resulting prediction stack is summarised in the [Postprocessing predictions](postprocessing.html) vignette.
+Once a model is fitted, predictions are projected through space and time using `generate_spatiotemporal_predictions()`, and the resulting prediction stack is summarized in the [Post-processing predictions](post-processing.html) vignette.

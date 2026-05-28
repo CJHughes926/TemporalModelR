@@ -51,7 +51,7 @@ By modeling the niche in time-independent E-space using time-independent trainin
 
 # Overview {#sec-overview}
 
-`build_temporal_glm()` fits one binomial GLM per cross-validation fold as was created during the [Preprocessing temporally explicit data](preprocessing.html) vignette. Each fold's model is trained on all data outside the fold and evaluated on the held-out fold. The user supplies the right-hand side of the model formula directly in standard R syntax, with this function supporting linear, polynomial, and interactive terms. See [Formula syntax](#sec-formula). The link function defaults to logit but can be set to probit, complementary log-log, or cauchit. A threshold is selected on the training data and applied to the continuous predictions to produce binary suitability output for downstream summarisation.
+`build_temporal_glm()` fits one binomial GLM per cross-validation fold as was created during the [Preprocessing temporally explicit data](preprocessing.html) vignette. Each fold's model is trained on all data outside the fold and evaluated on the held-out fold. The user supplies the right-hand side of the model formula directly in standard R syntax, with this function supporting linear, polynomial, and interactive terms. See [Formula syntax](#sec-formula). The link function defaults to logit but can be set to probit, complementary log-log, or cauchit. A threshold is selected on the training data and applied to the continuous predictions to produce binary suitability output for downstream summarization.
 
 GLMs are fast to fit, transparent to interpret, and tolerant of the kind of small datasets that occurrence records often provide. The trade-off is that nonlinear environmental responses must be specified manually with polynomial terms or transformations. If you want a more flexible response shape, use `build_temporal_gam()` instead.
 
@@ -89,7 +89,7 @@ glm_out <- build_temporal_glm(
 )
 ```
 
-We see that our model correctly identifies a strong positive relationship between both elevation and forest cover and species occurance. The same `create_plot = TRUE` function also visualizes time independent model assessment metrics relevant to the GLM (above). See [E-space performance](#sec-espace).
+We see that our model correctly identifies a strong positive relationship between both elevation and forest cover and species occurrence. The same `create_plot = TRUE` function also visualizes time independent model assessment metrics relevant to the GLM (above). See [E-space performance](#sec-espace).
 
 ```{r}
 class(glm_out)
@@ -100,7 +100,7 @@ names(glm_out)
 The returned object is a list of class `"TemporalGLM"` containing the following objects:
 
 -   `$models` - named list of `glm` objects, one per fold (`fold1`, `fold2`, ...). Each is a standard `glm` fit and accepts R's standard `summary()`, `coef()`, and `predict()` calls.
--   `$thresholds` - named numeric vector of probability thresholds used to binarise predictions for each fold.
+-   `$thresholds` - named numeric vector of probability thresholds used to binarize predictions for each fold.
 -   `$threshold_method` - character or numeric value recording how the thresholds were chosen (`"tss"`, `"prevalence"`, or a fixed numeric value).
 -   `$model_formula` - the right hand side formula supplied to the function.
 -   `$link` - the link function used (`"logit"`, `"probit"`, `"cloglog"`, or `"cauchit"`) supplied to the function.
@@ -139,7 +139,7 @@ If you choose a link other than logit, set it via the `link` argument.
 
 GLMs produce probabilities on the 0–1 scale. The rest of the TemporalModelR pipeline operates on binary suitability rasters, so a probability threshold must be chosen to convert probabilities into 0/1 predictions. `threshold_method` supports three options:
 
--   `"tss"` (default) - selects the threshold that maximises True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
+-   `"tss"` (default) - selects the threshold that maximizes True Skill Statistic (sensitivity + specificity − 1) on the training data. See [E-space performance](#sec-espace). This balances commission and omission.
 -   `"prevalence"` - sets the threshold equal to the prevalence (proportion of presences) in the training data for that fold.
 -   A numeric value between 0 and 1 - used as a fixed threshold for all folds, e.g. `threshold_method = 0.4`.
 
@@ -164,7 +164,7 @@ glm_out$fold_test_metrics
 Columns:
 
 -   `Fold` - fold identifier matching the folds in `tmr_partition$points_sf$fold`.
--   `Threshold` - the per-fold probability threshold used to binarise predictions.
+-   `Threshold` - the per-fold probability threshold used to binarize predictions.
 -   `Testing_TP` - count of test-set presence points correctly classified as suitable (true positives).
 -   `Testing_FN` - count of test-set presence points incorrectly classified as unsuitable (false negatives).
 -   `Testing_TN` - count of test-set pseudoabsence points correctly classified as unsuitable (true negatives).
@@ -173,11 +173,11 @@ Columns:
 -   `Specificity` - proportion of test-set pseudoabsences correctly classified, `Testing_TN / (Testing_TN + Testing_FP)`. Values close to 1 mean the model rarely flags pseudoabsence points as suitable.
 -   `TSS` - True Skill Statistic, `Sensitivity + Specificity - 1`. Ranges from -1 to 1, with 0 indicating performance no better than random and values above ~0.4 considered useful for most applications.
 -   `Kappa` - Cohen's kappa statistic adjusting overall classification accuracy for the accuracy expected by chance. Ranges from -1 to 1 with similar interpretation to TSS.
--   `AUC` - area under the ROC curve, computed on continuous probabilities rather than binarised predictions, so it is threshold-independent. Useful for comparing the models overall preformance independent of threshold.
+-   `AUC` - area under the ROC curve, computed on continuous probabilities rather than binarized predictions, so it is threshold-independent. Useful for comparing the models overall performance independent of threshold.
 
 The full ROC curve and each above metric are also graphed as an output of `create_plot = T` in the [Fitting a temporal GLM](#sec-fit) section.
 
-E-space metrics are robust to imbalanced sample sizes across time, because they pool across the time series. They are a good metric for assessing overall model fit. Time-specific (G-space) metrics can also be assessed later when we project the model to spesific G-space and time combinations.
+E-space metrics are robust to imbalanced sample sizes across time, because they pool across the time series. They are a good metric for assessing overall model fit. Time-specific (G-space) metrics can also be assessed later when we project the model to specific G-space and time combinations.
 
 <br>
 
@@ -259,11 +259,11 @@ terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
             mar = c(1.0, 1.0, 1.5, 3.0),  legend = FALSE)
 ```
 
-Visualizing our predictions across each season and year, we see that there is generally high agreement among models. These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitbale) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
+Visualizing our predictions across each season and year, we see that there is generally high agreement among models. These rasters represent consensus votes among each of our four folds, with yellow pixels having strong positive consensus among all folds (all four identify the pixel as suitable) and blue pixels having low consensus among folds (few to no folds identify the given pixel as suitable). We also see that the models correctly visually show one of the main temporal trends in the data: loss of habitat through deforestation starting around year 6.
 
 The GLM here does not pick up on the seasonal variability in precipitation patterns driving activity patterns for this hypothetical species, partially because the model itself is missing the relationship between precipitation and occupancy. This is in part due to the lack of low precipitation value background points in our dataset which would correctly identify the gap here and this methods reliance on that background data to make inference. We can explore if other modeling methods are able to fix this hurdle in other vignettes. Alternatively, we could use an alternative method for generating absence points which we describe more in the the [Preprocessing](preprocessing.html) vignette.
 
-Note that here we show that `time_steps` can handle making predictions from compound variables or variables at different temporal scales so long as their temporal scales are nested. For example here "elevation" has no temporal value and is considered to be static across all time steps. "forest_cover" is measured annually, but is considered to be static across all seasons within a year for the purposes of predictions. "prseason" is measured both by year and season, so resulting seasonal predictions reflect that. However if precipitation was only measured based on aggregate seasons but had no associated year, predictios would fail. Predictions can also be made where all variables share the same time step- for example annuual forest cover, annual temprerature, and annual precipitation.
+Note that here we show that `time_steps` can handle making predictions from compound variables or variables at different temporal scales so long as their temporal scales are nested. For example here "elevation" has no temporal value and is considered to be static across all time steps. "forest_cover" is measured annually, but is considered to be static across all seasons within a year for the purposes of predictions. "preseason" is measured both by year and season, so resulting seasonal predictions reflect that. However if precipitation was only measured based on aggregate seasons but had no associated year, predictions would fail. Predictions can also be made where all variables share the same time step- for example annual forest cover, annual temperature, and annual precipitation.
 
 Additionally, a plain vector like `time_steps = 1:15` produces one prediction per value of the first time column; the other time columns are filled in with every unique value present in the occurrence data. So a vector input with `time_cols = c("year", "season")` would produce one prediction per year-season combination observed in the data. A data frame like the `expand.grid()` above gives explicit control: any combination of values can be requested, including ones not present in the occurrence data, as long as the matching rasters exist (Such as Summer or Winter predictions).
 
@@ -312,7 +312,7 @@ plot_model_assessment(
 )
 ```
 
-This produces per-fold time series of percent suitable, sensitivity, specificity, CBP, TP/FN, and TN/FP. When `model_result` is also supplied, overall sensitivity and specificity from `$fold_test_metrics` are added as reference lines. When compound time steps are used (such as year and season), you must choose how they are visualized. Choosing `secondary_time_mode = "combine"` will roll them into one continuous x axis. `secondary_time_mode = "facet"` produces stacked plots as seen below, where the first `time_col` is displayed as the x axis, and a differnt plot is made for each secondary variable (`season` here). By default, the threshold for which CBP is identified as signifcant is 0.05, but this may also be adjusted mannually.
+This produces per-fold time series of percent suitable, sensitivity, specificity, CBP, TP/FN, and TN/FP. When `model_result` is also supplied, overall sensitivity and specificity from `$fold_test_metrics` are added as reference lines. When compound time steps are used (such as year and season), you must choose how they are visualized. Choosing `secondary_time_mode = "combine"` will roll them into one continuous x axis. `secondary_time_mode = "facet"` produces stacked plots as seen below, where the first `time_col` is displayed as the x axis, and a different plot is made for each secondary variable (`season` here). By default, the threshold for which CBP is identified as significant is 0.05, but this may also be adjusted manually.
 
 ```{r fig.height=20}
 plot_model_assessment(
@@ -328,7 +328,7 @@ plot_model_assessment(
 
 # Next steps {#sec-next}
 
-Now that predictions have been generated, you can assess the model and see if it is preforming satisfactory enough for what your goals are. If this is the case, you can preform postprocessing analyses to try to gain additional inference about the spatiotemporal patterns of change in the study region See the [Postprocessing predictions](postprocessing.html) vignette.
+Now that predictions have been generated, you can assess the model and see if it is preforming satisfactory enough for what your goals are. If this is the case, you can preform post-processing analyses to try to gain additional inference about the spatiotemporal patterns of change in the study region See the [Post-processing predictions](post-processing.html) vignette.
 
 For comparison with other algorithms applied to the same dataset:
 
