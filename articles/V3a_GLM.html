@@ -126,15 +126,16 @@ distributions.</p>
 <h2 id="sec-overview">Overview<a class="anchor" aria-label="anchor" href="#sec-overview"></a>
 </h2>
 <p><code><a href="../reference/build_temporal_glm.html">build_temporal_glm()</a></code> fits one binomial GLM per
-cross-validation fold as was created during the <a href="preprocessing.html">Preprocessing temporally explicit data</a>
-vignette. Each fold’s model is trained on all data outside the fold and
-evaluated on the held-out fold. The user supplies the right-hand side of
-the model formula directly in standard R syntax, with this function
-supporting linear, polynomial, and interactive terms. See <a href="#sec-formula">Formula syntax</a>. The link function defaults to
-logit but can be set to probit, complementary log-log, or cauchit. A
-threshold is selected on the training data and applied to the continuous
-predictions to produce binary suitability output for downstream
-summarization.</p>
+cross-validation fold as was created during the <a href="https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html" class="external-link">Preprocessing
+temporally explicit data</a> vignette. Each fold’s model is trained on
+all data outside the fold and evaluated on the held-out fold. The user
+supplies the right-hand side of the model formula directly in standard R
+syntax, with this function supporting linear, polynomial, and
+interactive terms. See <a href="#sec-formula">Formula syntax</a>. The
+link function defaults to logit but can be set to probit, complementary
+log-log, or cauchit. A threshold is selected on the training data and
+applied to the continuous predictions to produce binary suitability
+output for downstream summarization.</p>
 <p>GLMs are fast to fit, transparent to interpret, and tolerant of the
 kind of small datasets that occurrence records often provide. The
 trade-off is that nonlinear environmental responses must be specified

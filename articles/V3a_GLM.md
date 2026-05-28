@@ -53,11 +53,12 @@ dynamic, temporally-explicit ENM predictions of species distributions.
 
 [`build_temporal_glm()`](../reference/build_temporal_glm.md) fits one
 binomial GLM per cross-validation fold as was created during the
-[Preprocessing temporally explicit data](preprocessing.md) vignette.
-Each fold’s model is trained on all data outside the fold and evaluated
-on the held-out fold. The user supplies the right-hand side of the model
-formula directly in standard R syntax, with this function supporting
-linear, polynomial, and interactive terms. See [Formula
+[Preprocessing temporally explicit
+data](https://cjhughes926.github.io/TemporalModelR/articles/V2_Preprocessing.html)
+vignette. Each fold’s model is trained on all data outside the fold and
+evaluated on the held-out fold. The user supplies the right-hand side of
+the model formula directly in standard R syntax, with this function
+supporting linear, polynomial, and interactive terms. See [Formula
 syntax](#sec-formula). The link function defaults to logit but can be
 set to probit, complementary log-log, or cauchit. A threshold is
 selected on the training data and applied to the continuous predictions
