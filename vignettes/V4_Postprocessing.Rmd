@@ -277,4 +277,4 @@ The three post-processing functions together convert the per-fold per-time-step 
 
 These outputs show not only where a species is likely to be, but how that is changing and where those changes are occurring, and have many practical applications.
 
-The above workflow can be applied to any of the previously described model outputs: [GLM](modeling_glm.html), [GAM](modeling_gam.html), [Random Forest](modeling_rf.html) or [Hypervolume](modeling_hv.html).
+The above workflow can be applied to any of the previously described model outputs: [GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html), [GAM](https://cjhughes926.github.io/TemporalModelR/articles/V3b_GAM.html), [Random Forest](https://cjhughes926.github.io/TemporalModelR/articles/V3c_RF.html) or [Hypervolume](https://cjhughes926.github.io/TemporalModelR/articles/V3d_HV.html).
