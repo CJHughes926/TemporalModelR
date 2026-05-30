@@ -172,10 +172,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/Rtmp55s3k9/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/RtmpXGd61A/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/Rtmp55s3k9/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/RtmpXGd61A/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -279,13 +279,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/Rtmp55s3k9/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/RtmpXGd61A/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/Rtmp55s3k9/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/RtmpXGd61A/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/Rtmp55s3k9/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/RtmpXGd61A/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
