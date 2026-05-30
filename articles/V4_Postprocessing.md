@@ -53,8 +53,10 @@ workflow’s
 call, projecting `tmr_glm` across years 1-15 for the Spring season only.
 These are the same files referenced by
 `tmr_predictions$prediction_files` and are produced and inspected in the
-[Modeling with a GLM](modeling_glm.md) vignette. The underlying dataset
-is described in [About the Example Dataset](dataset.md).
+[Modeling with a
+GLM](https://cjhughes926.github.io/TemporalModelR/articles/V3a_GLM.html)
+vignette. The underlying dataset is described in [About the Example
+Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html).
 
 ``` r
 
