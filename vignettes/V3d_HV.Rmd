@@ -164,7 +164,7 @@ E-space metrics are robust to imbalanced sample sizes across time, because they 
 
 For this example we project across all 15 years and 4 seasons, producing 60 prediction layers total, each summarizing votes across the four folds:
 
-```{r}
+```{r eval=FALSE}
 scaled_dir <- system.file("extdata/rasters_scaled", package = "TemporalModelR")
 
 time_steps <- expand.grid(
@@ -187,6 +187,15 @@ preds <- generate_spatiotemporal_predictions(
   output_dir        = file.path(tempdir(), "HV_Predictions"),
   overwrite         = TRUE,
   verbose           = FALSE
+)
+```
+
+```{r echo=FALSE}
+preds <- readRDS(system.file("extdata/precomputed/hv/preds.rds",
+                             package = "TemporalModelR"))
+preds$prediction_files <- list.files(
+  system.file("extdata/precomputed/hv/pred_tifs", package = "TemporalModelR"),
+  pattern = "\\.tif$", full.names = TRUE
 )
 ```
 
