@@ -510,7 +510,7 @@ terra::plot(pred_stack[[block1]], nr = 4, nc = 4,
             levels = 0:4, col = vote_cols)
 ```
 
-![](V3d_HV_files/figure-html/unnamed-chunk-8-1.png)
+![](V3d_HV_files/figure-html/unnamed-chunk-9-1.png)
 
 ``` r
 
@@ -520,7 +520,7 @@ terra::plot(pred_stack[[block2]], nr = 4, nc = 4,
             levels = 0:4, col = vote_cols)
 ```
 
-![](V3d_HV_files/figure-html/unnamed-chunk-9-1.png)
+![](V3d_HV_files/figure-html/unnamed-chunk-10-1.png)
 
 ``` r
 
@@ -530,7 +530,7 @@ terra::plot(pred_stack[[block3]], nr = 4, nc = 4,
             levels = 0:4, col = vote_cols)
 ```
 
-![](V3d_HV_files/figure-html/unnamed-chunk-10-1.png)
+![](V3d_HV_files/figure-html/unnamed-chunk-11-1.png)
 
 ``` r
 
@@ -540,7 +540,7 @@ terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
             levels = 0:4, col = vote_cols)
 ```
 
-![](V3d_HV_files/figure-html/unnamed-chunk-11-1.png)
+![](V3d_HV_files/figure-html/unnamed-chunk-12-1.png)
 
 Visualizing our predictions across each season and year, we see that
 there is generally high agreement among models. These rasters represent
@@ -598,11 +598,11 @@ classifications.
 
 head(preds$timestep_metrics)
 #>   Fold Pct_Suitable N_Pres TP FN Sensitivity        CBP N_Abs TN FP Specificity
-#> 1    1       0.5467      2  2  0         1.0 0.29884444    NA NA NA          NA
-#> 2    2       0.4622      2  1  1         0.5 0.49714568    NA NA NA          NA
-#> 3    3       0.5778      5  5  0         1.0 0.06438789    NA NA NA          NA
-#> 4    4       0.5778      0 NA NA          NA         NA    NA NA NA          NA
-#> 5    1       0.3511      0 NA NA          NA         NA    NA NA NA          NA
+#> 1    1       0.5444      2  2  0         1.0 0.29641975    NA NA NA          NA
+#> 2    2       0.4689      2  1  1         0.5 0.49806420    NA NA NA          NA
+#> 3    3       0.5644      5  5  0         1.0 0.05729359    NA NA NA          NA
+#> 4    4       0.5600      0 NA NA          NA         NA    NA NA NA          NA
+#> 5    1       0.3622      0 NA NA          NA         NA    NA NA NA          NA
 #> 6    2       0.3378      2  1  1         0.5 0.44736790    NA NA NA          NA
 #>   TSS year season
 #> 1  NA    1 Spring
@@ -646,15 +646,15 @@ The overall summary gives a per-fold summary across all time steps:
 
 preds$overall_summary
 #>   Fold N_Timesteps Mean_Pct_Suitable Total_TP Total_FN Overall_Sensitivity
-#> 1    1          60            0.2532       34        3              0.9189
-#> 2    2          60            0.2308       33        4              0.8919
-#> 3    3          60            0.2691       42        1              0.9767
-#> 4    4          60            0.2578       32        1              0.9697
+#> 1    1          60            0.2557       34        3              0.9189
+#> 2    2          60            0.2295       33        4              0.8919
+#> 3    3          60            0.2672       43        0              1.0000
+#> 4    4          60            0.2560       31        2              0.9394
 #>    Overall_CBP Total_TN Total_FP Overall_Specificity Overall_TSS
-#> 1 1.694805e-17        0        0                  NA          NA
-#> 2 2.247894e-17        0        0                  NA          NA
-#> 3 3.589595e-23        0        0                  NA          NA
-#> 4 3.552487e-18        0        0                  NA          NA
+#> 1 2.335697e-17        0        0                  NA          NA
+#> 2 1.869632e-17        0        0                  NA          NA
+#> 3 2.265942e-25        0        0                  NA          NA
+#> 4 1.321179e-16        0        0                  NA          NA
 ```
 
 Rapid visual assessment of these metrics can be done using the function
@@ -672,13 +672,13 @@ plot_model_assessment(
 #> Loaded fold_test_metrics for 4 fold(s).
 ```
 
-![](V3d_HV_files/figure-html/unnamed-chunk-14-1.png)![](V3d_HV_files/figure-html/unnamed-chunk-14-2.png)![](V3d_HV_files/figure-html/unnamed-chunk-14-3.png)![](V3d_HV_files/figure-html/unnamed-chunk-14-4.png)
+![](V3d_HV_files/figure-html/unnamed-chunk-15-1.png)![](V3d_HV_files/figure-html/unnamed-chunk-15-2.png)![](V3d_HV_files/figure-html/unnamed-chunk-15-3.png)![](V3d_HV_files/figure-html/unnamed-chunk-15-4.png)
 
     #> 
     #> Timestep assessment summary.
     #>          Metric    Mean     SD
-    #>    Pct_Suitable  0.2527 0.1880
-    #>     Sensitivity  0.9347 0.1821
+    #>    Pct_Suitable  0.2521 0.1874
+    #>     Sensitivity  0.9354 0.1944
     #>  CBP < 0.05 (%) 17.5000     NA
 
 This produces per-fold time series of percent suitable, sensitivity,
@@ -706,7 +706,7 @@ plot_model_assessment(
 #> Loaded fold_test_metrics for 4 fold(s).
 ```
 
-![](V3d_HV_files/figure-html/unnamed-chunk-15-1.png)![](V3d_HV_files/figure-html/unnamed-chunk-15-2.png)![](V3d_HV_files/figure-html/unnamed-chunk-15-3.png)
+![](V3d_HV_files/figure-html/unnamed-chunk-16-1.png)![](V3d_HV_files/figure-html/unnamed-chunk-16-2.png)![](V3d_HV_files/figure-html/unnamed-chunk-16-3.png)
 
     #> Facet mode: produced 3 stacked plot(s) across 4 season value(s).
 

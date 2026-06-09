@@ -429,7 +429,7 @@ terra::plot(pred_stack[[block1]], nr = 4, nc = 4,
             mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
-![](V3b_GAM_files/figure-html/unnamed-chunk-10-1.png)
+![](V3b_GAM_files/figure-html/unnamed-chunk-11-1.png)
 
 ``` r
 
@@ -437,7 +437,7 @@ terra::plot(pred_stack[[block2]], nr = 4, nc = 4,
             mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
-![](V3b_GAM_files/figure-html/unnamed-chunk-11-1.png)
+![](V3b_GAM_files/figure-html/unnamed-chunk-12-1.png)
 
 ``` r
 
@@ -445,7 +445,7 @@ terra::plot(pred_stack[[block3]], nr = 4, nc = 4,
             mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
-![](V3b_GAM_files/figure-html/unnamed-chunk-12-1.png)
+![](V3b_GAM_files/figure-html/unnamed-chunk-13-1.png)
 
 ``` r
 
@@ -453,7 +453,7 @@ terra::plot(pred_stack[[block4]], nr = 3, nc = 4,
             mar = c(1.0, 1.0, 1.5, 3.0), legend = FALSE)
 ```
 
-![](V3b_GAM_files/figure-html/unnamed-chunk-13-1.png)
+![](V3b_GAM_files/figure-html/unnamed-chunk-14-1.png)
 
 Visualizing our predictions across each season and year, we see that
 there is generally high agreement among models. These rasters represent
@@ -601,7 +601,7 @@ plot_model_assessment(
 #> Loaded fold_test_metrics for 4 fold(s).
 ```
 
-![](V3b_GAM_files/figure-html/unnamed-chunk-16-1.png)![](V3b_GAM_files/figure-html/unnamed-chunk-16-2.png)![](V3b_GAM_files/figure-html/unnamed-chunk-16-3.png)![](V3b_GAM_files/figure-html/unnamed-chunk-16-4.png)![](V3b_GAM_files/figure-html/unnamed-chunk-16-5.png)![](V3b_GAM_files/figure-html/unnamed-chunk-16-6.png)
+![](V3b_GAM_files/figure-html/unnamed-chunk-17-1.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-2.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-3.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-4.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-5.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-6.png)
 
     #> 
     #> Timestep assessment summary.
@@ -635,7 +635,7 @@ plot_model_assessment(
 #> Loaded fold_test_metrics for 4 fold(s).
 ```
 
-![](V3b_GAM_files/figure-html/unnamed-chunk-17-1.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-2.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-3.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-4.png)
+![](V3b_GAM_files/figure-html/unnamed-chunk-18-1.png)![](V3b_GAM_files/figure-html/unnamed-chunk-18-2.png)![](V3b_GAM_files/figure-html/unnamed-chunk-18-3.png)![](V3b_GAM_files/figure-html/unnamed-chunk-18-4.png)
 
     #> Facet mode: produced 4 stacked plot(s) across 4 season value(s).
 
