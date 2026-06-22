@@ -159,9 +159,8 @@
 #'     "forest_cover" = "forest_cover_YEAR",
 #'     "prseas"       = "prseas_YEAR_SEASON"
 #'   ),
-#'   method                   = "buffer",
-#'   buffer_distance          = 300,
-#'   ratio                    = 2,
+#'   method                   = "random",
+#'   ratio                    = 1,
 #'   time_cols                = c("year", "season"),
 #'   create_plot              = FALSE,
 #'   verbose                  = FALSE
