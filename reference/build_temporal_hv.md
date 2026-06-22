@@ -158,7 +158,7 @@ data(tmr_partition_small, package = "TemporalModelR")
 
 build_temporal_hv(
   partition_result = tmr_partition_small,
-  model_vars       = c("elevation", "forest_cover", "prseas"),
+  model_vars       = c("elevation", "forest_cover"),
   method           = "svm",
   output_dir       = tempdir(),
   create_plot      = FALSE,
@@ -236,28 +236,28 @@ build_temporal_hv(
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 20482/20482 hypervolume random points for comparison with 19 test points.
+#> Retaining 6272/6272 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 18620/18620 hypervolume random points for comparison with 19 test points.
+#> Retaining 5824/5824 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 23568/23568 hypervolume random points for comparison with 22 test points.
+#> Retaining 6608/6608 hypervolume random points for comparison with 22 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 22500/22500 hypervolume random points for comparison with 17 test points.
+#> Retaining 6495/6495 hypervolume random points for comparison with 17 test points.
 #> 
 #> Building tree... 
 #> done.

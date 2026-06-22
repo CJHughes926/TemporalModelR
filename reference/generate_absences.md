@@ -219,7 +219,6 @@ generate_absences(
   variable_patterns        = c(
     "elevation"    = "elevation",
     "forest_cover" = "forest_cover_YEAR",
-    "prseas"       = "prseas_YEAR_SEASON"
   ),
   method                   = "random",
   ratio                    = 1,
@@ -227,4 +226,5 @@ generate_absences(
   create_plot              = FALSE,
   verbose                  = FALSE
 )
+#> Error in c(elevation = "elevation", forest_cover = "forest_cover_YEAR",     ): argument 3 is empty
 ```
