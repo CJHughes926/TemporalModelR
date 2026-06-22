@@ -112,7 +112,7 @@ data(tmr_partition, package = "TemporalModelR")
 build_temporal_hv(
   partition_result = tmr_partition,
   model_vars       = c("elevation", "forest_cover", "prseas"),
-  method           = "gaussian",
+  method           = "svm",
   output_dir       = tempdir(),
   create_plot      = FALSE,
   verbose          = FALSE
