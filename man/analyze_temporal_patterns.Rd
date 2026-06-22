@@ -88,34 +88,32 @@ Classification assumes consecutive rasters. Time periods
 shorter than ~15 time steps may be too short to classify increases or decreases.
 }
 \examples{
-\donttest{
-  con_file <- system.file("extdata/binary/consensus_stack.tif",
-        package = "TemporalModelR")
+con_file <- system.file("extdata/binary/consensus_stack.tif",
+      package = "TemporalModelR")
 
-  frq_file <- system.file("extdata/binary/frequency_raster.tif",
-        package = "TemporalModelR")
+frq_file <- system.file("extdata/binary/frequency_raster.tif",
+      package = "TemporalModelR")
 
-  binary_stack   <- terra::rast(con_file)
+binary_stack   <- terra::rast(con_file)
 
-  summary_raster <- terra::rast(frq_file)
+summary_raster <- terra::rast(frq_file)
 
-  time_steps <- expand.grid(
-    year    = 1:15,
-    season  = "Spring",
-    stringsAsFactors = FALSE
-  )
+time_steps <- expand.grid(
+  year    = 1:15,
+  season  = "Spring",
+  stringsAsFactors = FALSE
+)
 
-  analyze_temporal_patterns(
-    binary_stack   = binary_stack,
-    summary_raster = summary_raster,
-    time_steps     = time_steps,
-    output_dir     = tempdir(),
-    spatial_autocorrelation = FALSE,
-    overwrite      = TRUE,
-    estimate_time  = FALSE,
-    verbose        = FALSE
-  )
-}
+analyze_temporal_patterns(
+  binary_stack   = binary_stack,
+  summary_raster = summary_raster,
+  time_steps     = time_steps,
+  output_dir     = tempdir(),
+  spatial_autocorrelation = FALSE,
+  overwrite      = TRUE,
+  estimate_time  = FALSE,
+  verbose        = FALSE
+)
 }
 \seealso{
 Post-processing: \code{\link{summarize_raster_outputs}}

@@ -161,35 +161,33 @@
 #'   \code{\link{build_temporal_rf}}
 #'
 #' @examples
-#' \donttest{
-#'   pts_file <- system.file(
-#'     "extdata/points/extracted_seasonal_Scaled_Values.csv",
-#'     package = "TemporalModelR"
-#'   )
+#' pts_file <- system.file(
+#'   "extdata/points/extracted_seasonal_Scaled_Values.csv",
+#'   package = "TemporalModelR"
+#' )
 #'
-#'   ref_file <- system.file("extdata/rasters_raw/elevation.tif",
-#'                           package = "TemporalModelR")
+#' ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+#'                         package = "TemporalModelR")
 #'
-#'   study_crs <- sf::st_crs(terra::rast(ref_file))
+#' study_crs <- sf::st_crs(terra::rast(ref_file))
 #'
-#'   study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
-#'     sf::st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500),
-#'                 crs = study_crs)
-#'   ))
+#' study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
+#'   sf::st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500),
+#'               crs = study_crs)
+#' ))
 #'
-#'   spatiotemporal_partition(
-#'     reference_shapefile_path = study_area_sf,
-#'     points_file_path         = pts_file,
-#'     xcol                     = "x",
-#'     ycol                     = "y",
-#'     points_crs               = study_crs,
-#'     time_cols                = "year",
-#'     n_spatial_folds          = 2,
-#'     n_temporal_folds         = 2,
-#'     create_plot              = FALSE,
-#'     verbose                  = FALSE
-#'   )
-#' }
+#' spatiotemporal_partition(
+#'   reference_shapefile_path = study_area_sf,
+#'   points_file_path         = pts_file,
+#'   xcol                     = "x",
+#'   ycol                     = "y",
+#'   points_crs               = study_crs,
+#'   time_cols                = "year",
+#'   n_spatial_folds          = 2,
+#'   n_temporal_folds         = 2,
+#'   create_plot              = FALSE,
+#'   verbose                  = FALSE
+#' )
 
 #' @export
 #' @importFrom sf st_read st_as_sf st_transform st_coordinates st_crs st_bbox

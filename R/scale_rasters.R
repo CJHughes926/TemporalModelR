@@ -51,31 +51,29 @@
 #'   \code{\link{raster_align}}
 #'
 #' @examples
-#' \donttest{
-#'   aln_dir     <- system.file("extdata/rasters_aligned",
-#'                              package = "TemporalModelR")
+#' aln_dir     <- system.file("extdata/rasters_aligned",
+#'                            package = "TemporalModelR")
 #'
-#'   params_file <- system.file(
-#'     "extdata/points/extracted_seasonal_Scaling_Parameters.csv",
-#'     package = "TemporalModelR"
-#'   )
+#' params_file <- system.file(
+#'   "extdata/points/extracted_seasonal_Scaling_Parameters.csv",
+#'   package = "TemporalModelR"
+#' )
 #'
-#'   out_dir <- file.path(tempdir(), "scaled")
+#' out_dir <- file.path(tempdir(), "scaled")
 #'
-#'   scale_rasters(
-#'     input_dir           = aln_dir,
-#'     output_dir          = out_dir,
-#'     scaling_params_file = params_file,
-#'     variable_patterns   = c(
-#'       "elevation"    = "elevation",
-#'       "forest_cover" = "forest_cover_YEAR",
-#'       "prseas"       = "prseas_YEAR_SEASON"
-#'     ),
-#'     time_cols           = c("year", "season"),
-#'     overwrite           = TRUE,
-#'     verbose             = FALSE
-#'   )
-#' }
+#' scale_rasters(
+#'   input_dir           = aln_dir,
+#'   output_dir          = out_dir,
+#'   scaling_params_file = params_file,
+#'   variable_patterns   = c(
+#'     "elevation"    = "elevation",
+#'     "forest_cover" = "forest_cover_YEAR",
+#'     "prseas"       = "prseas_YEAR_SEASON"
+#'   ),
+#'   time_cols           = c("year", "season"),
+#'   overwrite           = TRUE,
+#'   verbose             = FALSE
+#' )
 
 #' @export
 #' @importFrom terra rast writeRaster
@@ -112,7 +110,7 @@ scale_rasters <- function(input_dir,
                    paste(missing_params, collapse = ", ")))
   }
 
-  all_files <- list.files(path = input_dir, pattern = "tif",
+  all_files <- list.files(path = input_dir, pattern = "\\.tif$",
                           recursive = TRUE, full.names = TRUE)
   if (verbose) message(paste("Found", length(all_files), "raster files"))
 

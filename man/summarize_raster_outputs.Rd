@@ -68,18 +68,16 @@ consensus) serves as input to \code{\link[TemporalModelR]{analyze_temporal_patte
 identifying long-term trends in suitability.
 }
 \examples{
-\donttest{
-  pred_dir <- system.file("extdata/predictions",
-                          package = "TemporalModelR")
+pred_dir <- system.file("extdata/predictions",
+                        package = "TemporalModelR")
 
-  summarize_raster_outputs(
-    predictions_dir = pred_dir,
-    output_dir      = tempdir(),
-    consensus       = 3,
-    overwrite       = TRUE,
-    verbose         = FALSE
-  )
-}
+summarize_raster_outputs(
+  predictions_dir = pred_dir,
+  output_dir      = tempdir(),
+  consensus       = 3,
+  overwrite       = TRUE,
+  verbose         = FALSE
+)
 }
 \seealso{
 Upstream: \code{\link{generate_spatiotemporal_predictions}}

@@ -75,28 +75,26 @@
 #'   \code{\link{spatiotemporal_partition}}
 #'
 #' @examples
-#' \donttest{
-#'   pts_file <- system.file(
-#'     "extdata/points/synthetic_occurrence_points.csv",
-#'     package = "TemporalModelR"
-#'   )
+#' pts_file <- system.file(
+#'   "extdata/points/synthetic_occurrence_points.csv",
+#'   package = "TemporalModelR"
+#' )
 #'
-#'   ref_file <- system.file("extdata/rasters_raw/elevation.tif",
-#'                           package = "TemporalModelR")
+#' ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+#'                         package = "TemporalModelR")
 #'
-#'   out_dir  <- file.path(tempdir(), "rarefied")
+#' out_dir  <- file.path(tempdir(), "rarefied")
 #'
-#'   spatiotemporal_rarefaction(
-#'     points_sp        = pts_file,
-#'     output_dir       = out_dir,
-#'     reference_raster = ref_file,
-#'     time_cols        = c("year", "season"),
-#'     xcol             = "x",
-#'     ycol             = "y",
-#'     points_crs       = terra::crs(terra::rast(ref_file)),
-#'     verbose          = FALSE
-#'   )
-#' }
+#' spatiotemporal_rarefaction(
+#'   points_sp        = pts_file,
+#'   output_dir       = out_dir,
+#'   reference_raster = ref_file,
+#'   time_cols        = c("year", "season"),
+#'   xcol             = "x",
+#'   ycol             = "y",
+#'   points_crs       = terra::crs(terra::rast(ref_file)),
+#'   verbose          = FALSE
+#' )
 
 #' @export
 #' @importFrom terra rast res ext ncell crs extract vect
@@ -133,9 +131,9 @@ spatiotemporal_rarefaction <- function(points_sp,
       stop(paste0("ERROR: File does not exist: ", points_sp))
     }
 
-    file_ext <- tolower(tools::file_ext(points_sp))
+    file_ext_lower <- tolower(tools::file_ext(points_sp))
 
-    if (file_ext == "csv") {
+    if (file_ext_lower == "csv") {
       if (is.null(xcol))       stop("ERROR: 'xcol' is required when reading CSV files.")
       if (is.null(ycol))       stop("ERROR: 'ycol' is required when reading CSV files.")
       if (is.null(points_crs)) stop("ERROR: 'points_crs' is required when reading CSV files.")
@@ -148,11 +146,11 @@ spatiotemporal_rarefaction <- function(points_sp,
 
       points_sp <- sf::st_as_sf(points_data, coords = c(xcol, ycol), crs = points_crs)
 
-    } else if (file_ext %in% c("shp", "geojson", "gpkg")) {
+    } else if (file_ext_lower %in% c("shp", "geojson", "gpkg")) {
       if (verbose) message(paste("Reading spatial file:", basename(points_sp)))
       points_sp <- sf::st_read(points_sp, quiet = TRUE)
     } else {
-      stop(paste0("ERROR: Unsupported file format: '", file_ext,
+      stop(paste0("ERROR: Unsupported file format: '", file_ext_lower,
                   "'. Supported formats: .csv, .shp, .geojson, .gpkg"))
     }
 

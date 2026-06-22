@@ -108,17 +108,15 @@ The returned object is accepted directly by
 via \code{\link[hypervolume]{hypervolume_project}}.
 }
 \examples{
-\donttest{
-  data(tmr_partition, package = "TemporalModelR")
-  build_temporal_hv(
-    partition_result = tmr_partition,
-    model_vars       = c("elevation", "forest_cover", "prseas"),
-    method           = "gaussian",
-    output_dir       = tempdir(),
-    create_plot      = FALSE,
-    verbose          = FALSE
-  )
-}
+data(tmr_partition, package = "TemporalModelR")
+build_temporal_hv(
+  partition_result = tmr_partition,
+  model_vars       = c("elevation", "forest_cover", "prseas"),
+  method           = "gaussian",
+  output_dir       = tempdir(),
+  create_plot      = FALSE,
+  verbose          = FALSE
+)
 }
 \seealso{
 Preprocessing: \code{\link{spatiotemporal_partition}}

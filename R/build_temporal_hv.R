@@ -104,18 +104,16 @@
 #'   \code{\link[hypervolume]{hypervolume_svm}}
 #'
 #' @examples
-#' \donttest{
-#'   data(tmr_partition, package = "TemporalModelR")
+#' data(tmr_partition, package = "TemporalModelR")
 
-#'   build_temporal_hv(
-#'     partition_result = tmr_partition,
-#'     model_vars       = c("elevation", "forest_cover", "prseas"),
-#'     method           = "gaussian",
-#'     output_dir       = tempdir(),
-#'     create_plot      = FALSE,
-#'     verbose          = FALSE
-#'   )
-#' }
+#' build_temporal_hv(
+#'   partition_result = tmr_partition,
+#'   model_vars       = c("elevation", "forest_cover", "prseas"),
+#'   method           = "gaussian",
+#'   output_dir       = tempdir(),
+#'   create_plot      = FALSE,
+#'   verbose          = FALSE
+#' )
 
 #' @export
 #' @importFrom sf st_drop_geometry
@@ -438,7 +436,7 @@ build_temporal_hv <- function(partition_result,
       })
     }
 
-    if (length(model_list) > 1) if (length(model_list) > 1) {
+    if (length(model_list) > 1) {
       comp_file <- file.path(output_dir, "Hypervolume_Comparison.png")
       hv_joined <- tryCatch(
         suppressMessages(do.call(hypervolume::hypervolume_join, model_list)),

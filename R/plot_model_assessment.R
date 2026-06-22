@@ -82,16 +82,14 @@
 #'   \code{\link{summarize_raster_outputs}}
 #'
 #' @examples
-#' \donttest{
-#'   data(tmr_predictions, package = "TemporalModelR")
+#' data(tmr_predictions, package = "TemporalModelR")
 #'
-#'   plot_model_assessment(
-#'     predictions         = tmr_predictions,
-#'     time_column         = c("year", "season"),
-#'     secondary_time_mode = "combine",
-#'     verbose             = FALSE
-#'   )
-#' }
+#' plot_model_assessment(
+#'   predictions         = tmr_predictions,
+#'   time_column         = c("year", "season"),
+#'   secondary_time_mode = "combine",
+#'   verbose             = FALSE
+#' )
 
 #' @export
 #' @importFrom graphics abline axis legend lines mtext par plot points rect

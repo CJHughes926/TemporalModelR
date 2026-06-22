@@ -84,16 +84,14 @@ if the model's performance warrants further interpretation of the results
 through post-processing analyses.
 }
 \examples{
-\donttest{
-  data(tmr_predictions, package = "TemporalModelR")
+data(tmr_predictions, package = "TemporalModelR")
 
-  plot_model_assessment(
-    predictions         = tmr_predictions,
-    time_column         = c("year", "season"),
-    secondary_time_mode = "combine",
-    verbose             = FALSE
-  )
-}
+plot_model_assessment(
+  predictions         = tmr_predictions,
+  time_column         = c("year", "season"),
+  secondary_time_mode = "combine",
+  verbose             = FALSE
+)
 }
 \seealso{
 Preprocessing: \code{\link{spatiotemporal_partition}},

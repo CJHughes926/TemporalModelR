@@ -129,22 +129,20 @@
 #'   \code{\link{generate_spatiotemporal_predictions}}
 #'
 #' @examples
-#' \donttest{
-#'   data(tmr_partition, package = "TemporalModelR")
+#' data(tmr_partition, package = "TemporalModelR")
 #'
-#'   data(tmr_absences,  package = "TemporalModelR")
+#' data(tmr_absences,  package = "TemporalModelR")
 #'
-#'   build_temporal_glm(
-#'     partition_result     = tmr_partition,
-#'     pseudoabsence_result = tmr_absences,
-#'     model_formula        = ~ elevation + forest_cover + prseas,
-#'     threshold_method     = "tss",
-#'     output_dir           = tempdir(),
-#'     create_plot          = FALSE,
-#'     time_cols            = c("year", "season"),
-#'     verbose              = FALSE
-#'   )
-#' }
+#' build_temporal_glm(
+#'   partition_result     = tmr_partition,
+#'   pseudoabsence_result = tmr_absences,
+#'   model_formula        = ~ elevation + forest_cover + prseas,
+#'   threshold_method     = "tss",
+#'   output_dir           = tempdir(),
+#'   create_plot          = FALSE,
+#'   time_cols            = c("year", "season"),
+#'   verbose              = FALSE
+#' )
 
 #' @export
 #' @importFrom sf st_drop_geometry

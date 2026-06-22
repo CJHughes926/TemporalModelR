@@ -69,42 +69,40 @@ utils::globalVariables(c("x", "y", "radius"))
 #'   \code{\link[TemporalModelR]{analyze_temporal_patterns}}
 #'
 #' @examples
-#' \donttest{
-#'   con_file <- system.file("extdata/binary/consensus_stack.tif",
-#'                           package = "TemporalModelR")
+#' con_file <- system.file("extdata/binary/consensus_stack.tif",
+#'                         package = "TemporalModelR")
 #'
-#'   binary_stack <- terra::rast(con_file)
+#' binary_stack <- terra::rast(con_file)
 #'
-#'   study_crs <- sf::st_crs(binary_stack)
+#' study_crs <- sf::st_crs(binary_stack)
 #'
-#'   zones_sf <- rbind(
-#'     sf::st_sf(ZONE = "West",
-#'               geometry = sf::st_sfc(sf::st_polygon(list(
-#'                 matrix(c(0, 0, 1500, 1500, 0,
-#'                          0, 1500, 1500, 0, 0), ncol = 2)
-#'               )), crs = study_crs)),
-#'     sf::st_sf(ZONE = "East",
-#'               geometry = sf::st_sfc(sf::st_polygon(list(
-#'                 matrix(c(1500, 1500, 3000, 3000, 1500,
-#'                          0,    1500, 1500, 0,    0),    ncol = 2)
-#'               )), crs = study_crs))
-#'   )
+#' zones_sf <- rbind(
+#'   sf::st_sf(ZONE = "West",
+#'             geometry = sf::st_sfc(sf::st_polygon(list(
+#'               matrix(c(0, 0, 1500, 1500, 0,
+#'                        0, 1500, 1500, 0, 0), ncol = 2)
+#'             )), crs = study_crs)),
+#'   sf::st_sf(ZONE = "East",
+#'             geometry = sf::st_sfc(sf::st_polygon(list(
+#'               matrix(c(1500, 1500, 3000, 3000, 1500,
+#'                        0,    1500, 1500, 0,    0),    ncol = 2)
+#'             )), crs = study_crs))
+#' )
 #'
-#'   time_steps <- expand.grid(
-#'     year             = 1:15,
-#'     season           = "Spring",
-#'     stringsAsFactors = FALSE
-#'   )
+#' time_steps <- expand.grid(
+#'   year             = 1:15,
+#'   season           = "Spring",
+#'   stringsAsFactors = FALSE
+#' )
 #'
-#'   analyze_trends_by_spatial_unit(
-#'     shapefile_path = zones_sf,
-#'     name_field     = "ZONE",
-#'     binary_stack   = binary_stack,
-#'     time_steps     = time_steps,
-#'     create_plot    = FALSE,
-#'     verbose        = FALSE
-#'   )
-#' }
+#' analyze_trends_by_spatial_unit(
+#'   shapefile_path = zones_sf,
+#'   name_field     = "ZONE",
+#'   binary_stack   = binary_stack,
+#'   time_steps     = time_steps,
+#'   create_plot    = FALSE,
+#'   verbose        = FALSE
+#' )
 
 #' @export
 #' @importFrom sf st_read st_transform st_coordinates st_point_on_surface st_sf
@@ -180,8 +178,9 @@ analyze_trends_by_spatial_unit <- function(shapefile_path,
   }
   if (has_binary)  binary_stack <- .load_raster_input(binary_stack, "binary_stack")
 
+  if (has_binary) lyr_names <- names(binary_stack)
+
   if (has_binary && length(secondary_filters) > 0) {
-    lyr_names <- names(binary_stack)
     keep_idx  <- seq_len(terra::nlyr(binary_stack))
     for (sc in names(secondary_filters)) {
       val      <- as.character(secondary_filters[[sc]])

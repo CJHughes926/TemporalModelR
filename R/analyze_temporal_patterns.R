@@ -76,34 +76,32 @@
 #' External: \code{\link[fastcpd]{fastcpd}}
 #'
 #' @examples
-#' \donttest{
-#'   con_file <- system.file("extdata/binary/consensus_stack.tif",
-#'         package = "TemporalModelR")
+#' con_file <- system.file("extdata/binary/consensus_stack.tif",
+#'       package = "TemporalModelR")
 #'
-#'   frq_file <- system.file("extdata/binary/frequency_raster.tif",
-#'         package = "TemporalModelR")
+#' frq_file <- system.file("extdata/binary/frequency_raster.tif",
+#'       package = "TemporalModelR")
 #'
-#'   binary_stack   <- terra::rast(con_file)
+#' binary_stack   <- terra::rast(con_file)
 #'
-#'   summary_raster <- terra::rast(frq_file)
+#' summary_raster <- terra::rast(frq_file)
 #'
-#'   time_steps <- expand.grid(
-#'     year    = 1:15,
-#'     season  = "Spring",
-#'     stringsAsFactors = FALSE
-#'   )
+#' time_steps <- expand.grid(
+#'   year    = 1:15,
+#'   season  = "Spring",
+#'   stringsAsFactors = FALSE
+#' )
 #'
-#'   analyze_temporal_patterns(
-#'     binary_stack   = binary_stack,
-#'     summary_raster = summary_raster,
-#'     time_steps     = time_steps,
-#'     output_dir     = tempdir(),
-#'     spatial_autocorrelation = FALSE,
-#'     overwrite      = TRUE,
-#'     estimate_time  = FALSE,
-#'     verbose        = FALSE
-#'   )
-#' }
+#' analyze_temporal_patterns(
+#'   binary_stack   = binary_stack,
+#'   summary_raster = summary_raster,
+#'   time_steps     = time_steps,
+#'   output_dir     = tempdir(),
+#'   spatial_autocorrelation = FALSE,
+#'   overwrite      = TRUE,
+#'   estimate_time  = FALSE,
+#'   verbose        = FALSE
+#' )
 
 #' @export
 #' @importFrom terra rast ext res crop nlyr app focal values ncell freq plot writeRaster mosaic
@@ -637,14 +635,14 @@ analyze_temporal_patterns <- function(binary_stack,
       if (verbose) message("Merging tiles...")
 
       tryCatch({
-        tile_rasters_pattern <- lapply(tile_files_pattern, rast)
-        pattern_raster <- do.call(mosaic, c(tile_rasters_pattern, fun = "mean"))
+        tile_rasters_pattern <- lapply(tile_files_pattern, terra::rast)
+        pattern_raster <- do.call(terra::mosaic, c(tile_rasters_pattern, fun = "mean"))
 
-        tile_rasters_decrease <- lapply(tile_files_decrease, rast)
-        decrease_raster <- do.call(mosaic, c(tile_rasters_decrease, fun = "mean"))
+        tile_rasters_decrease <- lapply(tile_files_decrease, terra::rast)
+        decrease_raster <- do.call(terra::mosaic, c(tile_rasters_decrease, fun = "mean"))
 
-        tile_rasters_increase <- lapply(tile_files_increase, rast)
-        increase_raster <- do.call(mosaic, c(tile_rasters_increase, fun = "mean"))
+        tile_rasters_increase <- lapply(tile_files_increase, terra::rast)
+        increase_raster <- do.call(terra::mosaic, c(tile_rasters_increase, fun = "mean"))
 
       }, error = function(e) {
         if (grepl("cannot allocate vector", e$message, ignore.case = TRUE)) {
@@ -681,6 +679,7 @@ analyze_temporal_patterns <- function(binary_stack,
                   "Increasing", "Decreasing", "Fluctuating", "Failed")
 
   opar1 <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar1), add = TRUE)
   graphics::par(mar = c(6.5, 4, 3, 2))
   terra::plot(pattern_raster,
               col    = pat_cols,
@@ -703,6 +702,7 @@ analyze_temporal_patterns <- function(binary_stack,
   dec_vals <- terra::values(decrease_raster, na.rm = TRUE)
   if (length(dec_vals) > 0 && !all(is.na(dec_vals))) {
     opar2 <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(opar2), add = TRUE)
     graphics::par(mar = c(4, 4, 3, 2))
     terra::plot(decrease_raster,
                 main = paste("Time of First Decrease\n", min(time_steps), "-", max(time_steps)),
@@ -715,6 +715,7 @@ analyze_temporal_patterns <- function(binary_stack,
   inc_vals <- terra::values(increase_raster, na.rm = TRUE)
   if (length(inc_vals) > 0 && !all(is.na(inc_vals))) {
     opar3 <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(opar3), add = TRUE)
     graphics::par(mar = c(4, 4, 3, 2))
     terra::plot(increase_raster,
                 main = paste("Time of First Increase\n", min(time_steps), "-", max(time_steps)),

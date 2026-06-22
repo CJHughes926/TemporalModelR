@@ -65,21 +65,19 @@ This preprocessing step ensures spatial alignment before applying other downstre
 analyses such as \code{\link{temporally_explicit_extraction}} or \code{\link{scale_rasters}}.
 }
 \examples{
-\donttest{
-  raw_dir <- system.file("extdata/rasters_raw", package = "TemporalModelR")
+raw_dir <- system.file("extdata/rasters_raw", package = "TemporalModelR")
 
-  ref     <- file.path(raw_dir, "elevation.tif")
+ref     <- file.path(raw_dir, "elevation.tif")
 
-  out_dir <- file.path(tempdir(), "aligned")
+out_dir <- file.path(tempdir(), "aligned")
 
-  raster_align(
-    input_dir        = raw_dir,
-    output_dir       = out_dir,
-    reference_raster = ref,
-    overwrite        = TRUE,
-    verbose          = FALSE
-  )
-}
+raster_align(
+  input_dir        = raw_dir,
+  output_dir       = out_dir,
+  reference_raster = ref,
+  overwrite        = TRUE,
+  verbose          = FALSE
+)
 }
 \seealso{
 Preprocessing: \code{\link{scale_rasters}},

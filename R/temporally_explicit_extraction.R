@@ -78,39 +78,37 @@
 #'   \code{\link{scale_rasters}}, \code{\link{spatiotemporal_partition}}
 #'
 #' @examples
-#' \donttest{
-#'   pts_file <- system.file(
-#'     "extdata/points/synthetic_occurrence_points.csv",
-#'     package = "TemporalModelR"
-#'   )
+#' pts_file <- system.file(
+#'   "extdata/points/synthetic_occurrence_points.csv",
+#'   package = "TemporalModelR"
+#' )
 #'
-#'   aln_dir  <- system.file("extdata/rasters_aligned",
-#'                           package = "TemporalModelR")
+#' aln_dir  <- system.file("extdata/rasters_aligned",
+#'                         package = "TemporalModelR")
 #'
-#'   ref_file <- system.file("extdata/rasters_raw/elevation.tif",
-#'                           package = "TemporalModelR")
+#' ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+#'                         package = "TemporalModelR")
 #'
-#'   out_dir  <- file.path(tempdir(), "extracted")
+#' out_dir  <- file.path(tempdir(), "extracted")
 #'
-#'   temporally_explicit_extraction(
-#'     points_sp           = pts_file,
-#'     raster_dir          = aln_dir,
-#'     variable_patterns   = c(
-#'       "elevation"    = "elevation",
-#'       "forest_cover" = "forest_cover_YEAR",
-#'       "prseas"       = "prseas_YEAR_SEASON"
-#'     ),
-#'     time_cols           = c("year", "season"),
-#'     xcol                = "x",
-#'     ycol                = "y",
-#'     points_crs          = terra::crs(terra::rast(ref_file)),
-#'     output_dir          = out_dir,
-#'     save_raw            = TRUE,
-#'     save_scaled         = FALSE,
-#'     save_scaling_params = TRUE,
-#'     verbose             = FALSE
-#'   )
-#' }
+#' temporally_explicit_extraction(
+#'   points_sp           = pts_file,
+#'   raster_dir          = aln_dir,
+#'   variable_patterns   = c(
+#'     "elevation"    = "elevation",
+#'     "forest_cover" = "forest_cover_YEAR",
+#'     "prseas"       = "prseas_YEAR_SEASON"
+#'   ),
+#'   time_cols           = c("year", "season"),
+#'   xcol                = "x",
+#'   ycol                = "y",
+#'   points_crs          = terra::crs(terra::rast(ref_file)),
+#'   output_dir          = out_dir,
+#'   save_raw            = TRUE,
+#'   save_scaled         = FALSE,
+#'   save_scaling_params = TRUE,
+#'   verbose             = FALSE
+#' )
 
 #' @export
 #' @importFrom terra rast extract vect

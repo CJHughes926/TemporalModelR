@@ -134,22 +134,20 @@
 #' External: \code{\link[mgcv]{gam}}, \code{\link[mgcv]{s}}
 #'
 #' @examples
-#' \donttest{
-#'   data(tmr_partition, package = "TemporalModelR")
+#' data(tmr_partition, package = "TemporalModelR")
 #'
-#'   data(tmr_absences,  package = "TemporalModelR")
+#' data(tmr_absences,  package = "TemporalModelR")
 #'
-#'   build_temporal_gam(
-#'     partition_result     = tmr_partition,
-#'     pseudoabsence_result = tmr_absences,
-#'     model_formula        = ~ s(elevation) + s(forest_cover) + s(prseas),
-#'     threshold_method     = "tss",
-#'     output_dir           = tempdir(),
-#'     create_plot          = FALSE,
-#'     time_cols            = c("year", "season"),
-#'     verbose              = FALSE
-#'   )
-#' }
+#' build_temporal_gam(
+#'   partition_result     = tmr_partition,
+#'   pseudoabsence_result = tmr_absences,
+#'   model_formula        = ~ s(elevation) + s(forest_cover) + s(prseas),
+#'   threshold_method     = "tss",
+#'   output_dir           = tempdir(),
+#'   create_plot          = FALSE,
+#'   time_cols            = c("year", "season"),
+#'   verbose              = FALSE
+#' )
 
 #' @export
 #' @importFrom sf st_drop_geometry

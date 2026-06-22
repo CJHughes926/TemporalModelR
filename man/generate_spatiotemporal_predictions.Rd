@@ -106,39 +106,37 @@ observing exactly \code{TP} correct by chance. Small values indicate
 predictions are better than random.
 }
 \examples{
-\donttest{
-  data(tmr_partition, package = "TemporalModelR")
+data(tmr_partition, package = "TemporalModelR")
 
-  data(tmr_glm,       package = "TemporalModelR")
+data(tmr_glm,       package = "TemporalModelR")
 
-  data(tmr_absences,  package = "TemporalModelR")
+data(tmr_absences,  package = "TemporalModelR")
 
-  scl_dir    <- system.file("extdata/rasters_scaled",
-                            package = "TemporalModelR")
+scl_dir    <- system.file("extdata/rasters_scaled",
+                          package = "TemporalModelR")
 
-  time_steps <- expand.grid(
-    year             = 1:15,
-    season           = "Spring",
-    stringsAsFactors = FALSE
-  )
+time_steps <- expand.grid(
+  year             = 1:15,
+  season           = "Spring",
+  stringsAsFactors = FALSE
+)
 
-  generate_spatiotemporal_predictions(
-    partition_result     = tmr_partition,
-    model_result         = tmr_glm,
-    pseudoabsence_result = tmr_absences,
-    raster_dir           = scl_dir,
-    variable_patterns    = c(
-      "elevation"    = "elevation",
-      "forest_cover" = "forest_cover_YEAR",
-      "prseas"       = "prseas_YEAR_SEASON"
-    ),
-    time_cols            = c("year", "season"),
-    time_steps           = time_steps,
-    output_dir           = tempdir(),
-    overwrite            = TRUE,
-    verbose              = FALSE
-  )
-}
+generate_spatiotemporal_predictions(
+  partition_result     = tmr_partition,
+  model_result         = tmr_glm,
+  pseudoabsence_result = tmr_absences,
+  raster_dir           = scl_dir,
+  variable_patterns    = c(
+    "elevation"    = "elevation",
+    "forest_cover" = "forest_cover_YEAR",
+    "prseas"       = "prseas_YEAR_SEASON"
+  ),
+  time_cols            = c("year", "season"),
+  time_steps           = time_steps,
+  output_dir           = tempdir(),
+  overwrite            = TRUE,
+  verbose              = FALSE
+)
 }
 \seealso{
 Preprocessing: \code{\link{scale_rasters}},

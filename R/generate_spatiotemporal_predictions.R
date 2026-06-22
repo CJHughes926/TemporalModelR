@@ -103,39 +103,37 @@
 #'   \code{\link{plot_model_assessment}}
 #'
 #' @examples
-#' \donttest{
-#'   data(tmr_partition, package = "TemporalModelR")
+#' data(tmr_partition, package = "TemporalModelR")
 #'
-#'   data(tmr_glm,       package = "TemporalModelR")
+#' data(tmr_glm,       package = "TemporalModelR")
 #'
-#'   data(tmr_absences,  package = "TemporalModelR")
+#' data(tmr_absences,  package = "TemporalModelR")
 #'
-#'   scl_dir    <- system.file("extdata/rasters_scaled",
-#'                             package = "TemporalModelR")
+#' scl_dir    <- system.file("extdata/rasters_scaled",
+#'                           package = "TemporalModelR")
 #'
-#'   time_steps <- expand.grid(
-#'     year             = 1:15,
-#'     season           = "Spring",
-#'     stringsAsFactors = FALSE
-#'   )
+#' time_steps <- expand.grid(
+#'   year             = 1:15,
+#'   season           = "Spring",
+#'   stringsAsFactors = FALSE
+#' )
 #'
-#'   generate_spatiotemporal_predictions(
-#'     partition_result     = tmr_partition,
-#'     model_result         = tmr_glm,
-#'     pseudoabsence_result = tmr_absences,
-#'     raster_dir           = scl_dir,
-#'     variable_patterns    = c(
-#'       "elevation"    = "elevation",
-#'       "forest_cover" = "forest_cover_YEAR",
-#'       "prseas"       = "prseas_YEAR_SEASON"
-#'     ),
-#'     time_cols            = c("year", "season"),
-#'     time_steps           = time_steps,
-#'     output_dir           = tempdir(),
-#'     overwrite            = TRUE,
-#'     verbose              = FALSE
-#'   )
-#' }
+#' generate_spatiotemporal_predictions(
+#'   partition_result     = tmr_partition,
+#'   model_result         = tmr_glm,
+#'   pseudoabsence_result = tmr_absences,
+#'   raster_dir           = scl_dir,
+#'   variable_patterns    = c(
+#'     "elevation"    = "elevation",
+#'     "forest_cover" = "forest_cover_YEAR",
+#'     "prseas"       = "prseas_YEAR_SEASON"
+#'   ),
+#'   time_cols            = c("year", "season"),
+#'   time_steps           = time_steps,
+#'   output_dir           = tempdir(),
+#'   overwrite            = TRUE,
+#'   verbose              = FALSE
+#' )
 
 #' @export
 #' @importFrom terra rast extract values vect ncell nlyr writeRaster
@@ -154,6 +152,9 @@ generate_spatiotemporal_predictions <- function(partition_result,
                                                 overwrite  = FALSE,
                                                 verbose    = TRUE) {
 
+  if (missing(model_result)) {
+    stop("ERROR: 'model_result' is required.")
+  }
 
   partition_result  <- .load_partition_result(partition_result)
   occurrence_points <- partition_result$points_sf
@@ -180,10 +181,6 @@ generate_spatiotemporal_predictions <- function(partition_result,
     } else {
       if (verbose) message(paste("Loaded", nrow(pseudoabs_sf), "pseudoabsence points for per-timestep evaluation."))
     }
-  }
-
-  if (missing(model_result)) {
-    stop("ERROR: 'model_result' is required.")
   }
 
   if (is.character(model_result)) {

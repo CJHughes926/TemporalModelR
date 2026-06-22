@@ -85,28 +85,26 @@ Output CSV files are suitable as direct input to
 \code{\link{temporally_explicit_extraction}}.
 }
 \examples{
-\donttest{
-  pts_file <- system.file(
-    "extdata/points/synthetic_occurrence_points.csv",
-    package = "TemporalModelR"
-  )
+pts_file <- system.file(
+  "extdata/points/synthetic_occurrence_points.csv",
+  package = "TemporalModelR"
+)
 
-  ref_file <- system.file("extdata/rasters_raw/elevation.tif",
-                          package = "TemporalModelR")
+ref_file <- system.file("extdata/rasters_raw/elevation.tif",
+                        package = "TemporalModelR")
 
-  out_dir  <- file.path(tempdir(), "rarefied")
+out_dir  <- file.path(tempdir(), "rarefied")
 
-  spatiotemporal_rarefaction(
-    points_sp        = pts_file,
-    output_dir       = out_dir,
-    reference_raster = ref_file,
-    time_cols        = c("year", "season"),
-    xcol             = "x",
-    ycol             = "y",
-    points_crs       = terra::crs(terra::rast(ref_file)),
-    verbose          = FALSE
-  )
-}
+spatiotemporal_rarefaction(
+  points_sp        = pts_file,
+  output_dir       = out_dir,
+  reference_raster = ref_file,
+  time_cols        = c("year", "season"),
+  xcol             = "x",
+  ycol             = "y",
+  points_crs       = terra::crs(terra::rast(ref_file)),
+  verbose          = FALSE
+)
 }
 \seealso{
 Preprocessing: \code{\link{temporally_explicit_extraction}},
