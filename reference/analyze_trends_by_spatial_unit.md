@@ -116,41 +116,39 @@ Post-processing:
 ## Examples
 
 ``` r
-# \donttest{
-  con_file <- system.file("extdata/binary/consensus_stack.tif",
-                          package = "TemporalModelR")
+con_file <- system.file("extdata/binary/consensus_stack.tif",
+                        package = "TemporalModelR")
 
-  binary_stack <- terra::rast(con_file)
+binary_stack <- terra::rast(con_file)
 
-  study_crs <- sf::st_crs(binary_stack)
+study_crs <- sf::st_crs(binary_stack)
 
-  zones_sf <- rbind(
-    sf::st_sf(ZONE = "West",
-              geometry = sf::st_sfc(sf::st_polygon(list(
-                matrix(c(0, 0, 1500, 1500, 0,
-                         0, 1500, 1500, 0, 0), ncol = 2)
-              )), crs = study_crs)),
-    sf::st_sf(ZONE = "East",
-              geometry = sf::st_sfc(sf::st_polygon(list(
-                matrix(c(1500, 1500, 3000, 3000, 1500,
-                         0,    1500, 1500, 0,    0),    ncol = 2)
-              )), crs = study_crs))
-  )
+zones_sf <- rbind(
+  sf::st_sf(ZONE = "West",
+            geometry = sf::st_sfc(sf::st_polygon(list(
+              matrix(c(0, 0, 1500, 1500, 0,
+                       0, 1500, 1500, 0, 0), ncol = 2)
+            )), crs = study_crs)),
+  sf::st_sf(ZONE = "East",
+            geometry = sf::st_sfc(sf::st_polygon(list(
+              matrix(c(1500, 1500, 3000, 3000, 1500,
+                       0,    1500, 1500, 0,    0),    ncol = 2)
+            )), crs = study_crs))
+)
 
-  time_steps <- expand.grid(
-    year             = 1:15,
-    season           = "Spring",
-    stringsAsFactors = FALSE
-  )
+time_steps <- expand.grid(
+  year             = 1:15,
+  season           = "Spring",
+  stringsAsFactors = FALSE
+)
 
-  analyze_trends_by_spatial_unit(
-    shapefile_path = zones_sf,
-    name_field     = "ZONE",
-    binary_stack   = binary_stack,
-    time_steps     = time_steps,
-    create_plot    = FALSE,
-    verbose        = FALSE
-  )
+analyze_trends_by_spatial_unit(
+  shapefile_path = zones_sf,
+  name_field     = "ZONE",
+  binary_stack   = binary_stack,
+  time_steps     = time_steps,
+  create_plot    = FALSE,
+  verbose        = FALSE
+)
 #>   |                                                          |                                                  |   0%  |                                                          |===                                               |   7%  |                                                          |=======                                           |  13%  |                                                          |==========                                        |  20%  |                                                          |=============                                     |  27%  |                                                          |=================                                 |  33%  |                                                          |====================                              |  40%  |                                                          |=======================                           |  47%  |                                                          |===========================                       |  53%  |                                                          |==============================                    |  60%  |                                                          |=================================                 |  67%  |                                                          |=====================================             |  73%  |                                                          |========================================          |  80%  |                                                          |===========================================       |  87%  |                                                          |===============================================   |  93%  |                                                          |==================================================| 100%
-# }
 ```

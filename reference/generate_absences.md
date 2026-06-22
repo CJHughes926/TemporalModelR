@@ -197,37 +197,35 @@ Modeling: [`build_temporal_hv`](build_temporal_hv.md),
 ## Examples
 
 ``` r
-# \donttest{
-  data(tmr_partition, package = "TemporalModelR")
+data(tmr_partition, package = "TemporalModelR")
 
-  scl_dir   <- system.file("extdata/rasters_scaled",
-                           package = "TemporalModelR")
+scl_dir   <- system.file("extdata/rasters_scaled",
+                         package = "TemporalModelR")
 
-  ref_file  <- system.file("extdata/rasters_raw/elevation.tif",
-                           package = "TemporalModelR")
+ref_file  <- system.file("extdata/rasters_raw/elevation.tif",
+                         package = "TemporalModelR")
 
-  study_crs <- sf::st_crs(terra::rast(ref_file))
+study_crs <- sf::st_crs(terra::rast(ref_file))
 
-  study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
-    sf::st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500),
-                crs = study_crs)
-  ))
+study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
+  sf::st_bbox(c(xmin = 0, xmax = 3000, ymin = 0, ymax = 1500),
+              crs = study_crs)
+))
 
-  generate_absences(
-    partition_result         = tmr_partition,
-    reference_shapefile_path = study_area_sf,
-    raster_dir               = scl_dir,
-    variable_patterns        = c(
-      "elevation"    = "elevation",
-      "forest_cover" = "forest_cover_YEAR",
-      "prseas"       = "prseas_YEAR_SEASON"
-    ),
-    method                   = "buffer",
-    buffer_distance          = 300,
-    ratio                    = 2,
-    time_cols                = c("year", "season"),
-    create_plot              = FALSE,
-    verbose                  = FALSE
-  )
-# }
+generate_absences(
+  partition_result         = tmr_partition,
+  reference_shapefile_path = study_area_sf,
+  raster_dir               = scl_dir,
+  variable_patterns        = c(
+    "elevation"    = "elevation",
+    "forest_cover" = "forest_cover_YEAR",
+    "prseas"       = "prseas_YEAR_SEASON"
+  ),
+  method                   = "buffer",
+  buffer_distance          = 300,
+  ratio                    = 2,
+  time_cols                = c("year", "season"),
+  create_plot              = FALSE,
+  verbose                  = FALSE
+)
 ```

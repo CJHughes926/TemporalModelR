@@ -259,36 +259,34 @@ workflows, ensuring spatial and/or temporal independence between folds.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span>  <span class="va">pts_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="st">"extdata/points/extracted_seasonal_Scaled_Values.csv"</span>,</span></span>
-<span class="r-in"><span>    package <span class="op">=</span> <span class="st">"TemporalModelR"</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pts_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"extdata/points/extracted_seasonal_Scaled_Values.csv"</span>,</span></span>
+<span class="r-in"><span>  package <span class="op">=</span> <span class="st">"TemporalModelR"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">ref_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/rasters_raw/elevation.tif"</span>,</span></span>
-<span class="r-in"><span>                          package <span class="op">=</span> <span class="st">"TemporalModelR"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ref_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/rasters_raw/elevation.tif"</span>,</span></span>
+<span class="r-in"><span>                        package <span class="op">=</span> <span class="st">"TemporalModelR"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">study_crs</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_crs</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">ref_file</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">study_crs</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_crs</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">ref_file</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">study_area_sf</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sfc.html" class="external-link">st_as_sfc</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">3000</span>, ymin <span class="op">=</span> <span class="fl">0</span>, ymax <span class="op">=</span> <span class="fl">1500</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                crs <span class="op">=</span> <span class="va">study_crs</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">study_area_sf</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sfc.html" class="external-link">st_as_sfc</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fl">0</span>, xmax <span class="op">=</span> <span class="fl">3000</span>, ymin <span class="op">=</span> <span class="fl">0</span>, ymax <span class="op">=</span> <span class="fl">1500</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>              crs <span class="op">=</span> <span class="va">study_crs</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="fu">spatiotemporal_partition</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    reference_shapefile_path <span class="op">=</span> <span class="va">study_area_sf</span>,</span></span>
-<span class="r-in"><span>    points_file_path         <span class="op">=</span> <span class="va">pts_file</span>,</span></span>
-<span class="r-in"><span>    xcol                     <span class="op">=</span> <span class="st">"x"</span>,</span></span>
-<span class="r-in"><span>    ycol                     <span class="op">=</span> <span class="st">"y"</span>,</span></span>
-<span class="r-in"><span>    points_crs               <span class="op">=</span> <span class="va">study_crs</span>,</span></span>
-<span class="r-in"><span>    time_cols                <span class="op">=</span> <span class="st">"year"</span>,</span></span>
-<span class="r-in"><span>    n_spatial_folds          <span class="op">=</span> <span class="fl">2</span>,</span></span>
-<span class="r-in"><span>    n_temporal_folds         <span class="op">=</span> <span class="fl">2</span>,</span></span>
-<span class="r-in"><span>    create_plot              <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>    verbose                  <span class="op">=</span> <span class="cn">FALSE</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">spatiotemporal_partition</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  reference_shapefile_path <span class="op">=</span> <span class="va">study_area_sf</span>,</span></span>
+<span class="r-in"><span>  points_file_path         <span class="op">=</span> <span class="va">pts_file</span>,</span></span>
+<span class="r-in"><span>  xcol                     <span class="op">=</span> <span class="st">"x"</span>,</span></span>
+<span class="r-in"><span>  ycol                     <span class="op">=</span> <span class="st">"y"</span>,</span></span>
+<span class="r-in"><span>  points_crs               <span class="op">=</span> <span class="va">study_crs</span>,</span></span>
+<span class="r-in"><span>  time_cols                <span class="op">=</span> <span class="st">"year"</span>,</span></span>
+<span class="r-in"><span>  n_spatial_folds          <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  n_temporal_folds         <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  create_plot              <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>  verbose                  <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Could not achieve target balance within 10 attempts. Final imbalance: 14.67%. Returning best result achieved. Try increasing max_imbalance or adjusting the fold configuration.</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

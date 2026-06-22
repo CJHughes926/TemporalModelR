@@ -102,7 +102,7 @@ install.packages("randomForest")
 
 library(TemporalModelR)
 library(terra)
-#> terra 1.9.27
+#> terra 1.9.34
 
 data(tmr_partition, package = "TemporalModelR")
 

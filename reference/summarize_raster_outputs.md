@@ -98,16 +98,14 @@ Downstream: [`analyze_temporal_patterns`](analyze_temporal_patterns.md)
 ## Examples
 
 ``` r
-# \donttest{
-  pred_dir <- system.file("extdata/predictions",
-                          package = "TemporalModelR")
+pred_dir <- system.file("extdata/predictions",
+                        package = "TemporalModelR")
 
-  summarize_raster_outputs(
-    predictions_dir = pred_dir,
-    output_dir      = tempdir(),
-    consensus       = 3,
-    overwrite       = TRUE,
-    verbose         = FALSE
-  )
-# }
+summarize_raster_outputs(
+  predictions_dir = pred_dir,
+  output_dir      = tempdir(),
+  consensus       = 3,
+  overwrite       = TRUE,
+  verbose         = FALSE
+)
 ```

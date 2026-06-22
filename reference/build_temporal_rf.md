@@ -180,21 +180,19 @@ External:
 ## Examples
 
 ``` r
-# \donttest{
-  data(tmr_partition, package = "TemporalModelR")
+data(tmr_partition, package = "TemporalModelR")
 
-  data(tmr_absences,  package = "TemporalModelR")
+data(tmr_absences,  package = "TemporalModelR")
 
-  build_temporal_rf(
-    partition_result     = tmr_partition,
-    pseudoabsence_result = tmr_absences,
-    model_vars           = c("elevation", "forest_cover", "prseas"),
-    rf_params            = list(ntree = 100),
-    threshold_method     = "tss",
-    output_dir           = tempdir(),
-    create_plot          = FALSE,
-    time_cols            = c("year", "season"),
-    verbose              = FALSE
-  )
-# }
+build_temporal_rf(
+  partition_result     = tmr_partition,
+  pseudoabsence_result = tmr_absences,
+  model_vars           = c("elevation", "forest_cover", "prseas"),
+  rf_params            = list(ntree = 100),
+  threshold_method     = "tss",
+  output_dir           = tempdir(),
+  create_plot          = FALSE,
+  time_cols            = c("year", "season"),
+  verbose              = FALSE
+)
 ```

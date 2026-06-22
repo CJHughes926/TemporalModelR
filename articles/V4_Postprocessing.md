@@ -62,7 +62,7 @@ Dataset](https://cjhughes926.github.io/TemporalModelR/articles/V1_dataset.html).
 
 library(TemporalModelR)
 library(terra)
-#> terra 1.9.27
+#> terra 1.9.34
 library(sf)
 #> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE
 
@@ -387,17 +387,17 @@ present tables depending on which raster inputs were supplied:
 
 zone_summary$overall_summary
 #>   Spatial_Unit Always_Absent Always_Present No_Pattern Increasing Decreasing
-#> 1         West           116             41         38          0         30
-#> 2         East           128             33         26          0         38
+#> 1         West           116             41         39          0         29
+#> 2         East           128             33         28          0         36
 #>   Fluctuating Failed Total_Pixels Pct_Always_Absent Pct_Always_Present
 #> 1           0      0          225             51.56              18.22
 #> 2           0      0          225             56.89              14.67
 #>   Pct_No_Pattern Pct_Increasing Pct_Decreasing Pct_Fluctuating Prop_Increasing
-#> 1          16.89              0          13.33               0               0
-#> 2          11.56              0          16.89               0               0
+#> 1          17.33              0          12.89               0               0
+#> 2          12.44              0          16.00               0               0
 #>   Prop_Stable_Suitable Prop_Decreasing Prop_Stable_Unsuitable
-#> 1                37.61           16.30                  63.04
-#> 2                34.02           19.79                  66.67
+#> 1                37.61           15.76                  63.04
+#> 2                34.02           18.75                  66.67
 ```
 
 - `$timestep_summary` - suitable pixel count per unit per time step,
