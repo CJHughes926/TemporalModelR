@@ -106,8 +106,13 @@
 #' @examples
 #' data(tmr_partition, package = "TemporalModelR")
 #'
-#'tmr_partition$train <- tmr_partition$train[sample(nrow(tmr_partition$train), nrow(tmr_partition$train) / 2), ]
-#'tmr_partition$test  <- tmr_partition$test[sample(nrow(tmr_partition$test),   nrow(tmr_partition$test)  / 2), ]
+#' tmr_partition$points_sf <- do.call(rbind, lapply(
+#'   unique(tmr_partition$points_sf$fold),
+#'   function(f) {
+#'     rows <- tmr_partition$points_sf[tmr_partition$points_sf$fold == f, ]
+#'     rows[sample(nrow(rows), ceiling(nrow(rows) / 2)), ]
+#'   }
+#' ))
 #'
 #' build_temporal_hv(
 #'   partition_result = tmr_partition,
