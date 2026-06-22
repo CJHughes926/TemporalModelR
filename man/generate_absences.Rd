@@ -143,15 +143,7 @@ The three generation methods differ in how the sampling region is defined:
 }
 }
 \examples{
-data(tmr_partition, package = "TemporalModelR")
-
-tmr_partition$points_sf <- do.call(rbind, lapply(
-  unique(tmr_partition$points_sf$fold),
-  function(f) {
-    rows <- tmr_partition$points_sf[tmr_partition$points_sf$fold == f, ]
-    rows[sample(nrow(rows), ceiling(nrow(rows) / 2)), ]
-  }
-))
+data(tmr_partition_small, package = "TemporalModelR")
 
 scl_dir   <- system.file("extdata/rasters_scaled",
                          package = "TemporalModelR")
@@ -167,7 +159,7 @@ study_area_sf <- sf::st_as_sf(sf::st_as_sfc(
 ))
 
 generate_absences(
-  partition_result         = tmr_partition,
+  partition_result         = tmr_partition_small,
   reference_shapefile_path = study_area_sf,
   raster_dir               = scl_dir,
   variable_patterns        = c(

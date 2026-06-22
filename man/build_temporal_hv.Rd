@@ -108,18 +108,10 @@ The returned object is accepted directly by
 via \code{\link[hypervolume]{hypervolume_project}}.
 }
 \examples{
-data(tmr_partition, package = "TemporalModelR")
-
-tmr_partition$points_sf <- do.call(rbind, lapply(
-  unique(tmr_partition$points_sf$fold),
-  function(f) {
-    rows <- tmr_partition$points_sf[tmr_partition$points_sf$fold == f, ]
-    rows[sample(nrow(rows), ceiling(nrow(rows) / 2)), ]
-  }
-))
+data(tmr_partition_small, package = "TemporalModelR")
 
 build_temporal_hv(
-  partition_result = tmr_partition,
+  partition_result = tmr_partition_small,
   model_vars       = c("elevation", "forest_cover", "prseas"),
   method           = "svm",
   output_dir       = tempdir(),
