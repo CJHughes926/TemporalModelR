@@ -218,7 +218,7 @@ generate_absences(
   raster_dir               = scl_dir,
   variable_patterns        = c(
     "elevation"    = "elevation",
-    "forest_cover" = "forest_cover_YEAR",
+    "forest_cover" = "forest_cover_YEAR"
   ),
   method                   = "random",
   ratio                    = 1,
@@ -226,5 +226,4 @@ generate_absences(
   create_plot              = FALSE,
   verbose                  = FALSE
 )
-#> Error in c(elevation = "elevation", forest_cover = "forest_cover_YEAR",     ): argument 3 is empty
 ```
