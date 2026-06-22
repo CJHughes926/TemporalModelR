@@ -156,7 +156,7 @@
 #'   raster_dir               = scl_dir,
 #'   variable_patterns        = c(
 #'     "elevation"    = "elevation",
-#'     "forest_cover" = "forest_cover_YEAR",
+#'     "forest_cover" = "forest_cover_YEAR"
 #'   ),
 #'   method                   = "random",
 #'   ratio                    = 1,
