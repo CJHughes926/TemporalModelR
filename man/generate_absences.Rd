@@ -168,7 +168,7 @@ generate_absences(
   ),
   method                   = "random",
   ratio                    = 1,
-  time_cols                = c("year", "season"),
+  time_cols                = c("year"),
   create_plot              = FALSE,
   verbose                  = FALSE
 )
