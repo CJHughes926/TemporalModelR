@@ -137,6 +137,9 @@
 #' @examples
 #' data(tmr_partition, package = "TemporalModelR")
 #'
+#'tmr_partition$train <- tmr_partition$train[sample(nrow(tmr_partition$train), nrow(tmr_partition$train) / 2), ]
+#'tmr_partition$test  <- tmr_partition$test[sample(nrow(tmr_partition$test),   nrow(tmr_partition$test)  / 2), ]
+#'
 #' scl_dir   <- system.file("extdata/rasters_scaled",
 #'                          package = "TemporalModelR")
 #'
