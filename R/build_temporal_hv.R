@@ -108,7 +108,7 @@
 #'
 #' build_temporal_hv(
 #'   partition_result = tmr_partition_small,
-#'   model_vars       = c("elevation", "forest_cover", "prseas"),
+#'   model_vars       = c("elevation", "forest_cover"),
 #'   method           = "svm",
 #'   output_dir       = tempdir(),
 #'   create_plot      = FALSE,

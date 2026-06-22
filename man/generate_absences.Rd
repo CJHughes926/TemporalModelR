@@ -165,7 +165,6 @@ generate_absences(
   variable_patterns        = c(
     "elevation"    = "elevation",
     "forest_cover" = "forest_cover_YEAR",
-    "prseas"       = "prseas_YEAR_SEASON"
   ),
   method                   = "random",
   ratio                    = 1,
