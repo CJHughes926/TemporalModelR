@@ -154,18 +154,10 @@ External:
 ## Examples
 
 ``` r
-data(tmr_partition, package = "TemporalModelR")
-
-tmr_partition$points_sf <- do.call(rbind, lapply(
-  unique(tmr_partition$points_sf$fold),
-  function(f) {
-    rows <- tmr_partition$points_sf[tmr_partition$points_sf$fold == f, ]
-    rows[sample(nrow(rows), ceiling(nrow(rows) / 2)), ]
-  }
-))
+data(tmr_partition_small, package = "TemporalModelR")
 
 build_temporal_hv(
-  partition_result = tmr_partition,
+  partition_result = tmr_partition_small,
   model_vars       = c("elevation", "forest_cover", "prseas"),
   method           = "svm",
   output_dir       = tempdir(),
@@ -244,7 +236,7 @@ build_temporal_hv(
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 19551/19551 hypervolume random points for comparison with 19 test points.
+#> Retaining 20482/20482 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
@@ -258,14 +250,14 @@ build_temporal_hv(
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 18658/18658 hypervolume random points for comparison with 22 test points.
+#> Retaining 23568/23568 hypervolume random points for comparison with 22 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 19800/19800 hypervolume random points for comparison with 17 test points.
+#> Retaining 22500/22500 hypervolume random points for comparison with 17 test points.
 #> 
 #> Building tree... 
 #> done.
