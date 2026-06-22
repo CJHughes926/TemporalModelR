@@ -199,10 +199,13 @@ Modeling: [`build_temporal_hv`](build_temporal_hv.md),
 ``` r
 data(tmr_partition, package = "TemporalModelR")
 
-tmr_partition$train <- tmr_partition$train[sample(nrow(tmr_partition$train), nrow(tmr_partition$train) / 2), ]
-#> Error in sample.int(length(x), size, replace, prob): invalid 'size' argument
-tmr_partition$test  <- tmr_partition$test[sample(nrow(tmr_partition$test),   nrow(tmr_partition$test)  / 2), ]
-#> Error in sample.int(length(x), size, replace, prob): invalid 'size' argument
+tmr_partition$points_sf <- do.call(rbind, lapply(
+  unique(tmr_partition$points_sf$fold),
+  function(f) {
+    rows <- tmr_partition$points_sf[tmr_partition$points_sf$fold == f, ]
+    rows[sample(nrow(rows), ceiling(nrow(rows) / 2)), ]
+  }
+))
 
 scl_dir   <- system.file("extdata/rasters_scaled",
                          package = "TemporalModelR")

@@ -194,10 +194,13 @@ via <code><a href="https://rdrr.io/pkg/hypervolume/man/hypervolume_project.html"
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tmr_partition</span>, package <span class="op">=</span> <span class="st">"TemporalModelR"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">train</span> <span class="op">&lt;-</span> <span class="va">tmr_partition</span><span class="op">$</span><span class="va">train</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">train</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">train</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>, <span class="op">]</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in sample.int(length(x), size, replace, prob):</span> invalid 'size' argument</span>
-<span class="r-in"><span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">test</span>  <span class="op">&lt;-</span> <span class="va">tmr_partition</span><span class="op">$</span><span class="va">test</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">test</span><span class="op">)</span>,   <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">test</span><span class="op">)</span>  <span class="op">/</span> <span class="fl">2</span><span class="op">)</span>, <span class="op">]</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in sample.int(length(x), size, replace, prob):</span> invalid 'size' argument</span>
+<span class="r-in"><span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">points_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">points_sf</span><span class="op">$</span><span class="va">fold</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">rows</span> <span class="op">&lt;-</span> <span class="va">tmr_partition</span><span class="op">$</span><span class="va">points_sf</span><span class="op">[</span><span class="va">tmr_partition</span><span class="op">$</span><span class="va">points_sf</span><span class="op">$</span><span class="va">fold</span> <span class="op">==</span> <span class="va">f</span>, <span class="op">]</span></span></span>
+<span class="r-in"><span>    <span class="va">rows</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rows</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rows</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">build_temporal_hv</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  partition_result <span class="op">=</span> <span class="va">tmr_partition</span>,</span></span>
@@ -279,28 +282,28 @@ via <code><a href="https://rdrr.io/pkg/hypervolume/man/hypervolume_project.html"
 <span class="r-out co"><span class="r-pr">#&gt;</span> Ball query... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 14818/14818 hypervolume random points for comparison with 37 test points.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 19551/19551 hypervolume random points for comparison with 19 test points.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Building tree... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Ball query... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 14818/14818 hypervolume random points for comparison with 37 test points.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 18620/18620 hypervolume random points for comparison with 19 test points.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Building tree... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Ball query... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 14140/14140 hypervolume random points for comparison with 43 test points.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 18658/18658 hypervolume random points for comparison with 22 test points.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Building tree... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Ball query... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 12012/12012 hypervolume random points for comparison with 33 test points.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Retaining 19800/19800 hypervolume random points for comparison with 17 test points.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Building tree... </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> done.</span>

@@ -156,10 +156,13 @@ External:
 ``` r
 data(tmr_partition, package = "TemporalModelR")
 
-tmr_partition$train <- tmr_partition$train[sample(nrow(tmr_partition$train), nrow(tmr_partition$train) / 2), ]
-#> Error in sample.int(length(x), size, replace, prob): invalid 'size' argument
-tmr_partition$test  <- tmr_partition$test[sample(nrow(tmr_partition$test),   nrow(tmr_partition$test)  / 2), ]
-#> Error in sample.int(length(x), size, replace, prob): invalid 'size' argument
+tmr_partition$points_sf <- do.call(rbind, lapply(
+  unique(tmr_partition$points_sf$fold),
+  function(f) {
+    rows <- tmr_partition$points_sf[tmr_partition$points_sf$fold == f, ]
+    rows[sample(nrow(rows), ceiling(nrow(rows) / 2)), ]
+  }
+))
 
 build_temporal_hv(
   partition_result = tmr_partition,
@@ -241,28 +244,28 @@ build_temporal_hv(
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 14818/14818 hypervolume random points for comparison with 37 test points.
+#> Retaining 19551/19551 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 14818/14818 hypervolume random points for comparison with 37 test points.
+#> Retaining 18620/18620 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 14140/14140 hypervolume random points for comparison with 43 test points.
+#> Retaining 18658/18658 hypervolume random points for comparison with 22 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 12012/12012 hypervolume random points for comparison with 33 test points.
+#> Retaining 19800/19800 hypervolume random points for comparison with 17 test points.
 #> 
 #> Building tree... 
 #> done.
