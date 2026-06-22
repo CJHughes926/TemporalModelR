@@ -45,6 +45,8 @@
   partition (seasonal workflow)
 - [`tmr_partition_annual`](tmr_partition_annual.md) : Pre-built
   spatiotemporal partition (annual workflow)
+- [`tmr_partition_small`](tmr_partition_small.md) : Pre-built
+  spatiotemporal partition, small version (seasonal workflow)
 - [`tmr_predictions`](tmr_predictions.md) : Pre-built spatiotemporal
   predictions (seasonal workflow)
 - [`tmr_predictions_annual`](tmr_predictions_annual.md) : Pre-built
