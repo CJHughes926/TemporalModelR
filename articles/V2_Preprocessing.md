@@ -172,10 +172,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/RtmpKGr3sH/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/RtmpMUu6Yv/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/RtmpKGr3sH/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/RtmpMUu6Yv/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -279,13 +279,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/RtmpKGr3sH/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/RtmpMUu6Yv/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/RtmpKGr3sH/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/RtmpMUu6Yv/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/RtmpKGr3sH/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/RtmpMUu6Yv/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
@@ -347,10 +347,10 @@ points share a consistent transformation.
 
 scaled_dir <- system.file("extdata/rasters_scaled", package = "TemporalModelR")
 
-list.files(aligned_dir, pattern = "\\.tif$")[1:6]
-#> [1] "elevation_Masked_Updated.tif"       "forest_cover_1_Masked_Updated.tif" 
-#> [3] "forest_cover_10_Masked_Updated.tif" "forest_cover_11_Masked_Updated.tif"
-#> [5] "forest_cover_12_Masked_Updated.tif" "forest_cover_13_Masked_Updated.tif"
+list.files(scaled_dir, pattern = "\\.tif$")[1:6]
+#> [1] "elevation_Scaled.tif"       "forest_cover_1_Scaled.tif" 
+#> [3] "forest_cover_10_Scaled.tif" "forest_cover_11_Scaled.tif"
+#> [5] "forest_cover_12_Scaled.tif" "forest_cover_13_Scaled.tif"
 ```
 
 We now have a directory of scaled rasters which we’ll use for future

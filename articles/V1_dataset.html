@@ -325,6 +325,8 @@ indicate year-season combinations with no points:</p>
 <code class="sourceCode R"><span><span class="va">seasons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Spring"</span>, <span class="st">"Summer"</span>, <span class="st">"Autumn"</span><span class="op">)</span></span>
 <span><span class="va">study_extent</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">3000</span>, <span class="fl">0</span>, <span class="fl">1500</span><span class="op">)</span></span>
 <span></span>
+<span><span class="va">opar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>no.readonly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">3</span><span class="op">)</span>,</span>
 <span>    mar   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">1.5</span>, <span class="fl">1.5</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
 <span>    oma   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
@@ -348,6 +350,9 @@ indicate year-season combinations with no points:</p>
 <span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="V1_dataset_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="95%"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">opar</span><span class="op">)</span></span></code></pre></div>
 <p>Together, this points dataset and the rasters above make up the
 landscape and species occurrence data for all of the example
 applications presented in this package’s vignettes.</p>
@@ -446,7 +451,7 @@ files corresponding to intermediate steps throughout various vignettes.
 These are bundled so that users may call them directly and avoid
 re-running previous analyses just to produce them. Each subdirectory can
 be loaded from the system with <code><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file()</a></code>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/predictions"</span>,</span>
 <span>                        package <span class="op">=</span> <span class="st">"TemporalModelR"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">pred_dir</span>, pattern <span class="op">=</span> <span class="st">"\\.tif$"</span><span class="op">)</span></span></code></pre></div>

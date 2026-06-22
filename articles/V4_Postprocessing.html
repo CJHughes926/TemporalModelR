@@ -309,7 +309,7 @@ predictions from <code><a href="../reference/summarize_raster_outputs.html">summ
 <span>  overwrite               <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose                 <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="95%"><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-6-2.png" class="r-plt" alt="" width="95%"></p>
+<p><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="95%"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">patterns</span><span class="op">)</span></span>
@@ -433,17 +433,17 @@ is supplied.</li>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">zone_summary</span><span class="op">$</span><span class="va">overall_summary</span></span>
 <span><span class="co">#&gt;   Spatial_Unit Always_Absent Always_Present No_Pattern Increasing Decreasing</span></span>
-<span><span class="co">#&gt; 1         West           116             41         39          0         29</span></span>
-<span><span class="co">#&gt; 2         East           128             33         28          0         36</span></span>
+<span><span class="co">#&gt; 1         West           116             41         15          0          0</span></span>
+<span><span class="co">#&gt; 2         East           128             33         18          0          0</span></span>
 <span><span class="co">#&gt;   Fluctuating Failed Total_Pixels Pct_Always_Absent Pct_Always_Present</span></span>
-<span><span class="co">#&gt; 1           0      0          225             51.56              18.22</span></span>
-<span><span class="co">#&gt; 2           0      0          225             56.89              14.67</span></span>
+<span><span class="co">#&gt; 1           0     53          225             51.56              18.22</span></span>
+<span><span class="co">#&gt; 2           0     46          225             56.89              14.67</span></span>
 <span><span class="co">#&gt;   Pct_No_Pattern Pct_Increasing Pct_Decreasing Pct_Fluctuating Prop_Increasing</span></span>
-<span><span class="co">#&gt; 1          17.33              0          12.89               0               0</span></span>
-<span><span class="co">#&gt; 2          12.44              0          16.00               0               0</span></span>
+<span><span class="co">#&gt; 1           6.67              0              0               0               0</span></span>
+<span><span class="co">#&gt; 2           8.00              0              0               0               0</span></span>
 <span><span class="co">#&gt;   Prop_Stable_Suitable Prop_Decreasing Prop_Stable_Unsuitable</span></span>
-<span><span class="co">#&gt; 1                37.61           15.76                  63.04</span></span>
-<span><span class="co">#&gt; 2                34.02           18.75                  66.67</span></span></code></pre></div>
+<span><span class="co">#&gt; 1                37.61               0                  63.04</span></span>
+<span><span class="co">#&gt; 2                34.02               0                  66.67</span></span></code></pre></div>
 <ul>
 <li>
 <code>$timestep_summary</code> - suitable pixel count per unit per
@@ -469,7 +469,7 @@ both change rasters are supplied.</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">zone_summary</span><span class="op">$</span><span class="va">change_by_timestep</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Spatial_Unit Time_Step Decrease_Pixels Increase_Pixels</span></span>
 <span><span class="co">#&gt; 1         East         1               0               0</span></span>
-<span><span class="co">#&gt; 2         East        10               4               0</span></span>
+<span><span class="co">#&gt; 2         East        10               0               0</span></span>
 <span><span class="co">#&gt; 3         East        11               0               0</span></span>
 <span><span class="co">#&gt; 4         East        12               0               0</span></span>
 <span><span class="co">#&gt; 5         East        13               0               0</span></span>
@@ -495,7 +495,11 @@ the summarized spatiotemporal dynamics of the landscape.</p>
 <span>  create_plot          <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose              <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="95%"><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-2.png" class="r-plt" alt="" width="95%"><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-3.png" class="r-plt" alt="" width="95%"><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-4.png" class="r-plt" alt="" width="95%"><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-5.png" class="r-plt" alt="" width="95%"></p>
+<p><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="95%"><img src="V4_Postprocessing_files/figure-html/unnamed-chunk-12-2.png" class="r-plt" alt="" width="95%"></p>
+<pre><code><span><span class="co">#&gt; Warning in analyze_trends_by_spatial_unit(shapefile_path = zones_sf, name_field = "ZONE", : change_by_timestep has no non-zero pixel counts  -  skipping change plots.</span></span>
+<span><span class="co">#&gt;   time_steps range: 1-15</span></span>
+<span><span class="co">#&gt;   time_decrease_raster unique values (sample): </span></span>
+<span><span class="co">#&gt;   If ranges differ, check that time_steps matches the raster time step values.</span></span></code></pre>
 <p>The resulting per-timestep and per-spatial-unit outputs of this
 function allow for a robust overarching look at the study region broken
 down by units we care about. An example application may be looking at

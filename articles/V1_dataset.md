@@ -266,6 +266,8 @@ indicate year-season combinations with no points:
 seasons <- c("Spring", "Summer", "Autumn")
 study_extent <- ext(0, 3000, 0, 1500)
 
+opar <- par(no.readonly = TRUE)
+
 par(mfrow = c(15, 3),
     mar   = c(1.5, 1.5, 1.5, 0.5),
     oma   = c(2, 2, 2, 1))
@@ -291,6 +293,12 @@ for (yr in 1:15) {
 ```
 
 ![](V1_dataset_files/figure-html/unnamed-chunk-6-1.png)
+
+``` r
+
+
+par(opar)
+```
 
 Together, this points dataset and the rasters above make up the
 landscape and species occurrence data for all of the example

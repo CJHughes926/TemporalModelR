@@ -150,5 +150,4 @@ analyze_temporal_patterns(
   estimate_time  = FALSE,
   verbose        = FALSE
 )
-
 ```
