@@ -232,10 +232,10 @@ reference and for users who want a static comparison:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rare_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $spatiotemporal</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpxj3LD5/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmpEUoAD9/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $spatial</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpxj3LD5/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/RtmpEUoAD9/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
 <p>If we wanted to focus on annual variation rather than both annual and
 seasonal variation, we could instead run this focusing only ‘year’ as
 our time_col of interest. This would instead save all unique pixel-year
@@ -333,13 +333,13 @@ with annual measures of precipitation.</li>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ext_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $raw</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpxj3LD5/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmpEUoAD9/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaled</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpxj3LD5/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmpEUoAD9/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaling_params</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmpxj3LD5/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/RtmpEUoAD9/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
 <p>The raw values file is what models that don’t need scaling will
 consume. The scaled file applies a z-score per variable using the means
 and SDs computed across all records. The scaling parameters file records
