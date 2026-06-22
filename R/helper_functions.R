@@ -217,7 +217,7 @@
 #' @keywords internal
 #' @noRd
 .classify_pixel_with_times <- function(pixel_vals, n_middle, time_steps,
-                                       method = "MBIC", alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
+                                       alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
 
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
@@ -1197,6 +1197,8 @@
 .plot_trend_timeseries <- function(timestep_summary, all_units, unit_colors,
                                    ts_x_rng, ts_y_max, x_ticks) {
   right_mar <- max(2, ceiling(max(nchar(all_units)) / 2.5) + 1)
+  opar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar))
   graphics::par(mar = c(4, 7.5, 3.5, right_mar),
                 mgp = c(1.8, 0.7, 0))
   graphics::plot(NULL,
@@ -1230,6 +1232,8 @@
 #' @noRd
 ### Cross-unit time-step bar plot of gains (positive) and losses (negative).
 .plot_trend_change_per_step <- function(gain_v, loss_v, yrs_chg, ac_ylim) {
+  opar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar))
   graphics::par(mar = c(5, 8, 3.5, 2),
                 mgp = c(1.8, 0.7, 0))
   graphics::barplot(gain_v,
@@ -1258,6 +1262,8 @@
 ### Horizontal bar plot of total gains and losses per spatial unit across the
 .plot_trend_total_unit <- function(g_tot, l_tot, shared_units, time_steps, tcu_ymax) {
   left_mar <- max(4, ceiling(max(nchar(shared_units)) / 2.5))
+  opar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar))
   graphics::par(mar = c(4, left_mar, 3.5, 1),
                 mgp = c(1.8, 0.7, 0))
 
@@ -1285,6 +1291,8 @@
 #' @keywords internal
 #' @noRd
 .plot_trend_facet_units <- function(change_by_timestep, all_units, n_rows, n_cols) {
+  opar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar))
   graphics::par(mfrow = c(n_rows, n_cols),
                 mar   = c(3.5, 7, 2.5, 0.5),
                 oma   = c(0, 0, 3, 0),
@@ -2327,6 +2335,8 @@
   } else {
     4
   }
+  opar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar), add = TRUE)
   graphics::par(mar = c(bot_mar, 5, 3.5, right_mar), xpd = FALSE)
   if (!is.null(x_labels_attr)) {
     graphics::plot(NULL, xlim = x_lim, ylim = c(y_lo, y_hi),
@@ -2363,6 +2373,8 @@
   y_hi  <- if (!is.null(y_ceil))  min(y_ceil,  y_rng[2] + y_pad) else y_rng[2] + y_pad
   if (is.na(y_lo) || is.na(y_hi) || y_lo >= y_hi) { y_lo <- 0; y_hi <- 1 }
 
+  opar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(opar), add = TRUE)
   graphics::par(mfrow = c(n_combos, 1), mar = c(4, 5, 2.5, 1), oma = c(0, 0, 2.5, 0))
   for (ci in seq_len(n_combos)) {
     combo       <- secondary_combos[ci, , drop = FALSE]

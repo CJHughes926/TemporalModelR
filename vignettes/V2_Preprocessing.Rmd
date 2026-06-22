@@ -237,7 +237,7 @@ scale_rasters(
 ```{r}
 scaled_dir <- system.file("extdata/rasters_scaled", package = "TemporalModelR")
 
-list.files(aligned_dir, pattern = "\\.tif$")[1:6]
+list.files(scaled_dir, pattern = "\\.tif$")[1:6]
 ```
 
 We now have a directory of scaled rasters which we'll use for future analyses. 

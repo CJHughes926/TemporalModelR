@@ -22,6 +22,20 @@
 #'   \code{$voronoi_folds}, \code{$summary}, and \code{$plots}.
 "tmr_partition"
 
+#' Pre-built spatiotemporal partition, small version (seasonal workflow)
+#'
+#' A subsampled version of \code{\link{tmr_partition}} retaining
+#' approximately half the points per fold, for use in examples and tests
+#' where runtime is a concern. Built by sampling
+#' \code{ceiling(n / 2)} rows from each fold of \code{tmr_partition$points_sf}.
+#' Loaded with \code{data(tmr_partition_small)}.
+#'
+#' @format A list with the same structure as \code{\link{tmr_partition}},
+#'   containing \code{$folds}, \code{$points_sf}, \code{$voronoi_blocks},
+#'   \code{$voronoi_folds}, \code{$summary}, and \code{$plots}.
+#' @seealso \code{\link{tmr_partition}}
+"tmr_partition_small"
+
 #' Pre-built pseudoabsence result (seasonal workflow)
 #'
 #' Output from \code{\link{generate_absences}} using the buffer method with
