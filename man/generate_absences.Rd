@@ -8,9 +8,11 @@ generate_absences(partition_result, reference_shapefile_path, raster_dir,
                   variable_patterns, method = "random", ratio = 1,
                   buffer_distance = NULL, env_percentile = 0.05,
                   time_cols = NULL, pseudoabsence_times = NULL,
-                  min_points_per_timestep = 1, create_plot = TRUE,
-                  plot_by_fold = FALSE, plot_palette = "Dark 2",
-                  output_file = NULL, verbose = TRUE)
+                  min_points_per_timestep = 1, user_absence_data = NULL,
+                  xcol = NULL, ycol = NULL, points_crs = NULL,
+                  create_plot = TRUE, plot_by_fold = FALSE,
+                  plot_palette = "Dark 2", output_file = NULL,
+                  verbose = TRUE)
 }
 \arguments{
 \item{partition_result}{List or character. Output from
@@ -34,8 +36,14 @@ for static variables omit it (e.g. \code{"elevation" = "elevation"}). Time
 placeholders must match entries in \code{time_cols}.}
 
 \item{method}{Character. Pseudoabsence generation method. One of
-\code{"random"}, \code{"buffer"}, or \code{"environmental"}.
-Default is \code{"random"}.}
+\code{"random"}, \code{"buffer"}, \code{"environmental"}, or
+\code{"user_data"}. Default is \code{"random"}. When \code{"user_data"}
+is specified, \code{user_absence_data} is used as the source of absence
+locations instead of generating them. \code{ratio}, \code{buffer_distance},
+\code{env_percentile}, and \code{pseudoabsence_times} are ignored.
+\code{raster_dir} and \code{variable_patterns} are required for all
+methods, including \code{"user_data"}, for temporally-matched environmental
+extraction at the absence points.}
 
 \item{ratio}{Numeric. Number of pseudoabsence points to generate per
 presence point. Default is \code{1}. Values of 2, 10, 50, etc. are
@@ -75,6 +83,25 @@ points to generate per time step per fold. Default is \code{1}. When
 generated per time step per fold, independent of the number of
 presence points. \code{ratio} and \code{min_points_per_timestep} cannot
 both be 0.}
+
+\item{user_absence_data}{Character, sf object, sfc object, Spatial object,
+or data frame. Path to occurrence data (\code{.csv}, \code{.shp},
+\code{.geojson}, \code{.gpkg}) or a spatial object to be processed as absence
+data for downstream operations. Required when \code{method = "user_data"}.
+Should be preprocessed with \code{\link{spatiotemporal_rarefaction}} in the
+same formatting as presence data if not already thinned.}
+
+\item{xcol}{Character. Name of the x-coordinate column in \code{user_absence_data}.
+Required when when \code{method = "environmental"} and \code{user_absence_data}
+is a CSV file or data frame.}
+
+\item{ycol}{Character. Name of the y-coordinate column in \code{user_absence_data}.
+Required when when \code{method = "environmental"} and \code{user_absence_data}
+is a CSV file or data frame.}
+
+\item{points_crs}{Character or CRS object. CRS of the \code{user_absence_data}.
+Required when when \code{method = "environmental"} and
+\code{user_absence_data} is a CSV file or data frame.}
 
 \item{create_plot}{Logical. If \code{TRUE} (default), generates diagnostic
 plots showing the spatial and temporal distribution of generated
@@ -119,14 +146,19 @@ proportionally to the number of presence points in each time step within each
 fold. Three generation methods are supported: random sampling within the
 study area, buffer-constrained sampling around presence points, and
 environmentally biased sampling that targets areas outside the known
-environmental tolerance of the species.
+environmental tolerance of the species. Additionally, this function can be used
+to process user defined absences to work with downflow operations. This may be
+any list of points for which a user wants to count as 'absences' in downflow
+operations, including negative occupancy surveys, or alternatively surveys for
+similar species which may act as pseudoabsences for the presence of the species
+of interest.
 }
 \details{
 Generates sets of background data based on user-specified methodology that
 can be used as pseudoabsence data for the purposes of training
 presence/absence models.
 
-The three generation methods differ in how the sampling region is defined:
+The four generation methods differ in how the absence locations are obtained:
 \itemize{
   \item \strong{Random}: Points are sampled uniformly at random from the
     full study area, excluding a negligible buffer around presence locations
@@ -140,6 +172,13 @@ The three generation methods differ in how the sampling region is defined:
     representative subset. If \code{buffer_distance} is supplied the
     environmental filtering is applied only within that buffered region,
     implementing the full three-step approach of Senay et al. (2013).
+  \item \strong{User data}: Absence locations are taken directly from
+    \code{user_absence_data} to be used when user has a predefined set of
+    absense points. Points are assigned to folds by spatial join against the
+    partition fold boundaries, with unmatched points routed to
+    temporal folds by time value. Environmental values are then extracted
+    at the supplied locations using the same time-matched logic as the
+    generated methods.
 }
 }
 \examples{

@@ -34,6 +34,13 @@ loaded via \code{\link[base]{system.file}}.
     \code{year}, \code{season}, and \code{pres = 1}.}
   \item{\code{extdata/points/synthetic_occurrence_points.shp}}{Same
     points as a shapefile.}
+  \item{\code{extdata/points/synthetic_user_presences.csv}}{A second-species
+    presence dataset for demonstrating \code{method = "user_data"} in
+    \code{\link{generate_absences}}. Points were derived from buffer-
+    constrained environmental pseudoabsences of the primary species and
+    reformatted as presences (\code{pres = 1}). Same column structure as
+    \code{synthetic_occurrence_points.csv} (\code{x}, \code{y},
+    \code{year}, \code{season}, \code{pres}).}
   \item{\code{extdata/points/extracted_seasonal_*.csv}}{Outputs from
     \code{\link{temporally_explicit_extraction}} using the seasonal
     predictor set: \code{_Raw_Values.csv}, \code{_Scaled_Values.csv},

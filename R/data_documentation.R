@@ -131,6 +131,23 @@
 "tmr_predictions_annual"
 
 
+#' Pre-built user_data pseudoabsences (seasonal workflow)
+#'
+#' Output of \code{\link{generate_absences}} run with
+#' \code{method = "user_data"} against \code{\link{tmr_partition}}, using
+#' \code{inst/extdata/points/synthetic_user_presences.csv} as the supplied
+#' absence locations. The CSV contains occurrence-formatted points for a
+#' 'related speecies' to that data of interest to be used as a proxy for survey
+#' effort for the species of interest, serving as an alternative method for
+#' generating pseudoabsences.
+#'
+#' @format A list as returned by \code{\link{generate_absences}}, containing
+#'   \code{$pseudoabsences} (an sf object with attached predictor columns),
+#'   \code{$plots}, and \code{$summary}.
+#'
+"tmr_absences_user"
+
+
 ### Bundled extdata --------------------------------------------------------
 
 #' Bundled rasters, point files, and prediction outputs
