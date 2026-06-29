@@ -603,8 +603,6 @@ plot_model_assessment(
 
 ![](V3b_GAM_files/figure-html/unnamed-chunk-17-1.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-2.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-3.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-4.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-5.png)![](V3b_GAM_files/figure-html/unnamed-chunk-17-6.png)
 
-    #> 
-    #> Timestep assessment summary.
     #>          Metric    Mean     SD
     #>    Pct_Suitable  0.2055 0.0898
     #>     Sensitivity  0.9306 0.2136
