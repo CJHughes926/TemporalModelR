@@ -417,19 +417,20 @@ spatiotemporal_partition <- function(reference_shapefile_path,
     mean_per_fold     <- mean(final_fold_counts)
     imbalance         <- max(abs(final_fold_counts - mean_per_fold)) / mean_per_fold
 
-    plot_list <- if (create_plot) {
+    plot_result <- if (create_plot) {
       .plot_partitions_base(pts_sf, reference_shapefile, final_fold_counts, mean_per_fold,
                             n_random_folds, "random", time_cols, !is.null(time_cols), 1, NULL,
                             plot_palette)
     } else {
-      list()
+      list(plots = list(), fold_polygons = NULL)
     }
 
     result <- .build_partition_result(pts_sf, NULL, final_fold_counts, mean_per_fold, imbalance,
                                       n_spatial, n_temporal, total_folds, partition_mode,
                                       temporal_partitioning, FALSE, TRUE,
                                       0, 0, 0, n_random_folds,
-                                      n_removed, n_original, plot_list, output_file,
+                                      n_removed, n_original, plot_result$plots, output_file,
+                                      reference_shapefile = reference_shapefile,
                                       verbose = verbose)
     if (verbose) message(paste(utils::capture.output(
       print(result$summary, row.names = FALSE)), collapse = "\n"))
@@ -489,19 +490,20 @@ spatiotemporal_partition <- function(reference_shapefile_path,
                      "%) due to uneven point density. This is expected for spatial CV."))
     }
 
-    plot_list <- if (create_plot) {
+    plot_result <- if (create_plot) {
       .plot_partitions_base(pts_work, reference_shapefile, fc, mpf,
                             total_folds, partition_mode, time_cols, temporal_partitioning,
                             n_temporal, voronoi_sf, plot_palette)
     } else {
-      list()
+      list(plots = list(), fold_polygons = NULL)
     }
 
     result <- .build_partition_result(pts_work, voronoi_sf, fc, mpf, imb,
                                       n_spatial, n_temporal, total_folds, partition_mode,
                                       temporal_partitioning, use_balanced, FALSE,
                                       n_spatial_folds, n_temporal_folds, n_balanced_folds, 0,
-                                      n_removed, n_original, plot_list, output_file,
+                                      n_removed, n_original, plot_result$plots, output_file,
+                                      reference_shapefile = reference_shapefile,
                                       verbose = verbose)
     if (verbose) message(paste(utils::capture.output(
       print(result$summary, row.names = FALSE)), collapse = "\n"))
@@ -620,19 +622,20 @@ spatiotemporal_partition <- function(reference_shapefile_path,
   mean_per_fold     <- best_mean
   imbalance         <- best_imbalance
 
-  plot_list <- if (create_plot) {
+  plot_result <- if (create_plot) {
     .plot_partitions_base(pts_sf, reference_shapefile, final_fold_counts, mean_per_fold,
                           total_folds, partition_mode, time_cols, temporal_partitioning,
                           n_temporal, voronoi_sf, plot_palette)
   } else {
-    list()
+    list(plots = list(), fold_polygons = NULL)
   }
 
   result <- .build_partition_result(pts_sf, voronoi_sf, final_fold_counts, mean_per_fold,
                                     imbalance, n_spatial, n_temporal, total_folds, partition_mode,
                                     temporal_partitioning, use_balanced, FALSE,
                                     n_spatial_folds, n_temporal_folds, n_balanced_folds, 0,
-                                    n_removed, n_original, plot_list, output_file,
+                                    n_removed, n_original, plot_result$plots, output_file,
+                                    reference_shapefile = reference_shapefile,
                                     verbose = verbose)
   if (verbose) message(paste(utils::capture.output(
     print(result$summary, row.names = FALSE)), collapse = "\n"))

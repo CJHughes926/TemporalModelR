@@ -317,17 +317,6 @@ plot_model_assessment <- function(predictions,
     ref_vals <- if (!is.null(ov_sum) && "Mean_Pct_Suitable" %in% names(ov_sum))
       ov_sum$Mean_Pct_Suitable else NULL
 
-    .new_plot(an$Pct_Suitable, ref_vals,
-              title = "G-Space Predictions per Time Step",
-              ylab  = "Proportion of Study Area Predicted Suitable",
-              x_lim = x_lim, x_axis_label = x_axis_label,
-              x_tck = x_tck, x_labels_attr = x_labels_attr,
-              y_floor = 0, y_ceil = 1)
-
-    .ref_lines(ov_sum, "Mean_Pct_Suitable", all_folds, fold_colors)
-    .tseries(t_all, an$Pct_Suitable, an$Fold, t_sum, an_summary$Mean_Pct_Suitable,
-             all_folds, fold_colors, col_mean)
-
     leg_lab <- "Cross-fold mean"
     leg_col <- col_mean
     leg_lty <- 1
@@ -338,7 +327,19 @@ plot_model_assessment <- function(predictions,
       leg_lty <- c(leg_lty, 2)
       leg_lwd <- c(leg_lwd, 1.5)
     }
-    .line_legend(leg_lab, leg_col, leg_lty, leg_lwd)
+
+    .new_plot(an$Pct_Suitable, ref_vals,
+              title = "G-Space Predictions per Time Step",
+              ylab  = "Proportion of Study Area Predicted Suitable",
+              x_lim = x_lim, x_axis_label = x_axis_label,
+              x_tck = x_tck, x_labels_attr = x_labels_attr,
+              y_floor = 0, y_ceil = 1,
+              draw_fn = function() {
+                .ref_lines(ov_sum, "Mean_Pct_Suitable", all_folds, fold_colors)
+                .tseries(t_all, an$Pct_Suitable, an$Fold, t_sum, an_summary$Mean_Pct_Suitable,
+                         all_folds, fold_colors, col_mean)
+                .line_legend(leg_lab, leg_col, leg_lty, leg_lwd)
+              })
     plot_list$pct_suitable <- grDevices::recordPlot()
   }
 
@@ -348,17 +349,6 @@ plot_model_assessment <- function(predictions,
       if (!is.null(ov_sum)    && "Overall_Sensitivity" %in% names(ov_sum))    ov_sum$Overall_Sensitivity,
       if (!is.null(fold_test) && "Sensitivity"          %in% names(fold_test)) fold_test$Sensitivity
     )
-
-    .new_plot(an$Sensitivity, ref_vals,
-              title = "Sensitivity per Time Step", ylab = "Sensitivity",
-              x_lim = x_lim, x_axis_label = x_axis_label,
-              x_tck = x_tck, x_labels_attr = x_labels_attr,
-              y_floor = 0, y_ceil = 1)
-
-    .ref_lines(ov_sum,    "Overall_Sensitivity", all_folds, fold_colors, lty = 2, lwd = 1.2)
-    .ref_lines(fold_test, "Sensitivity",          all_folds, fold_colors, lty = 3, lwd = 1.5)
-    .tseries(t_all, an$Sensitivity, an$Fold, t_sum, an_summary$Mean_Sensitivity,
-             all_folds, fold_colors, col_mean)
 
     leg_lab <- "Cross-fold mean"
     leg_col <- col_mean
@@ -376,7 +366,19 @@ plot_model_assessment <- function(predictions,
       leg_lty <- c(leg_lty, 3)
       leg_lwd <- c(leg_lwd, 1.5)
     }
-    .line_legend(leg_lab, leg_col, leg_lty, leg_lwd)
+
+    .new_plot(an$Sensitivity, ref_vals,
+              title = "Sensitivity per Time Step", ylab = "Sensitivity",
+              x_lim = x_lim, x_axis_label = x_axis_label,
+              x_tck = x_tck, x_labels_attr = x_labels_attr,
+              y_floor = 0, y_ceil = 1,
+              draw_fn = function() {
+                .ref_lines(ov_sum,    "Overall_Sensitivity", all_folds, fold_colors, lty = 2, lwd = 1.2)
+                .ref_lines(fold_test, "Sensitivity",          all_folds, fold_colors, lty = 3, lwd = 1.5)
+                .tseries(t_all, an$Sensitivity, an$Fold, t_sum, an_summary$Mean_Sensitivity,
+                         all_folds, fold_colors, col_mean)
+                .line_legend(leg_lab, leg_col, leg_lty, leg_lwd)
+              })
     plot_list$sensitivity <- grDevices::recordPlot()
   }
 
@@ -386,17 +388,6 @@ plot_model_assessment <- function(predictions,
       if (!is.null(ov_sum)    && "Overall_Specificity" %in% names(ov_sum))    ov_sum$Overall_Specificity,
       if (!is.null(fold_test) && "Specificity"          %in% names(fold_test)) fold_test$Specificity
     )
-
-    .new_plot(an$Specificity, ref_vals,
-              title = "Specificity per Time Step", ylab = "Specificity",
-              x_lim = x_lim, x_axis_label = x_axis_label,
-              x_tck = x_tck, x_labels_attr = x_labels_attr,
-              y_floor = 0, y_ceil = 1)
-
-    .ref_lines(ov_sum,    "Overall_Specificity", all_folds, fold_colors, lty = 2, lwd = 1.2)
-    .ref_lines(fold_test, "Specificity",          all_folds, fold_colors, lty = 3, lwd = 1.5)
-    .tseries(t_all, an$Specificity, an$Fold, t_sum, an_summary$Mean_Specificity,
-             all_folds, fold_colors, col_mean)
 
     leg_lab <- "Cross-fold mean"
     leg_col <- col_mean
@@ -414,7 +405,19 @@ plot_model_assessment <- function(predictions,
       leg_lty <- c(leg_lty, 3)
       leg_lwd <- c(leg_lwd, 1.5)
     }
-    .line_legend(leg_lab, leg_col, leg_lty, leg_lwd)
+
+    .new_plot(an$Specificity, ref_vals,
+              title = "Specificity per Time Step", ylab = "Specificity",
+              x_lim = x_lim, x_axis_label = x_axis_label,
+              x_tck = x_tck, x_labels_attr = x_labels_attr,
+              y_floor = 0, y_ceil = 1,
+              draw_fn = function() {
+                .ref_lines(ov_sum,    "Overall_Specificity", all_folds, fold_colors, lty = 2, lwd = 1.2)
+                .ref_lines(fold_test, "Specificity",          all_folds, fold_colors, lty = 3, lwd = 1.5)
+                .tseries(t_all, an$Specificity, an$Fold, t_sum, an_summary$Mean_Specificity,
+                         all_folds, fold_colors, col_mean)
+                .line_legend(leg_lab, leg_col, leg_lty, leg_lwd)
+              })
     plot_list$specificity <- grDevices::recordPlot()
   }
 
@@ -435,6 +438,8 @@ plot_model_assessment <- function(predictions,
       } else {
         4
       }
+      opar_cbp <- graphics::par(no.readonly = TRUE)
+      on.exit(graphics::par(opar_cbp), add = TRUE)
       graphics::par(mar = c(bot_mar, 5, 3.5, 12), xpd = FALSE)
       if (!is.null(x_labels_attr)) {
         graphics::plot(NULL, xlim = x_lim, ylim = lim, log = "y",
@@ -495,6 +500,8 @@ plot_model_assessment <- function(predictions,
       } else {
         4
       }
+      opar_tp <- graphics::par(no.readonly = TRUE)
+      on.exit(graphics::par(opar_tp), add = TRUE)
       graphics::par(mar = c(bot_mar, 5, 3.5, 12), xpd = FALSE)
       if (!is.null(x_labels_attr)) {
         graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
@@ -553,6 +560,8 @@ plot_model_assessment <- function(predictions,
       } else {
         4
       }
+      opar_tn <- graphics::par(no.readonly = TRUE)
+      on.exit(graphics::par(opar_tn), add = TRUE)
       graphics::par(mar = c(bot_mar, 5, 3.5, 12), xpd = FALSE)
       if (!is.null(x_labels_attr)) {
         graphics::plot(NULL, xlim = x_lim, ylim = c(y_min, y_max),
@@ -635,13 +644,11 @@ plot_model_assessment <- function(predictions,
     summary_df <- do.call(rbind, summary_rows)
     rownames(summary_df) <- NULL
     if (verbose) {
-      message("\nTimestep assessment summary.")
       message(paste(utils::capture.output(
         print(summary_df, row.names = FALSE)), collapse = "\n"))
     }
   }
 
-  graphics::par(opar)
   plot_list$timestep_summary <- an_summary
   if (!is.null(ov_sum)) plot_list$overall_summary <- ov_sum
   invisible(plot_list)
