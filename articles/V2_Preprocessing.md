@@ -172,10 +172,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/Rtmpwwf9eD/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/RtmpyEWRbD/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/Rtmpwwf9eD/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/RtmpyEWRbD/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -279,13 +279,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
@@ -544,7 +544,7 @@ step.
 
 ### User data method
 
-The `generate_absences` function alternativly allows for users to
+The `generate_absences` function alternatively allows for users to
 process a set of defined absences for use with downstream operations in
 this package. These points may represent true absence records, such as
 negative occupancy survey locations, or may represent pseudoabsence
@@ -557,7 +557,7 @@ generated internally, and this output can subsequently be used in any
 function requiring outputs from `generate_absences`.
 
 We consider `synthetic_user_presences.csv` as a second related species
-to our species of interest. We assume that the survey methedology is
+to our species of interest. We assume that the survey methodology is
 similar for both species, and any surveys conducted for this second
 species would also have subsequently detected our species of interest if
 it was present.
@@ -585,10 +585,41 @@ nrow(user_pts)
 ```
 
 The file has the same `x`, `y`, `year`, `season` columns as the primary
-occurrence data. We pass it to
+occurrence data. Before passing it to
+[`generate_absences()`](../reference/generate_absences.md), we apply the
+same spatiotemporal rarefaction step used for the primary presences.
+This ensures that if the second species’ dataset contains multiple
+records in the same pixel and time step due to repeat surveys or
+aggregated data, only one is retained, preventing pseudoreplication in
+the absence set for the same reason it is prevented in the presence set.
+
+``` r
+
+user_rare_dir <- file.path(tempdir(), "rarefied_user")
+
+user_rare_out <- spatiotemporal_rarefaction(
+  points_sp        = user_pts_file,
+  output_dir       = user_rare_dir,
+  reference_raster = ref_file,
+  time_cols        = c("year", "season"),
+  xcol             = "x",
+  ycol             = "y",
+  points_crs       = study_crs,
+  output_prefix    = "Pts_user",
+  verbose          = FALSE
+)
+
+user_rare_out$input_points
+#> [1] 300
+
+user_rare_out$spatiotemporal_points
+#> [1] 296
+```
+
+We pass the rarefied file to
 [`generate_absences()`](../reference/generate_absences.md) via
 `user_absence_data`, along with the coordinate column names and CRS so
-that it can be processed as pseudoabcenses for future modeling.
+that it can be processed as pseudoabsences for future modeling.
 
 ``` r
 
@@ -602,9 +633,9 @@ absences_user <- generate_absences(
     "prseas"       = "prseas_YEAR_SEASON"
   ),
   method                   = "user_data",
-  user_absence_data        = user_pts_file,
-  xcol                     = "x",
-  ycol                     = "y",
+  user_absence_data        = user_rare_out$files_created$spatiotemporal,
+  xcol                     = "X",
+  ycol                     = "Y",
   points_crs               = study_crs,
   time_cols                = c("year", "season"),
   create_plot              = TRUE,
@@ -613,15 +644,15 @@ absences_user <- generate_absences(
 )
 ```
 
-![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-1.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-2.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-3.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-4.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-5.png)
+![](V2_Preprocessing_files/figure-html/unnamed-chunk-16-1.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-16-2.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-16-3.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-16-4.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-16-5.png)
 
 ``` r
 
 
 absences_user$summary
 #>   fold n_presences n_pseudoabsences ratio_achieved
-#> 1    1          37               96          2.595
-#> 2    2          37               73          1.973
+#> 1    1          37               93          2.514
+#> 2    2          37               72          1.946
 #> 3    3          43               67          1.558
 #> 4    4          33               64          1.939
 ```
