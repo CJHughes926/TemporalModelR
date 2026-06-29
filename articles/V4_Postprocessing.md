@@ -201,7 +201,7 @@ series, classifying it into one of six categories:
     time.
 
 Changepoint detection runs via
-[`fastcpd::fastcpd_binomial()`](https://fastcpd.xingchi.li/reference/fastcpd_binomial.html)
+[`fastcpd::fastcpd_binomial()`](https://rdrr.io/pkg/fastcpd/man/fastcpd_binomial.html)
 with each pixel’s previous-time-step value included as a predictor to
 account for temporal autocorrelation. When
 `spatial_autocorrelation = TRUE`, the proportion of a pixel’s

@@ -39,7 +39,7 @@ analyze_temporal_patterns(binary_stack, summary_raster, time_steps,
 
   List. Named list of parameters passed to fastcpd changepoint detection
   function. Default is empty list. Supports parameterization from
-  [`fastcpd_binomial`](https://fastcpd.xingchi.li/reference/fastcpd_binomial.html).
+  [`fastcpd_binomial`](https://rdrr.io/pkg/fastcpd/man/fastcpd_binomial.html).
 
 - output_dir:
 
@@ -119,7 +119,7 @@ Classification assumes consecutive rasters. Time periods shorter than
 Post-processing:
 [`summarize_raster_outputs`](summarize_raster_outputs.md)
 
-External: [`fastcpd`](https://fastcpd.xingchi.li/reference/fastcpd.html)
+External: [`fastcpd`](https://rdrr.io/pkg/fastcpd/man/fastcpd.html)
 
 ## Examples
 

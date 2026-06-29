@@ -236,28 +236,28 @@ build_temporal_hv(
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 6272/6272 hypervolume random points for comparison with 19 test points.
+#> Retaining 4928/4928 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 5824/5824 hypervolume random points for comparison with 19 test points.
+#> Retaining 4928/4928 hypervolume random points for comparison with 19 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 6608/6608 hypervolume random points for comparison with 22 test points.
+#> Retaining 6136/6136 hypervolume random points for comparison with 22 test points.
 #> 
 #> Building tree... 
 #> done.
 #> Ball query... 
 #> 
 #> done.
-#> Retaining 6495/6495 hypervolume random points for comparison with 17 test points.
+#> Retaining 4763/4763 hypervolume random points for comparison with 17 test points.
 #> 
 #> Building tree... 
 #> done.
