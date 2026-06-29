@@ -5,13 +5,23 @@ proportionally to the number of presence points in each time step within each
 fold. Three generation methods are supported: random sampling within the
 study area, buffer-constrained sampling around presence points, and
 environmentally biased sampling that targets areas outside the known
-environmental tolerance of the species."><meta property="og:description" content="Generates pseudoabsence or background points for each fold produced by
+environmental tolerance of the species. Additionally, this function can be used
+to process user defined absences to work with downflow operations. This may be
+any list of points for which a user wants to count as 'absences' in downflow
+operations, including negative occupancy surveys, or alternatively surveys for
+similar species which may act as pseudoabsences for the presence of the species
+of interest."><meta property="og:description" content="Generates pseudoabsence or background points for each fold produced by
 spatiotemporal_partition, distributed across time steps
 proportionally to the number of presence points in each time step within each
 fold. Three generation methods are supported: random sampling within the
 study area, buffer-constrained sampling around presence points, and
 environmentally biased sampling that targets areas outside the known
-environmental tolerance of the species."></head><body>
+environmental tolerance of the species. Additionally, this function can be used
+to process user defined absences to work with downflow operations. This may be
+any list of points for which a user wants to count as 'absences' in downflow
+operations, including negative occupancy surveys, or alternatively surveys for
+similar species which may act as pseudoabsences for the presence of the species
+of interest."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +29,7 @@ environmental tolerance of the species."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">TemporalModelR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +72,12 @@ proportionally to the number of presence points in each time step within each
 fold. Three generation methods are supported: random sampling within the
 study area, buffer-constrained sampling around presence points, and
 environmentally biased sampling that targets areas outside the known
-environmental tolerance of the species.</p>
+environmental tolerance of the species. Additionally, this function can be used
+to process user defined absences to work with downflow operations. This may be
+any list of points for which a user wants to count as 'absences' in downflow
+operations, including negative occupancy surveys, or alternatively surveys for
+similar species which may act as pseudoabsences for the presence of the species
+of interest.</p>
     </div>
 
     <div class="section level2">
@@ -71,9 +86,11 @@ environmental tolerance of the species.</p>
 <span>                  <span class="va">variable_patterns</span>, method <span class="op">=</span> <span class="st">"random"</span>, ratio <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                  buffer_distance <span class="op">=</span> <span class="cn">NULL</span>, env_percentile <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>                  time_cols <span class="op">=</span> <span class="cn">NULL</span>, pseudoabsence_times <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>                  min_points_per_timestep <span class="op">=</span> <span class="fl">1</span>, create_plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                  plot_by_fold <span class="op">=</span> <span class="cn">FALSE</span>, plot_palette <span class="op">=</span> <span class="st">"Dark 2"</span>,</span>
-<span>                  output_file <span class="op">=</span> <span class="cn">NULL</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>                  min_points_per_timestep <span class="op">=</span> <span class="fl">1</span>, user_absence_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                  xcol <span class="op">=</span> <span class="cn">NULL</span>, ycol <span class="op">=</span> <span class="cn">NULL</span>, points_crs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                  create_plot <span class="op">=</span> <span class="cn">TRUE</span>, plot_by_fold <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                  plot_palette <span class="op">=</span> <span class="st">"Dark 2"</span>, output_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                  verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -110,8 +127,14 @@ placeholders must match entries in <code>time_cols</code>.</p></dd>
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>Character. Pseudoabsence generation method. One of
-<code>"random"</code>, <code>"buffer"</code>, or <code>"environmental"</code>.
-Default is <code>"random"</code>.</p></dd>
+<code>"random"</code>, <code>"buffer"</code>, <code>"environmental"</code>, or
+<code>"user_data"</code>. Default is <code>"random"</code>. When <code>"user_data"</code>
+is specified, <code>user_absence_data</code> is used as the source of absence
+locations instead of generating them. <code>ratio</code>, <code>buffer_distance</code>,
+<code>env_percentile</code>, and <code>pseudoabsence_times</code> are ignored.
+<code>raster_dir</code> and <code>variable_patterns</code> are required for all
+methods, including <code>"user_data"</code>, for temporally-matched environmental
+extraction at the absence points.</p></dd>
 
 
 <dt id="arg-ratio">ratio<a class="anchor" aria-label="anchor" href="#arg-ratio"></a></dt>
@@ -165,6 +188,33 @@ presence points. <code>ratio</code> and <code>min_points_per_timestep</code> can
 both be 0.</p></dd>
 
 
+<dt id="arg-user-absence-data">user_absence_data<a class="anchor" aria-label="anchor" href="#arg-user-absence-data"></a></dt>
+<dd><p>Character, sf object, sfc object, Spatial object,
+or data frame. Path to occurrence data (<code>.csv</code>, <code>.shp</code>,
+<code>.geojson</code>, <code>.gpkg</code>) or a spatial object to be processed as absence
+data for downstream operations. Required when <code>method = "user_data"</code>.
+Should be preprocessed with <code><a href="spatiotemporal_rarefaction.html">spatiotemporal_rarefaction</a></code> in the
+same formatting as presence data if not already thinned.</p></dd>
+
+
+<dt id="arg-xcol">xcol<a class="anchor" aria-label="anchor" href="#arg-xcol"></a></dt>
+<dd><p>Character. Name of the x-coordinate column in <code>user_absence_data</code>.
+Required when when <code>method = "environmental"</code> and <code>user_absence_data</code>
+is a CSV file or data frame.</p></dd>
+
+
+<dt id="arg-ycol">ycol<a class="anchor" aria-label="anchor" href="#arg-ycol"></a></dt>
+<dd><p>Character. Name of the y-coordinate column in <code>user_absence_data</code>.
+Required when when <code>method = "environmental"</code> and <code>user_absence_data</code>
+is a CSV file or data frame.</p></dd>
+
+
+<dt id="arg-points-crs">points_crs<a class="anchor" aria-label="anchor" href="#arg-points-crs"></a></dt>
+<dd><p>Character or CRS object. CRS of the <code>user_absence_data</code>.
+Required when when <code>method = "environmental"</code> and
+<code>user_absence_data</code> is a CSV file or data frame.</p></dd>
+
+
 <dt id="arg-create-plot">create_plot<a class="anchor" aria-label="anchor" href="#arg-create-plot"></a></dt>
 <dd><p>Logical. If <code>TRUE</code> (default), generates diagnostic
 plots showing the spatial and temporal distribution of generated
@@ -214,7 +264,7 @@ pseudoabsence counts.</p></dd>
     <p>Generates sets of background data based on user-specified methodology that
 can be used as pseudoabsence data for the purposes of training
 presence/absence models.</p>
-<p>The three generation methods differ in how the sampling region is defined:</p><ul><li><p><strong>Random</strong>: Points are sampled uniformly at random from the
+<p>The four generation methods differ in how the absence locations are obtained:</p><ul><li><p><strong>Random</strong>: Points are sampled uniformly at random from the
     full study area, excluding a negligible buffer around presence locations
     to prevent exact overlap.</p></li>
 <li><p><strong>Buffer</strong>: Points are sampled within buffers of radius
@@ -226,6 +276,13 @@ presence/absence models.</p>
     representative subset. If <code>buffer_distance</code> is supplied the
     environmental filtering is applied only within that buffered region,
     implementing the full three-step approach of Senay et al. (2013).</p></li>
+<li><p><strong>User data</strong>: Absence locations are taken directly from
+    <code>user_absence_data</code> to be used when user has a predefined set of
+    absense points. Points are assigned to folds by spatial join against the
+    partition fold boundaries, with unmatched points routed to
+    temporal folds by time value. Environmental values are then extracted
+    at the supplied locations using the same time-matched logic as the
+    generated methods.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

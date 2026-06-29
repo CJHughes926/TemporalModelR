@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">TemporalModelR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -232,10 +232,10 @@ reference and for users who want a static comparison:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rare_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $spatiotemporal</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmp9UlRtW/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/Rtmpwwf9eD/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $spatial</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmp9UlRtW/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/Rtmpwwf9eD/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
 <p>If we wanted to focus on annual variation rather than both annual and
 seasonal variation, we could instead run this focusing only ‘year’ as
 our time_col of interest. This would instead save all unique pixel-year
@@ -333,13 +333,13 @@ with annual measures of precipitation.</li>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ext_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $raw</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmp9UlRtW/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaled</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmp9UlRtW/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaling_params</span></span>
-<span><span class="co">#&gt; [1] "/tmp/Rtmp9UlRtW/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
 <p>The raw values file is what models that don’t need scaling will
 consume. The scaled file applies a z-score per variable using the means
 and SDs computed across all records. The scaling parameters file records
@@ -500,7 +500,7 @@ Pseudoabsences measure the environmental characteristics of locations
 not otherwise characterized by species occurrences and are essential for
 GLMs, GAMs, and random forests when no ‘true absence’ points exist. The
 hypervolume method is presence-only and does not need them.</p>
-<p>Three generation methods are supported:</p>
+<p>Four generation methods are supported:</p>
 <ul>
 <li>
 <strong>Random.</strong> Uniform sampling across the study area with
@@ -518,11 +518,25 @@ k-means clustering selects a spatially representative subset. When
 <code>buffer_distance</code> is also supplied the environmental
 filtering is restricted to within that buffer, implementing the
 three-step approach of Senay et al. (2013).</li>
+<li>
+<strong>User data.</strong> A user-supplied set of points is used
+directly as the absence locations rather than generating them.
+Environmental values are extracted internally at each point’s matched
+time step using the same <code>raster_dir</code> and
+<code>variable_patterns</code> as the other methods. Fold assignment is
+performed automatically by spatial join against the partition’s fold
+boundaries, with any points outside the spatial folds routed to temporal
+folds by their time value. This is the appropriate method when you have
+true absence records, or target-group background points from a separate
+survey.</li>
 </ul>
 <p>The function distributes pseudoabsences across folds and across time
 steps in proportion to the presences in each fold-time combination, so
 the potential environmental conditions experienced by each pseudoabsence
 match those experienced by the presences it complements.</p>
+<div class="section level3">
+<h3 id="buffer-method">Buffer method<a class="anchor" aria-label="anchor" href="#buffer-method"></a>
+</h3>
 <p>We use the buffer method with a 300 m radius (three pixels at the
 synthetic landscape’s 100 m resolution) and a 2:1
 pseudoabsence-to-presence ratio:</p>
@@ -541,13 +555,12 @@ pseudoabsence-to-presence ratio:</p>
 <span>  ratio                    <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  time_cols                <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"year"</span>, <span class="st">"season"</span><span class="op">)</span>,</span>
 <span>  create_plot              <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  plot_by_fold <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  plot_by_fold             <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose                  <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-13-2.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-13-3.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-13-4.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-13-5.png" class="r-plt" alt="" width="95%"></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span></span>
 <span><span class="va">absences</span><span class="op">$</span><span class="va">summary</span></span>
 <span><span class="co">#&gt;   fold n_presences n_pseudoabsences ratio_achieved</span></span>
 <span><span class="co">#&gt; 1    1          37               74              2</span></span>
@@ -560,7 +573,86 @@ pseudoabsences are stamped with year-season values just like the
 presences, and the environmental values attached to them are pulled from
 the matching time-specific raster. This consistency is what keeps the
 temporally explicit workflow intact through the model fitting step.</p>
+</div>
+<div class="section level3">
+<h3 id="user-data-method">User data method<a class="anchor" aria-label="anchor" href="#user-data-method"></a>
+</h3>
+<p>The <code>generate_absences</code> function alternativly allows for
+users to process a set of defined absences for use with downstream
+operations in this package. These points may represent true absence
+records, such as negative occupancy survey locations, or may represent
+pseudoabsence locations, such as occupancy locations for similar taxa
+used as a proxy for survey effort. When using
+<code>method = "user_data"</code>, the function assigns each point to a
+fold, then extracts temporally matched environmental values exactly as
+it would for generated pseudoabsences. The output is identical except
+for the fact that the points were not generated internally, and this
+output can subsequently be used in any function requiring outputs from
+<code>generate_absences</code>.</p>
+<p>We consider <code>synthetic_user_presences.csv</code> as a second
+related species to our species of interest. We assume that the survey
+methedology is similar for both species, and any surveys conducted for
+this second species would also have subsequently detected our species of
+interest if it was present.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">user_pts_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata/points/synthetic_user_presences.csv"</span>,</span>
+<span>  package <span class="op">=</span> <span class="st">"TemporalModelR"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">user_pts</span> <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">user_pts_file</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">user_pts</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           x         y year season pres</span></span>
+<span><span class="co">#&gt; 1 1115.2174 1241.3043    1 Spring    1</span></span>
+<span><span class="co">#&gt; 2 1979.0323  566.1290    1 Spring    1</span></span>
+<span><span class="co">#&gt; 3  814.0000  802.0000    1 Spring    1</span></span>
+<span><span class="co">#&gt; 4 1514.5161  333.8710    1 Spring    1</span></span>
+<span><span class="co">#&gt; 5 1747.0149  444.0299    2 Autumn    1</span></span>
+<span><span class="co">#&gt; 6  960.2041 1029.5918    2 Autumn    1</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">user_pts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 300</span></span></code></pre></div>
+<p>The file has the same <code>x</code>, <code>y</code>,
+<code>year</code>, <code>season</code> columns as the primary occurrence
+data. We pass it to <code><a href="../reference/generate_absences.html">generate_absences()</a></code> via
+<code>user_absence_data</code>, along with the coordinate column names
+and CRS so that it can be processed as pseudoabcenses for future
+modeling.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">absences_user</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_absences.html">generate_absences</a></span><span class="op">(</span></span>
+<span>  partition_result         <span class="op">=</span> <span class="va">partition</span>,</span>
+<span>  reference_shapefile_path <span class="op">=</span> <span class="va">study_area_sf</span>,</span>
+<span>  raster_dir               <span class="op">=</span> <span class="va">scaled_dir</span>,</span>
+<span>  variable_patterns        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"elevation"</span>    <span class="op">=</span> <span class="st">"elevation"</span>,</span>
+<span>    <span class="st">"forest_cover"</span> <span class="op">=</span> <span class="st">"forest_cover_YEAR"</span>,</span>
+<span>    <span class="st">"prseas"</span>       <span class="op">=</span> <span class="st">"prseas_YEAR_SEASON"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  method                   <span class="op">=</span> <span class="st">"user_data"</span>,</span>
+<span>  user_absence_data        <span class="op">=</span> <span class="va">user_pts_file</span>,</span>
+<span>  xcol                     <span class="op">=</span> <span class="st">"x"</span>,</span>
+<span>  ycol                     <span class="op">=</span> <span class="st">"y"</span>,</span>
+<span>  points_crs               <span class="op">=</span> <span class="va">study_crs</span>,</span>
+<span>  time_cols                <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"year"</span>, <span class="st">"season"</span><span class="op">)</span>,</span>
+<span>  create_plot              <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  plot_by_fold             <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  verbose                  <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-15-2.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-15-3.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-15-4.png" class="r-plt" alt="" width="95%"><img src="V2_Preprocessing_files/figure-html/unnamed-chunk-15-5.png" class="r-plt" alt="" width="95%"></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">absences_user</span><span class="op">$</span><span class="va">summary</span></span>
+<span><span class="co">#&gt;   fold n_presences n_pseudoabsences ratio_achieved</span></span>
+<span><span class="co">#&gt; 1    1          37               96          2.595</span></span>
+<span><span class="co">#&gt; 2    2          37               73          1.973</span></span>
+<span><span class="co">#&gt; 3    3          43               67          1.558</span></span>
+<span><span class="co">#&gt; 4    4          33               64          1.939</span></span></code></pre></div>
+<p>The result has the same structure as any other
+<code><a href="../reference/generate_absences.html">generate_absences()</a></code> output and can be passed directly to
+any of the model builders.</p>
 <p><br></p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="sec-outputs">Outputs ready for modeling<a class="anchor" aria-label="anchor" href="#sec-outputs"></a>

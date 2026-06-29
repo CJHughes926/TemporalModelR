@@ -172,10 +172,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/Rtmp9UlRtW/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/Rtmpwwf9eD/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/Rtmp9UlRtW/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/Rtmpwwf9eD/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -279,13 +279,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/Rtmp9UlRtW/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/Rtmp9UlRtW/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/Rtmp9UlRtW/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/Rtmpwwf9eD/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
@@ -466,7 +466,7 @@ essential for GLMs, GAMs, and random forests when no ‘true absence’
 points exist. The hypervolume method is presence-only and does not need
 them.
 
-Three generation methods are supported:
+Four generation methods are supported:
 
 - **Random.** Uniform sampling across the study area with a small buffer
   around presences to avoid exact overlap.
@@ -480,11 +480,22 @@ Three generation methods are supported:
   a spatially representative subset. When `buffer_distance` is also
   supplied the environmental filtering is restricted to within that
   buffer, implementing the three-step approach of Senay et al. (2013).
+- **User data.** A user-supplied set of points is used directly as the
+  absence locations rather than generating them. Environmental values
+  are extracted internally at each point’s matched time step using the
+  same `raster_dir` and `variable_patterns` as the other methods. Fold
+  assignment is performed automatically by spatial join against the
+  partition’s fold boundaries, with any points outside the spatial folds
+  routed to temporal folds by their time value. This is the appropriate
+  method when you have true absence records, or target-group background
+  points from a separate survey.
 
 The function distributes pseudoabsences across folds and across time
 steps in proportion to the presences in each fold-time combination, so
 the potential environmental conditions experienced by each pseudoabsence
 match those experienced by the presences it complements.
+
+### Buffer method
 
 We use the buffer method with a 300 m radius (three pixels at the
 synthetic landscape’s 100 m resolution) and a 2:1
@@ -506,7 +517,7 @@ absences <- generate_absences(
   ratio                    = 2,
   time_cols                = c("year", "season"),
   create_plot              = TRUE,
-  plot_by_fold = TRUE,
+  plot_by_fold             = TRUE,
   verbose                  = FALSE
 )
 ```
@@ -514,7 +525,6 @@ absences <- generate_absences(
 ![](V2_Preprocessing_files/figure-html/unnamed-chunk-13-1.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-13-2.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-13-3.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-13-4.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-13-5.png)
 
 ``` r
-
 
 
 absences$summary
@@ -531,6 +541,94 @@ like the presences, and the environmental values attached to them are
 pulled from the matching time-specific raster. This consistency is what
 keeps the temporally explicit workflow intact through the model fitting
 step.
+
+### User data method
+
+The `generate_absences` function alternativly allows for users to
+process a set of defined absences for use with downstream operations in
+this package. These points may represent true absence records, such as
+negative occupancy survey locations, or may represent pseudoabsence
+locations, such as occupancy locations for similar taxa used as a proxy
+for survey effort. When using `method = "user_data"`, the function
+assigns each point to a fold, then extracts temporally matched
+environmental values exactly as it would for generated pseudoabsences.
+The output is identical except for the fact that the points were not
+generated internally, and this output can subsequently be used in any
+function requiring outputs from `generate_absences`.
+
+We consider `synthetic_user_presences.csv` as a second related species
+to our species of interest. We assume that the survey methedology is
+similar for both species, and any surveys conducted for this second
+species would also have subsequently detected our species of interest if
+it was present.
+
+``` r
+
+user_pts_file <- system.file(
+  "extdata/points/synthetic_user_presences.csv",
+  package = "TemporalModelR"
+)
+
+user_pts <- utils::read.csv(user_pts_file)
+
+head(user_pts)
+#>           x         y year season pres
+#> 1 1115.2174 1241.3043    1 Spring    1
+#> 2 1979.0323  566.1290    1 Spring    1
+#> 3  814.0000  802.0000    1 Spring    1
+#> 4 1514.5161  333.8710    1 Spring    1
+#> 5 1747.0149  444.0299    2 Autumn    1
+#> 6  960.2041 1029.5918    2 Autumn    1
+
+nrow(user_pts)
+#> [1] 300
+```
+
+The file has the same `x`, `y`, `year`, `season` columns as the primary
+occurrence data. We pass it to
+[`generate_absences()`](../reference/generate_absences.md) via
+`user_absence_data`, along with the coordinate column names and CRS so
+that it can be processed as pseudoabcenses for future modeling.
+
+``` r
+
+absences_user <- generate_absences(
+  partition_result         = partition,
+  reference_shapefile_path = study_area_sf,
+  raster_dir               = scaled_dir,
+  variable_patterns        = c(
+    "elevation"    = "elevation",
+    "forest_cover" = "forest_cover_YEAR",
+    "prseas"       = "prseas_YEAR_SEASON"
+  ),
+  method                   = "user_data",
+  user_absence_data        = user_pts_file,
+  xcol                     = "x",
+  ycol                     = "y",
+  points_crs               = study_crs,
+  time_cols                = c("year", "season"),
+  create_plot              = TRUE,
+  plot_by_fold             = TRUE,
+  verbose                  = FALSE
+)
+```
+
+![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-1.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-2.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-3.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-4.png)![](V2_Preprocessing_files/figure-html/unnamed-chunk-15-5.png)
+
+``` r
+
+
+absences_user$summary
+#>   fold n_presences n_pseudoabsences ratio_achieved
+#> 1    1          37               96          2.595
+#> 2    2          37               73          1.973
+#> 3    3          43               67          1.558
+#> 4    4          33               64          1.939
+```
+
+The result has the same structure as any other
+[`generate_absences()`](../reference/generate_absences.md) output and
+can be passed directly to any of the model builders.
 
   
 

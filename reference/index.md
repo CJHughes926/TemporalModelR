@@ -38,6 +38,8 @@
   (seasonal workflow)
 - [`tmr_absences_annual`](tmr_absences_annual.md) : Pre-built
   pseudoabsence result (annual workflow)
+- [`tmr_absences_user`](tmr_absences_user.md) : Pre-built user_data
+  pseudoabsences (seasonal workflow)
 - [`tmr_glm`](tmr_glm.md) : Pre-built GLM result (seasonal workflow)
 - [`tmr_glm_annual`](tmr_glm_annual.md) : Pre-built GLM result (annual
   workflow)

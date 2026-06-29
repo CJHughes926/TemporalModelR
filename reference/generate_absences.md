@@ -7,6 +7,12 @@ each time step within each fold. Three generation methods are supported:
 random sampling within the study area, buffer-constrained sampling
 around presence points, and environmentally biased sampling that targets
 areas outside the known environmental tolerance of the species.
+Additionally, this function can be used to process user defined absences
+to work with downflow operations. This may be any list of points for
+which a user wants to count as 'absences' in downflow operations,
+including negative occupancy surveys, or alternatively surveys for
+similar species which may act as pseudoabsences for the presence of the
+species of interest.
 
 ## Usage
 
@@ -15,9 +21,11 @@ generate_absences(partition_result, reference_shapefile_path, raster_dir,
                   variable_patterns, method = "random", ratio = 1,
                   buffer_distance = NULL, env_percentile = 0.05,
                   time_cols = NULL, pseudoabsence_times = NULL,
-                  min_points_per_timestep = 1, create_plot = TRUE,
-                  plot_by_fold = FALSE, plot_palette = "Dark 2",
-                  output_file = NULL, verbose = TRUE)
+                  min_points_per_timestep = 1, user_absence_data = NULL,
+                  xcol = NULL, ycol = NULL, points_crs = NULL,
+                  create_plot = TRUE, plot_by_fold = FALSE,
+                  plot_palette = "Dark 2", output_file = NULL,
+                  verbose = TRUE)
 ```
 
 ## Arguments
@@ -53,7 +61,14 @@ generate_absences(partition_result, reference_shapefile_path, raster_dir,
 - method:
 
   Character. Pseudoabsence generation method. One of `"random"`,
-  `"buffer"`, or `"environmental"`. Default is `"random"`.
+  `"buffer"`, `"environmental"`, or `"user_data"`. Default is
+  `"random"`. When `"user_data"` is specified, `user_absence_data` is
+  used as the source of absence locations instead of generating them.
+  `ratio`, `buffer_distance`, `env_percentile`, and
+  `pseudoabsence_times` are ignored. `raster_dir` and
+  `variable_patterns` are required for all methods, including
+  `"user_data"`, for temporally-matched environmental extraction at the
+  absence points.
 
 - ratio:
 
@@ -103,6 +118,33 @@ generate_absences(partition_result, reference_shapefile_path, raster_dir,
   exact (fixed) number of points generated per time step per fold,
   independent of the number of presence points. `ratio` and
   `min_points_per_timestep` cannot both be 0.
+
+- user_absence_data:
+
+  Character, sf object, sfc object, Spatial object, or data frame. Path
+  to occurrence data (`.csv`, `.shp`, `.geojson`, `.gpkg`) or a spatial
+  object to be processed as absence data for downstream operations.
+  Required when `method = "user_data"`. Should be preprocessed with
+  [`spatiotemporal_rarefaction`](spatiotemporal_rarefaction.md) in the
+  same formatting as presence data if not already thinned.
+
+- xcol:
+
+  Character. Name of the x-coordinate column in `user_absence_data`.
+  Required when when `method = "environmental"` and `user_absence_data`
+  is a CSV file or data frame.
+
+- ycol:
+
+  Character. Name of the y-coordinate column in `user_absence_data`.
+  Required when when `method = "environmental"` and `user_absence_data`
+  is a CSV file or data frame.
+
+- points_crs:
+
+  Character or CRS object. CRS of the `user_absence_data`. Required when
+  when `method = "environmental"` and `user_absence_data` is a CSV file
+  or data frame.
 
 - create_plot:
 
@@ -159,8 +201,8 @@ Generates sets of background data based on user-specified methodology
 that can be used as pseudoabsence data for the purposes of training
 presence/absence models.
 
-The three generation methods differ in how the sampling region is
-defined:
+The four generation methods differ in how the absence locations are
+obtained:
 
 - **Random**: Points are sampled uniformly at random from the full study
   area, excluding a negligible buffer around presence locations to
@@ -176,6 +218,14 @@ defined:
   subset. If `buffer_distance` is supplied the environmental filtering
   is applied only within that buffered region, implementing the full
   three-step approach of Senay et al. (2013).
+
+- **User data**: Absence locations are taken directly from
+  `user_absence_data` to be used when user has a predefined set of
+  absense points. Points are assigned to folds by spatial join against
+  the partition fold boundaries, with unmatched points routed to
+  temporal folds by time value. Environmental values are then extracted
+  at the supplied locations using the same time-matched logic as the
+  generated methods.
 
 ## References
 

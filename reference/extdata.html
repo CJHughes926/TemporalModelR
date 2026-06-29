@@ -13,7 +13,7 @@ loaded via system.file."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">TemporalModelR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,6 +93,15 @@ loaded via <code><a href="https://rdrr.io/r/base/system.file.html" class="extern
   <dt><code>extdata/points/synthetic_occurrence_points.shp</code></dt>
 <dd><p>Same
     points as a shapefile.</p></dd>
+
+  <dt><code>extdata/points/synthetic_user_presences.csv</code></dt>
+<dd><p>A second-species
+    presence dataset for demonstrating <code>method = "user_data"</code> in
+    <code><a href="generate_absences.html">generate_absences</a></code>. Points were derived from buffer-
+    constrained environmental pseudoabsences of the primary species and
+    reformatted as presences (<code>pres = 1</code>). Same column structure as
+    <code>synthetic_occurrence_points.csv</code> (<code>x</code>, <code>y</code>,
+    <code>year</code>, <code>season</code>, <code>pres</code>).</p></dd>
 
   <dt><code>extdata/points/extracted_seasonal_*.csv</code></dt>
 <dd><p>Outputs from

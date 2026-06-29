@@ -41,6 +41,16 @@ examples and the package vignette. They cannot be portably serialized as
 
   Same points as a shapefile.
 
+- `extdata/points/synthetic_user_presences.csv`:
+
+  A second-species presence dataset for demonstrating
+  `method = "user_data"` in [`generate_absences`](generate_absences.md).
+  Points were derived from buffer- constrained environmental
+  pseudoabsences of the primary species and reformatted as presences
+  (`pres = 1`). Same column structure as
+  `synthetic_occurrence_points.csv` (`x`, `y`, `year`, `season`,
+  `pres`).
+
 - `extdata/points/extracted_seasonal_*.csv`:
 
   Outputs from
