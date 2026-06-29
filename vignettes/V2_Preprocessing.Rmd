@@ -334,9 +334,9 @@ Note that `variable_patterns` and `time_cols` here use both `year` and `season`.
 
 ## User data method
 
-The `generate_absences` function alternativly allows for users to process a set of defined absences for use with downstream operations in this package. These points may represent true absence records, such as negative occupancy survey locations, or may represent pseudoabsence locations, such as occupancy locations for similar taxa used as a proxy for survey effort. When using `method = "user_data"`, the function assigns each point to a fold, then extracts temporally matched environmental values exactly as it would for generated pseudoabsences. The output is identical except for the fact that the points were not generated internally, and this output can subsequently be used in any function requiring outputs from `generate_absences`.
+The `generate_absences` function alternatively allows for users to process a set of defined absences for use with downstream operations in this package. These points may represent true absence records, such as negative occupancy survey locations, or may represent pseudoabsence locations, such as occupancy locations for similar taxa used as a proxy for survey effort. When using `method = "user_data"`, the function assigns each point to a fold, then extracts temporally matched environmental values exactly as it would for generated pseudoabsences. The output is identical except for the fact that the points were not generated internally, and this output can subsequently be used in any function requiring outputs from `generate_absences`.
 
-We consider `synthetic_user_presences.csv` as a second related species to our species of interest. We assume that the survey methedology is similar for both species, and any surveys conducted for this second species would also have subsequently detected our species of interest if it was present.
+We consider `synthetic_user_presences.csv` as a second related species to our species of interest. We assume that the survey methodology is similar for both species, and any surveys conducted for this second species would also have subsequently detected our species of interest if it was present.
 
 ```{r}
 user_pts_file <- system.file(
@@ -351,7 +351,29 @@ head(user_pts)
 nrow(user_pts)
 ```
 
-The file has the same `x`, `y`, `year`, `season` columns as the primary occurrence data. We pass it to `generate_absences()` via `user_absence_data`, along with the coordinate column names and CRS so that it can be processed as pseudoabcenses for future modeling. 
+The file has the same `x`, `y`, `year`, `season` columns as the primary occurrence data. Before passing it to `generate_absences()`, we apply the same spatiotemporal rarefaction step used for the primary presences. This ensures that if the second species' dataset contains multiple records in the same pixel and time step due to repeat surveys or aggregated data, only one is retained, preventing pseudoreplication in the absence set for the same reason it is prevented in the presence set.
+
+```{r}
+user_rare_dir <- file.path(tempdir(), "rarefied_user")
+
+user_rare_out <- spatiotemporal_rarefaction(
+  points_sp        = user_pts_file,
+  output_dir       = user_rare_dir,
+  reference_raster = ref_file,
+  time_cols        = c("year", "season"),
+  xcol             = "x",
+  ycol             = "y",
+  points_crs       = study_crs,
+  output_prefix    = "Pts_user",
+  verbose          = FALSE
+)
+
+user_rare_out$input_points
+
+user_rare_out$spatiotemporal_points
+```
+
+We pass the rarefied file to `generate_absences()` via `user_absence_data`, along with the coordinate column names and CRS so that it can be processed as pseudoabsences for future modeling.
 
 ```{r}
 absences_user <- generate_absences(
@@ -364,9 +386,9 @@ absences_user <- generate_absences(
     "prseas"       = "prseas_YEAR_SEASON"
   ),
   method                   = "user_data",
-  user_absence_data        = user_pts_file,
-  xcol                     = "x",
-  ycol                     = "y",
+  user_absence_data        = user_rare_out$files_created$spatiotemporal,
+  xcol                     = "X",
+  ycol                     = "Y",
   points_crs               = study_crs,
   time_cols                = c("year", "season"),
   create_plot              = TRUE,
