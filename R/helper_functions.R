@@ -215,7 +215,8 @@
 #' @keywords internal
 #' @noRd
 .classify_pixel_with_times <- function(pixel_vals, n_middle, time_steps,
-                                       alpha = 0.05, n_perm = 1000, use_neighbor = TRUE) {
+                                       fastcpd_params = list(), alpha = 0.05,
+                                       n_perm = 1000, use_neighbor = TRUE) {
 
   y <- pixel_vals[1:n_middle]
   lag <- pixel_vals[(n_middle + 1):(2 * n_middle)]
@@ -237,7 +238,10 @@
   data_matrix <- if (use_neighbor) cbind(y, lag, neighbor) else cbind(y, lag)
 
   cp_result <- tryCatch({
-    suppressWarnings(fastcpd::fastcpd.binomial(data = data_matrix, r.progress = FALSE))
+    suppressWarnings(do.call(
+      fastcpd::fastcpd.binomial,
+      c(list(data = data_matrix, r.progress = FALSE), fastcpd_params)
+    ))
   }, error = function(e) NULL)
 
   if (is.null(cp_result)) return(c(7, NA, NA))
@@ -1030,6 +1034,8 @@
   dissolved
 }
 
+#' @keywords internal
+#' @noRd
 .plot_partitions_base <- function(pts_sf, reference_shapefile, final_fold_counts,
                                   mean_per_fold, total_folds, partition_mode,
                                   time_cols, temporal_partitioning, n_temporal,
@@ -2129,14 +2135,14 @@
       matches <- all_files[grepl(fname, basename(all_files), ignore.case = TRUE)]
     }
     if (length(matches) == 0) {
-      warning(paste0("Missing raster file for dynamic variable \'", var,
-                     "\' matching pattern \'", fname, "\'."))
+      warning(paste0("Missing raster file for dynamic variable '", var,
+                     "' matching pattern '", fname, "'."))
       return(NULL)
     }
     if (length(matches) > 1) {
       stop(paste0(
-        "ERROR: Multiple raster files found for dynamic variable \'", var,
-        "\' matching pattern \'", fname, "\'.",
+        "ERROR: Multiple raster files found for dynamic variable '", var,
+        "' matching pattern '", fname, "'.",
         "\nMatching files:\n", paste(matches, collapse = "\n")
       ))
     }
@@ -2147,14 +2153,14 @@
     fname   <- variable_patterns[[var]]
     matches <- all_files[grepl(fname, basename(all_files), ignore.case = TRUE)]
     if (length(matches) == 0) {
-      warning(paste0("Missing raster file for static variable \'", var,
-                     "\' matching pattern \'", fname, "\'."))
+      warning(paste0("Missing raster file for static variable '", var,
+                     "' matching pattern '", fname, "'."))
       return(NULL)
     }
     if (length(matches) > 1) {
       stop(paste0(
-        "ERROR: Multiple raster files found for static variable \'", var,
-        "\' matching pattern \'", fname, "\'.",
+        "ERROR: Multiple raster files found for static variable '", var,
+        "' matching pattern '", fname, "'.",
         "\nMatching files:\n", paste(matches, collapse = "\n")
       ))
     }

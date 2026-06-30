@@ -1,16 +1,9 @@
 #' Analyze Temporal Patterns in Binary Raster Time Series
 #'
-#' Post-processing function that applies changepoint detection methods to
+#' Postprocessing function that applies changepoint detection methods to
 #' identify temporal trends in habitat suitability across consecutive
 #' predictions. Classifies pixels as stable, increasing in quality, or
 #' decreasing in quality, and identifies time periods of significant change.
-#'
-#' @usage
-#' analyze_temporal_patterns(binary_stack, summary_raster, time_steps,
-#'                           fastcpd_params = list(), output_dir = NULL,
-#'                           n_tiles_x = 1, n_tiles_y = 1, alpha = 0.05,
-#'                           spatial_autocorrelation = TRUE, verbose = TRUE,
-#'                           estimate_time = TRUE, overwrite = FALSE)
 #'
 #' @param binary_stack RasterStack, RasterBrick, or character. Stack of binary
 #'   raster layers across time, or path to directory containing binary rasters.
@@ -61,7 +54,8 @@
 #' shifts in spatial suitability. Accounts for spatial and temporal
 #' autocorrelation when \code{spatial_autocorrelation = TRUE}. The
 #' \code{fastcpd_params} list allows customization of the changepoint detection
-#' algorithm.
+#' algorithm, and is passed through to \code{\link[fastcpd]{fastcpd.binomial}}
+#' (e.g. \code{list(cost_adjustment = "BIC", trim = 0.025)}).
 #'
 #' Pattern classifications enable identification of expanding, contracting, or
 #' stable g-space distributions over time or site level assessments of directional
@@ -71,37 +65,39 @@
 #' shorter than ~15 time steps may be too short to classify increases or decreases.
 #'
 #' @seealso
-#' Post-processing: \code{\link{summarize_raster_outputs}}
+#' Postprocessing: \code{\link{summarize_raster_outputs}}
 #'
 #' External: \code{\link[fastcpd]{fastcpd}}
 #'
 #' @examples
-#' con_file <- system.file("extdata/binary/consensus_stack.tif",
-#'       package = "TemporalModelR")
+#' \donttest{
+#'   con_file <- system.file("extdata/binary/consensus_stack.tif",
+#'                           package = "TemporalModelR")
 #'
-#' frq_file <- system.file("extdata/binary/frequency_raster.tif",
-#'       package = "TemporalModelR")
+#'   frq_file <- system.file("extdata/binary/frequency_raster.tif",
+#'                           package = "TemporalModelR")
 #'
-#' binary_stack   <- terra::rast(con_file)
+#'   binary_stack   <- terra::rast(con_file)
 #'
-#' summary_raster <- terra::rast(frq_file)
+#'   summary_raster <- terra::rast(frq_file)
 #'
-#' time_steps <- expand.grid(
-#'   year    = 1:15,
-#'   season  = "Spring",
-#'   stringsAsFactors = FALSE
-#' )
+#'   time_steps <- expand.grid(
+#'     year             = 1:15,
+#'     season           = "Spring",
+#'     stringsAsFactors = FALSE
+#'   )
 #'
-#' analyze_temporal_patterns(
-#'   binary_stack   = binary_stack,
-#'   summary_raster = summary_raster,
-#'   time_steps     = time_steps,
-#'   output_dir     = tempdir(),
-#'   spatial_autocorrelation = FALSE,
-#'   overwrite      = TRUE,
-#'   estimate_time  = FALSE,
-#'   verbose        = FALSE
-#' )
+#'   analyze_temporal_patterns(
+#'     binary_stack            = binary_stack,
+#'     summary_raster          = summary_raster,
+#'     time_steps              = time_steps,
+#'     output_dir              = tempdir(),
+#'     spatial_autocorrelation = FALSE,
+#'     overwrite               = TRUE,
+#'     estimate_time           = FALSE,
+#'     verbose                 = FALSE
+#'   )
+#' }
 
 #' @export
 #' @importFrom terra rast ext res crop nlyr app focal values ncell freq plot writeRaster mosaic
@@ -112,15 +108,15 @@
 analyze_temporal_patterns <- function(binary_stack,
                                       summary_raster,
                                       time_steps,
-                                      fastcpd_params = list(),
-                                      output_dir     = NULL,
-                                      n_tiles_x      = 1,
-                                      n_tiles_y      = 1,
-                                      alpha          = 0.05,
+                                      fastcpd_params          = list(),
+                                      output_dir              = NULL,
+                                      n_tiles_x               = 1,
+                                      n_tiles_y               = 1,
+                                      alpha                   = 0.05,
                                       spatial_autocorrelation = TRUE,
-                                      verbose        = TRUE,
-                                      estimate_time  = TRUE,
-                                      overwrite      = FALSE) {
+                                      verbose                 = TRUE,
+                                      estimate_time           = TRUE,
+                                      overwrite               = FALSE) {
 
 
   if (!requireNamespace("fastcpd", quietly = TRUE)) {
@@ -140,7 +136,7 @@ analyze_temporal_patterns <- function(binary_stack,
     stop("ERROR: 'time_steps' is required")
   }
 
-  ts_norm  <- .normalize_time_steps(time_steps, "analyze_temporal_patterns")
+  ts_norm           <- .normalize_time_steps(time_steps, "analyze_temporal_patterns")
   time_steps        <- ts_norm$time_steps
   secondary_filters <- ts_norm$secondary_filters
 
@@ -300,8 +296,14 @@ analyze_temporal_patterns <- function(binary_stack,
 
           start_time <- Sys.time()
           for (idx in sample_indices) {
-            result <- .classify_pixel_with_times(pred_vals_all[idx, ], n_middle,
-                                                 time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+            result <- .classify_pixel_with_times(
+              pixel_vals      = pred_vals_all[idx, ],
+              n_middle        = n_middle,
+              time_steps      = time_steps,
+              fastcpd_params  = fastcpd_params,
+              alpha           = alpha,
+              use_neighbor    = spatial_autocorrelation
+            )
           }
           end_time <- Sys.time()
 
@@ -353,8 +355,14 @@ analyze_temporal_patterns <- function(binary_stack,
 
       for (cell_i in seq_len(n_cells)) {
         if (!any(is.na(pred_vals[cell_i, ]))) {
-          result <- .classify_pixel_with_times(pred_vals[cell_i, ], n_middle,
-                                               time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+          result <- .classify_pixel_with_times(
+            pixel_vals      = pred_vals[cell_i, ],
+            n_middle        = n_middle,
+            time_steps      = time_steps,
+            fastcpd_params  = fastcpd_params,
+            alpha           = alpha,
+            use_neighbor    = spatial_autocorrelation
+          )
           pattern_vals[cell_i] <- result[1]
           decrease_vals[cell_i] <- result[2]
           increase_vals[cell_i] <- result[3]
@@ -377,9 +385,17 @@ analyze_temporal_patterns <- function(binary_stack,
       terra::values(increase_raster) <- increase_vals
 
     } else {
-      result_matrix <- terra::app(predictor_stack,
-                                  fun = function(x) .classify_pixel_with_times(x, n_middle, time_steps,
-                                                                               fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
+      result_matrix <- terra::app(
+        predictor_stack,
+        fun = function(x) .classify_pixel_with_times(
+          pixel_vals      = x,
+          n_middle        = n_middle,
+          time_steps      = time_steps,
+          fastcpd_params  = fastcpd_params,
+          alpha           = alpha,
+          use_neighbor    = spatial_autocorrelation
+        )
+      )
 
       pattern_raster <- result_matrix[[1]]
       decrease_raster <- result_matrix[[2]]
@@ -490,8 +506,14 @@ analyze_temporal_patterns <- function(binary_stack,
 
               start_time <- Sys.time()
               for (idx in sample_indices) {
-                result <- .classify_pixel_with_times(pred_vals_all[idx, ], n_middle,
-                                                     time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+                result <- .classify_pixel_with_times(
+                  pixel_vals      = pred_vals_all[idx, ],
+                  n_middle        = n_middle,
+                  time_steps      = time_steps,
+                  fastcpd_params  = fastcpd_params,
+                  alpha           = alpha,
+                  use_neighbor    = spatial_autocorrelation
+                )
               }
               end_time <- Sys.time()
 
@@ -576,8 +598,14 @@ analyze_temporal_patterns <- function(binary_stack,
 
           for (cell_i in seq_len(n_cells)) {
             if (!any(is.na(pred_vals[cell_i, ]))) {
-              result <- .classify_pixel_with_times(pred_vals[cell_i, ], n_middle,
-                                                   time_steps, fastcpd_params, alpha, use_neighbor = spatial_autocorrelation)
+              result <- .classify_pixel_with_times(
+                pixel_vals      = pred_vals[cell_i, ],
+                n_middle        = n_middle,
+                time_steps      = time_steps,
+                fastcpd_params  = fastcpd_params,
+                alpha           = alpha,
+                use_neighbor    = spatial_autocorrelation
+              )
               pattern_vals[cell_i] <- result[1]
               decrease_vals[cell_i] <- result[2]
               increase_vals[cell_i] <- result[3]
@@ -600,9 +628,17 @@ analyze_temporal_patterns <- function(binary_stack,
           terra::values(tile_increase) <- increase_vals
 
         } else {
-          result_matrix <- terra::app(predictor_stack,
-                                      fun = function(x) .classify_pixel_with_times(x, n_middle, time_steps,
-                                                                                   fastcpd_params, alpha, use_neighbor = spatial_autocorrelation))
+          result_matrix <- terra::app(
+            predictor_stack,
+            fun = function(x) .classify_pixel_with_times(
+              pixel_vals      = x,
+              n_middle        = n_middle,
+              time_steps      = time_steps,
+              fastcpd_params  = fastcpd_params,
+              alpha           = alpha,
+              use_neighbor    = spatial_autocorrelation
+            )
+          )
 
           tile_pattern <- result_matrix[[1]]
           tile_decrease <- result_matrix[[2]]
