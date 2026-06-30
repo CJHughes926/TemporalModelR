@@ -15,10 +15,14 @@ Connor Hughes, Mariana Castaneda-Guzman, Luis E. Escobar
 - [Getting help](#getting-help)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CJHughes926/TemporalModelR/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/TemporalModelR)](https://CRAN.R-project.org/package=TemporalModelR)
+[![downloads](https://cranlogs.r-pkg.org/badges/grand-total/TemporalModelR)](https://cranlogs.r-pkg.org:443/badges/grand-total/TemporalModelR)
+[![License:
+MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg?style=flat)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
 ## Background

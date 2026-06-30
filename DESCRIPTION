@@ -1,7 +1,7 @@
 Package: TemporalModelR
 Type: Package
 Title: Temporally Explicit Species Distribution Modelling
-Version: 1.0.0
+Version: 0.3.0
 Authors@R: c(
     person(
       "Connor", "Hughes",
