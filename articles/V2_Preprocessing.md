@@ -172,10 +172,10 @@ users who want a static comparison:
 
 rare_out$files_created
 #> $spatiotemporal
-#> [1] "/tmp/RtmpyEWRbD/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
+#> [1] "/tmp/RtmpOnc9ho/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"
 #> 
 #> $spatial
-#> [1] "/tmp/RtmpyEWRbD/rarefied/Pts_seasonal_OnePerPix.csv"
+#> [1] "/tmp/RtmpOnc9ho/rarefied/Pts_seasonal_OnePerPix.csv"
 ```
 
 If we wanted to focus on annual variation rather than both annual and
@@ -279,13 +279,13 @@ The same call generates three outputs:
 
 ext_out$files_created
 #> $raw
-#> [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Raw_Values.csv"
+#> [1] "/tmp/RtmpOnc9ho/extracted/extracted_seasonal_Raw_Values.csv"
 #> 
 #> $scaled
-#> [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Scaled_Values.csv"
+#> [1] "/tmp/RtmpOnc9ho/extracted/extracted_seasonal_Scaled_Values.csv"
 #> 
 #> $scaling_params
-#> [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Scaling_Parameters.csv"
+#> [1] "/tmp/RtmpOnc9ho/extracted/extracted_seasonal_Scaling_Parameters.csv"
 ```
 
 The raw values file is what models that don’t need scaling will consume.
@@ -577,11 +577,11 @@ head(user_pts)
 #> 2 1979.0323  566.1290    1 Spring    1
 #> 3  814.0000  802.0000    1 Spring    1
 #> 4 1514.5161  333.8710    1 Spring    1
-#> 5 1747.0149  444.0299    2 Autumn    1
-#> 6  960.2041 1029.5918    2 Autumn    1
+#> 5 1747.0149  444.0299    2 Spring    1
+#> 6  960.2041 1029.5918    2 Spring    1
 
 nrow(user_pts)
-#> [1] 300
+#> [1] 900
 ```
 
 The file has the same `x`, `y`, `year`, `season` columns as the primary
@@ -610,10 +610,10 @@ user_rare_out <- spatiotemporal_rarefaction(
 )
 
 user_rare_out$input_points
-#> [1] 300
+#> [1] 900
 
 user_rare_out$spatiotemporal_points
-#> [1] 296
+#> [1] 846
 ```
 
 We pass the rarefied file to
@@ -651,10 +651,10 @@ absences_user <- generate_absences(
 
 absences_user$summary
 #>   fold n_presences n_pseudoabsences ratio_achieved
-#> 1    1          37               93          2.514
-#> 2    2          37               72          1.946
-#> 3    3          43               67          1.558
-#> 4    4          33               64          1.939
+#> 1    1          37              268          7.243
+#> 2    2          37              202          5.459
+#> 3    3          43              188          4.372
+#> 4    4          33              188          5.697
 ```
 
 The result has the same structure as any other

@@ -232,10 +232,10 @@ reference and for users who want a static comparison:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rare_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $spatiotemporal</span></span>
-<span><span class="co">#&gt; [1] "/tmp/RtmpyEWRbD/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmpOnc9ho/rarefied/Pts_seasonal_OnePerPixPerTimeStep.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $spatial</span></span>
-<span><span class="co">#&gt; [1] "/tmp/RtmpyEWRbD/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/RtmpOnc9ho/rarefied/Pts_seasonal_OnePerPix.csv"</span></span></code></pre></div>
 <p>If we wanted to focus on annual variation rather than both annual and
 seasonal variation, we could instead run this focusing only ‘year’ as
 our time_col of interest. This would instead save all unique pixel-year
@@ -333,13 +333,13 @@ with annual measures of precipitation.</li>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ext_out</span><span class="op">$</span><span class="va">files_created</span></span>
 <span><span class="co">#&gt; $raw</span></span>
-<span><span class="co">#&gt; [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmpOnc9ho/extracted/extracted_seasonal_Raw_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaled</span></span>
-<span><span class="co">#&gt; [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
+<span><span class="co">#&gt; [1] "/tmp/RtmpOnc9ho/extracted/extracted_seasonal_Scaled_Values.csv"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $scaling_params</span></span>
-<span><span class="co">#&gt; [1] "/tmp/RtmpyEWRbD/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/tmp/RtmpOnc9ho/extracted/extracted_seasonal_Scaling_Parameters.csv"</span></span></code></pre></div>
 <p>The raw values file is what models that don’t need scaling will
 consume. The scaled file applies a z-score per variable using the means
 and SDs computed across all records. The scaling parameters file records
@@ -608,11 +608,11 @@ interest if it was present.</p>
 <span><span class="co">#&gt; 2 1979.0323  566.1290    1 Spring    1</span></span>
 <span><span class="co">#&gt; 3  814.0000  802.0000    1 Spring    1</span></span>
 <span><span class="co">#&gt; 4 1514.5161  333.8710    1 Spring    1</span></span>
-<span><span class="co">#&gt; 5 1747.0149  444.0299    2 Autumn    1</span></span>
-<span><span class="co">#&gt; 6  960.2041 1029.5918    2 Autumn    1</span></span>
+<span><span class="co">#&gt; 5 1747.0149  444.0299    2 Spring    1</span></span>
+<span><span class="co">#&gt; 6  960.2041 1029.5918    2 Spring    1</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">user_pts</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 300</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 900</span></span></code></pre></div>
 <p>The file has the same <code>x</code>, <code>y</code>,
 <code>year</code>, <code>season</code> columns as the primary occurrence
 data. Before passing it to <code><a href="../reference/generate_absences.html">generate_absences()</a></code>, we apply
@@ -638,10 +638,10 @@ set.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">user_rare_out</span><span class="op">$</span><span class="va">input_points</span></span>
-<span><span class="co">#&gt; [1] 300</span></span>
+<span><span class="co">#&gt; [1] 900</span></span>
 <span></span>
 <span><span class="va">user_rare_out</span><span class="op">$</span><span class="va">spatiotemporal_points</span></span>
-<span><span class="co">#&gt; [1] 296</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 846</span></span></code></pre></div>
 <p>We pass the rarefied file to <code><a href="../reference/generate_absences.html">generate_absences()</a></code> via
 <code>user_absence_data</code>, along with the coordinate column names
 and CRS so that it can be processed as pseudoabsences for future
@@ -671,10 +671,10 @@ modeling.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="va">absences_user</span><span class="op">$</span><span class="va">summary</span></span>
 <span><span class="co">#&gt;   fold n_presences n_pseudoabsences ratio_achieved</span></span>
-<span><span class="co">#&gt; 1    1          37               93          2.514</span></span>
-<span><span class="co">#&gt; 2    2          37               72          1.946</span></span>
-<span><span class="co">#&gt; 3    3          43               67          1.558</span></span>
-<span><span class="co">#&gt; 4    4          33               64          1.939</span></span></code></pre></div>
+<span><span class="co">#&gt; 1    1          37              268          7.243</span></span>
+<span><span class="co">#&gt; 2    2          37              202          5.459</span></span>
+<span><span class="co">#&gt; 3    3          43              188          4.372</span></span>
+<span><span class="co">#&gt; 4    4          33              188          5.697</span></span></code></pre></div>
 <p>The result has the same structure as any other
 <code><a href="../reference/generate_absences.html">generate_absences()</a></code> output and can be passed directly to
 any of the model builders.</p>
