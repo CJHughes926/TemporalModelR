@@ -17,12 +17,12 @@ Source:
 
 Hughes C, Castaneda-Guzman M, E. Escobar L (2026). *TemporalModelR:
 Temporally Explicit Species Distribution Modelling*. R package version
-1.0.0, <https://github.com/CJHughes926/TemporalModelR>.
+0.3.0, <https://github.com/CJHughes926/TemporalModelR>.
 
     @Manual{,
       title = {TemporalModelR: Temporally Explicit Species Distribution Modelling},
       author = {Connor Hughes and Mariana Castaneda-Guzman and Luis {E. Escobar}},
       year = {2026},
-      note = {R package version 1.0.0},
+      note = {R package version 0.3.0},
       url = {https://github.com/CJHughes926/TemporalModelR},
     }
