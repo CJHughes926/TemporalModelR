@@ -4,11 +4,20 @@
 \alias{analyze_temporal_patterns}
 \title{Analyze Temporal Patterns in Binary Raster Time Series}
 \usage{
-analyze_temporal_patterns(binary_stack, summary_raster, time_steps,
-                          fastcpd_params = list(), output_dir = NULL,
-                          n_tiles_x = 1, n_tiles_y = 1, alpha = 0.05,
-                          spatial_autocorrelation = TRUE, verbose = TRUE,
-                          estimate_time = TRUE, overwrite = FALSE)
+analyze_temporal_patterns(
+  binary_stack,
+  summary_raster,
+  time_steps,
+  fastcpd_params = list(),
+  output_dir = NULL,
+  n_tiles_x = 1,
+  n_tiles_y = 1,
+  alpha = 0.05,
+  spatial_autocorrelation = TRUE,
+  verbose = TRUE,
+  estimate_time = TRUE,
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{binary_stack}{RasterStack, RasterBrick, or character. Stack of binary
@@ -68,7 +77,7 @@ Invisibly returns a list containing:
 }
 }
 \description{
-Post-processing function that applies changepoint detection methods to
+Postprocessing function that applies changepoint detection methods to
 identify temporal trends in habitat suitability across consecutive
 predictions. Classifies pixels as stable, increasing in quality, or
 decreasing in quality, and identifies time periods of significant change.
@@ -78,7 +87,8 @@ Applies changepoint detection using fastcpd to identify significant temporal
 shifts in spatial suitability. Accounts for spatial and temporal
 autocorrelation when \code{spatial_autocorrelation = TRUE}. The
 \code{fastcpd_params} list allows customization of the changepoint detection
-algorithm.
+algorithm, and is passed through to \code{\link[fastcpd]{fastcpd.binomial}}
+(e.g. \code{list(cost_adjustment = "BIC", trim = 0.025)}).
 
 Pattern classifications enable identification of expanding, contracting, or
 stable g-space distributions over time or site level assessments of directional
@@ -88,35 +98,37 @@ Classification assumes consecutive rasters. Time periods
 shorter than ~15 time steps may be too short to classify increases or decreases.
 }
 \examples{
-con_file <- system.file("extdata/binary/consensus_stack.tif",
-      package = "TemporalModelR")
+\donttest{
+  con_file <- system.file("extdata/binary/consensus_stack.tif",
+                          package = "TemporalModelR")
 
-frq_file <- system.file("extdata/binary/frequency_raster.tif",
-      package = "TemporalModelR")
+  frq_file <- system.file("extdata/binary/frequency_raster.tif",
+                          package = "TemporalModelR")
 
-binary_stack   <- terra::rast(con_file)
+  binary_stack   <- terra::rast(con_file)
 
-summary_raster <- terra::rast(frq_file)
+  summary_raster <- terra::rast(frq_file)
 
-time_steps <- expand.grid(
-  year    = 1:15,
-  season  = "Spring",
-  stringsAsFactors = FALSE
-)
+  time_steps <- expand.grid(
+    year             = 1:15,
+    season           = "Spring",
+    stringsAsFactors = FALSE
+  )
 
-analyze_temporal_patterns(
-  binary_stack   = binary_stack,
-  summary_raster = summary_raster,
-  time_steps     = time_steps,
-  output_dir     = tempdir(),
-  spatial_autocorrelation = FALSE,
-  overwrite      = TRUE,
-  estimate_time  = FALSE,
-  verbose        = FALSE
-)
+  analyze_temporal_patterns(
+    binary_stack            = binary_stack,
+    summary_raster          = summary_raster,
+    time_steps              = time_steps,
+    output_dir              = tempdir(),
+    spatial_autocorrelation = FALSE,
+    overwrite               = TRUE,
+    estimate_time           = FALSE,
+    verbose                 = FALSE
+  )
+}
 }
 \seealso{
-Post-processing: \code{\link{summarize_raster_outputs}}
+Postprocessing: \code{\link{summarize_raster_outputs}}
 
 External: \code{\link[fastcpd]{fastcpd}}
 }
