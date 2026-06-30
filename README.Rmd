@@ -67,13 +67,18 @@ This makes the workflow flexible to whether your time scale is annual, monthly, 
 
 Note: Internet connection is required to install the package.
 
+To install the latest release of TemporalModelR from CRAN use the following line of code:
+
+```{r, eval=FALSE}
+install.packages("TemporalModelR")
+```
+
 The development version of TemporalModelR can be installed using the code below.
 
 ```{r, eval=FALSE}
 # install.packages("devtools")
 devtools::install_github("CJHughes926/TemporalModelR")
 ```
-
 <br>
 
 ## Workflow in TemporalModelR
