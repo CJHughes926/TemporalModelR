@@ -1,6 +1,6 @@
 # Analyze Temporal Patterns in Binary Raster Time Series
 
-Post-processing function that applies changepoint detection methods to
+Postprocessing function that applies changepoint detection methods to
 identify temporal trends in habitat suitability across consecutive
 predictions. Classifies pixels as stable, increasing in quality, or
 decreasing in quality, and identifies time periods of significant
@@ -9,11 +9,20 @@ change.
 ## Usage
 
 ``` r
-analyze_temporal_patterns(binary_stack, summary_raster, time_steps,
-                          fastcpd_params = list(), output_dir = NULL,
-                          n_tiles_x = 1, n_tiles_y = 1, alpha = 0.05,
-                          spatial_autocorrelation = TRUE, verbose = TRUE,
-                          estimate_time = TRUE, overwrite = FALSE)
+analyze_temporal_patterns(
+  binary_stack,
+  summary_raster,
+  time_steps,
+  fastcpd_params = list(),
+  output_dir = NULL,
+  n_tiles_x = 1,
+  n_tiles_y = 1,
+  alpha = 0.05,
+  spatial_autocorrelation = TRUE,
+  verbose = TRUE,
+  estimate_time = TRUE,
+  overwrite = FALSE
+)
 ```
 
 ## Arguments
@@ -105,7 +114,9 @@ Applies changepoint detection using fastcpd to identify significant
 temporal shifts in spatial suitability. Accounts for spatial and
 temporal autocorrelation when `spatial_autocorrelation = TRUE`. The
 `fastcpd_params` list allows customization of the changepoint detection
-algorithm.
+algorithm, and is passed through to
+[`fastcpd.binomial`](https://rdrr.io/pkg/fastcpd/man/fastcpd_binomial.html)
+(e.g. `list(cost_adjustment = "BIC", trim = 0.025)`).
 
 Pattern classifications enable identification of expanding, contracting,
 or stable g-space distributions over time or site level assessments of
@@ -116,7 +127,7 @@ Classification assumes consecutive rasters. Time periods shorter than
 
 ## See also
 
-Post-processing:
+Postprocessing:
 [`summarize_raster_outputs`](summarize_raster_outputs.md)
 
 External: [`fastcpd`](https://rdrr.io/pkg/fastcpd/man/fastcpd.html)
@@ -124,31 +135,34 @@ External: [`fastcpd`](https://rdrr.io/pkg/fastcpd/man/fastcpd.html)
 ## Examples
 
 ``` r
-con_file <- system.file("extdata/binary/consensus_stack.tif",
-      package = "TemporalModelR")
+# \donttest{
+  con_file <- system.file("extdata/binary/consensus_stack.tif",
+                          package = "TemporalModelR")
 
-frq_file <- system.file("extdata/binary/frequency_raster.tif",
-      package = "TemporalModelR")
+  frq_file <- system.file("extdata/binary/frequency_raster.tif",
+                          package = "TemporalModelR")
 
-binary_stack   <- terra::rast(con_file)
+  binary_stack   <- terra::rast(con_file)
 
-summary_raster <- terra::rast(frq_file)
+  summary_raster <- terra::rast(frq_file)
 
-time_steps <- expand.grid(
-  year    = 1:15,
-  season  = "Spring",
-  stringsAsFactors = FALSE
-)
+  time_steps <- expand.grid(
+    year             = 1:15,
+    season           = "Spring",
+    stringsAsFactors = FALSE
+  )
 
-analyze_temporal_patterns(
-  binary_stack   = binary_stack,
-  summary_raster = summary_raster,
-  time_steps     = time_steps,
-  output_dir     = tempdir(),
-  spatial_autocorrelation = FALSE,
-  overwrite      = TRUE,
-  estimate_time  = FALSE,
-  verbose        = FALSE
-)
+  analyze_temporal_patterns(
+    binary_stack            = binary_stack,
+    summary_raster          = summary_raster,
+    time_steps              = time_steps,
+    output_dir              = tempdir(),
+    spatial_autocorrelation = FALSE,
+    overwrite               = TRUE,
+    estimate_time           = FALSE,
+    verbose                 = FALSE
+  )
 
+
+# }
 ```
