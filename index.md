@@ -135,6 +135,14 @@ cover estimates, monthly precipitation).
 
 Note: Internet connection is required to install the package.
 
+To install the latest release of TemporalModelR from CRAN use the
+following line of code:
+
+``` r
+
+install.packages("TemporalModelR")
+```
+
 The development version of TemporalModelR can be installed using the
 code below.
 
